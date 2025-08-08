@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Loss & Transient Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 260px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 10;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -130px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .hidden-group {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Power Loss & Transient Simulator</h1>
+            <p class="text-md text-gray-600 mt-2">For Power Transistors</p>
+        </header>
+
+        <!-- Main Calculator Card -->
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Left Column: Inputs -->
+                <div>
+                    <div class="grid md:grid-cols-2 gap-x-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Operating Conditions</h3>
+                            <div class="space-y-3">
+                                <div><label for="param-voltage" class="block text-sm font-medium text-gray-600">Voltage (V<sub>DS</sub> / V<sub>ce</sub>)</label><input type="number" id="param-voltage" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="400"></div>
+                                <div><label for="param-current" class="block text-sm font-medium text-gray-600">Current (I<sub>D</sub> / I<sub>c</sub>)</label><input type="number" id="param-current" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="10"></div>
+                                <div><label for="param-frequency" class="block text-sm font-medium text-gray-600">Frequency (f<sub>sw</sub>) (kHz)</label><input type="number" id="param-frequency" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="100"></div>
+                                <div><label for="param-duty-cycle" class="block text-sm font-medium text-gray-600">Duty Cycle (%)</label><input type="number" id="param-duty-cycle" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="50"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Gate Drive</h3>
+                            <div class="space-y-3">
+                                <div><label for="param-v-drive" class="block text-sm font-medium text-gray-600">Drive Voltage (V<sub>Gate</sub>)</label><input type="number" id="param-v-drive" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="12"></div>
+                                <div><label for="param-rg-ext" class="block text-sm font-medium text-gray-600">External Gate Resistor (R<sub>g,ext</sub>) (Ω)</label><input type="number" id="param-rg-ext" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="10"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column: Datasheet Params -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">Datasheet Parameters</h3>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Calculation Method</label>
+                        <div class="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-md">
+                            <label><input type="radio" name="input-method" value="charge" class="sr-only peer" checked><div class="p-2 text-center rounded-md cursor-pointer peer-checked:bg-blue-600 peer-checked:text-white">Gate Charge</div></label>
+                            <label><input type="radio" name="input-method" value="capacitance" class="sr-only peer"><div class="p-2 text-center rounded-md cursor-pointer peer-checked:bg-blue-600 peer-checked:text-white">Capacitance</div></label>
+                            <label><input type="radio" name="input-method" value="eon-eoff" class="sr-only peer"><div class="p-2 text-center rounded-md cursor-pointer peer-checked:bg-blue-600 peer-checked:text-white">Eon/Eoff</div></label>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+                        <!-- Common Param -->
+                        <div>
+                            <div class="tooltip">
+                                <label for="param-vds-on" class="block text-sm font-medium text-gray-600">V<sub>DS,on</sub> / V<sub>CE,on</sub> (V)</label>
+                                <span class="tooltiptext">The on-state voltage drop at your operating current. Use the datasheet graph to find this value.</span>
+                            </div>
+                            <input type="number" id="param-vds-on" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="1.2">
+                        </div>
+                        
+                        <!-- Transient-specific Params -->
+                        <div class="transient-param-group">
+                            <label for="param-rg-int" class="block text-sm font-medium text-gray-600">Internal Gate Resistor (R<sub>g,int</sub>) (Ω)</label>
+                            <input type="number" id="param-rg-int" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="1.5">
+                        </div>
+                        <div class="transient-param-group">
+                            <div class="tooltip">
+                                <label for="param-vth" class="block text-sm font-medium text-gray-600">Threshold Voltage (V<sub>th</sub>)</label>
+                                <span class="tooltiptext">The gate voltage at which the transistor begins to conduct.</span>
+                            </div>
+                            <input type="number" id="param-vth" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="3">
+                        </div>
+                        <div class="transient-param-group">
+                            <div class="tooltip">
+                                <label for="param-vpl" class="block text-sm font-medium text-gray-600">Plateau Voltage (V<sub>pl</sub>)</label>
+                                <span class="tooltiptext">The gate voltage during the Miller plateau.</span>
+                            </div>
+                            <input type="number" id="param-vpl" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="5">
+                        </div>
+
+                        <!-- Gate Charge Inputs -->
+                        <div class="charge-param-group">
+                            <div class="tooltip">
+                                <label for="param-qgs" class="block text-sm font-medium text-gray-600">Gate-Source Charge (Q<sub>gs</sub>) (nC)</label>
+                                <span class="tooltiptext">Charge needed to bring Vgs from 0V to Vpl.</span>
+                            </div>
+                            <input type="number" id="param-qgs" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="15">
+                        </div>
+                        <div class="charge-param-group">
+                            <div class="tooltip">
+                                <label for="param-qgd" class="block text-sm font-medium text-gray-600">Gate-Drain Charge (Q<sub>gd</sub>) (nC)</label>
+                                <span class="tooltiptext">The 'Miller Charge'.</span>
+                            </div>
+                            <input type="number" id="param-qgd" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="25">
+                        </div>
+                        
+                        <!-- Capacitance Inputs -->
+                        <div class="capacitance-param-group hidden-group">
+                            <div class="tooltip">
+                                <label for="param-ciss" class="block text-sm font-medium text-gray-600">Input Capacitance (C<sub>iss</sub>) (pF)</label>
+                                <span class="tooltiptext">Ciss = Cgs + Cgd.</span>
+                            </div>
+                            <input type="number" id="param-ciss" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="3000">
+                        </div>
+                        <div class="capacitance-param-group hidden-group">
+                            <div class="tooltip">
+                                <label for="param-crss" class="block text-sm font-medium text-gray-600">Reverse Transfer Cap (C<sub>rss</sub>) (pF)</label>
+                                <span class="tooltiptext">Crss = Cgd. The Miller Capacitance.</span>
+                            </div>
+                            <input type="number" id="param-crss" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="100">
+                        </div>
+
+                        <!-- Eon/Eoff Inputs -->
+                        <div class="eon-eoff-param-group hidden-group">
+                             <div class="tooltip">
+                                <label for="param-eon" class="block text-sm font-medium text-gray-600">Turn-On Energy (E<sub>on</sub>) (µJ)</label>
+                                <span class="tooltiptext">Energy loss per switching cycle during turn-on.</span>
+                             </div>
+                            <input type="number" id="param-eon" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="100">
+                        </div>
+                        <div class="eon-eoff-param-group hidden-group">
+                            <div class="tooltip">
+                                <label for="param-eoff" class="block text-sm font-medium text-gray-600">Turn-Off Energy (E<sub>off</sub>) (µJ)</label>
+                                <span class="tooltiptext">Energy loss per switching cycle during turn-off.</span>
+                            </div>
+                            <input type="number" id="param-eoff" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="80">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button id="calculate-button" class="mt-6 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Calculate Losses</button>
+            <div id="results-container" class="mt-6 bg-gray-50 p-4 rounded-lg hidden">
+                 <h2 class="text-xl font-semibold mb-3 border-b pb-2 text-gray-800">Estimated Losses</h2>
+                 <div class="grid grid-cols-2 gap-4">
+                    <div><p class="text-md text-gray-600">Conduction Loss:</p><p id="result-conduction-loss" class="text-xl font-bold text-blue-600">0 W</p></div>
+                    <div><p class="text-md text-gray-600">Switching Loss:</p><p id="result-switching-loss" class="text-xl font-bold text-green-600">0 W</p></div>
+                    <div id="result-eon-wrapper" class="hidden"><p class="text-md text-gray-600">Turn-On Energy (E<sub>on</sub>):</p><p id="result-eon" class="text-lg font-semibold text-gray-700">0 µJ</p></div>
+                    <div id="result-eoff-wrapper" class="hidden"><p class="text-md text-gray-600">Turn-Off Energy (E<sub>off</sub>):</p><p id="result-eoff" class="text-lg font-semibold text-gray-700">0 µJ</p></div>
+                 </div>
+                 <div class="border-t pt-3 mt-3"><p class="text-lg text-gray-800">Total Loss:</p><p id="result-total-loss" class="text-2xl font-extrabold text-red-600">0 W</p></div>
+                 
+                 <!-- Thermal Analysis Section -->
+                 <div id="thermal-container" class="mt-4 border-t pt-4">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">Thermal Analysis</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <input id="use-heatsink" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="use-heatsink" class="ml-2 block text-sm font-medium text-gray-900">Use Heatsink</label>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="thermal-rth-jc" class="block text-sm font-medium text-gray-600">R<sub>th j-c</sub> (°C/W)</label>
+                                <input type="number" id="thermal-rth-jc" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="1.5">
+                            </div>
+                            <div id="rth-ca-group">
+                                <div class="tooltip">
+                                    <label for="thermal-rth-ca" class="block text-sm font-medium text-gray-600">R<sub>th c-a</sub> (°C/W)</label>
+                                    <span class="tooltiptext">Case-to-Ambient resistance. Can be calculated as Rth j-a minus Rth j-c.</span>
+                                </div>
+                                <input type="number" id="thermal-rth-ca" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="60.5">
+                            </div>
+                            <div id="rth-cs-group" class="hidden-group">
+                                <label for="thermal-rth-cs" class="block text-sm font-medium text-gray-600">R<sub>th c-s</sub> (°C/W)</label>
+                                <input type="number" id="thermal-rth-cs" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="0.5">
+                            </div>
+                            <div id="rth-ha-group" class="hidden-group">
+                                <label for="thermal-rth-ha" class="block text-sm font-medium text-gray-600">R<sub>th h-a</sub> (°C/W)</label>
+                                <input type="number" id="thermal-rth-ha" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="10">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="thermal-ta" class="block text-sm font-medium text-gray-600">Ambient Temp (T<sub>a</sub>) (°C)</label>
+                            <input type="number" id="thermal-ta" class="mt-1 w-full p-2 border border-gray-300 rounded-md" value="25">
+                        </div>
+                    </div>
+                    <button id="calculate-temp-button" class="mt-4 w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">Estimate Junction Temperature</button>
+                    <div id="temp-result-container" class="mt-4 pt-4 border-t hidden">
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div>
+                                <p class="text-md text-gray-600">Case Temp (T<sub>c</sub>):</p>
+                                <p id="result-case-temp" class="text-xl font-bold text-orange-600">0 °C</p>
+                            </div>
+                            <div>
+                                <p class="text-md text-gray-600">Junction Temp (T<sub>j</sub>):</p>
+                                <p id="result-junction-temp" class="text-xl font-bold text-purple-600">0 °C</p>
+                            </div>
+                        </div>
+                        <!-- Thermal Graphic -->
+                        <div id="thermal-graphic-container" class="mt-4 space-y-1 text-white text-sm font-semibold text-center">
+                            <div class="bg-purple-600 p-2 rounded-t-md">Junction: <span id="graphic-tj"></span> °C</div>
+                            <div class="bg-orange-500 p-2">Case: <span id="graphic-tc"></span> °C</div>
+                            <div id="graphic-hs-layer" class="bg-gray-500 p-2 hidden-group">Heatsink: <span id="graphic-ths"></span> °C</div>
+                            <div class="bg-blue-500 p-2 rounded-b-md">Ambient: <span id="graphic-ta"></span> °C</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plotting Card -->
+        <div id="plot-container" class="mt-8 max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-center">Simulated Switching Transients</h2>
+            <div id="timing-info-container" class="mb-6 text-sm">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2 text-center">Switching Interval Analysis</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 p-3 bg-gray-50 rounded-md">
+                    <div class="font-semibold text-green-700">Turn-On:</div>
+                    <div>Delay: <span id="info-td-on" class="font-mono">0</span> ns</div>
+                    <div>Current Rise: <span id="info-tri" class="font-mono">0</span> ns</div>
+                    <div>Voltage Fall: <span id="info-tfv" class="font-mono">0</span> ns</div>
+                    <div class="font-semibold text-red-700">Turn-Off:</div>
+                    <div>Delay: <span id="info-td-off" class="font-mono">0</span> ns</div>
+                    <div>Voltage Rise: <span id="info-trv" class="font-mono">0</span> ns</div>
+                    <div>Current Fall: <span id="info-tfi" class="font-mono">0</span> ns</div>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="w-full h-64"><canvas id="chart-vgs"></canvas></div>
+                <div class="w-full h-64"><canvas id="chart-id"></canvas></div>
+                <div class="w-full h-64"><canvas id="chart-vds"></canvas></div>
+                <div class="w-full h-64"><canvas id="chart-power"></canvas></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const charts = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('calculate-button').addEventListener('click', runCalculation);
+            document.querySelectorAll('input[name="input-method"]').forEach(radio => {
+                radio.addEventListener('change', handleInputMethodChange);
+            });
+            handleInputMethodChange();
+        });
+        
+        function handleInputMethodChange() {
+            const method = document.querySelector('input[name="input-method"]:checked').value;
+            
+            document.querySelectorAll('.transient-param-group').forEach(el => el.classList.toggle('hidden-group', method === 'eon-eoff'));
+            document.querySelectorAll('.charge-param-group').forEach(el => el.classList.toggle('hidden-group', method !== 'charge'));
+            document.querySelectorAll('.capacitance-param-group').forEach(el => el.classList.toggle('hidden-group', method !== 'capacitance'));
+            document.querySelectorAll('.eon-eoff-param-group').forEach(el => el.classList.toggle('hidden-group', method !== 'eon-eoff'));
+            
+            document.getElementById('calculate-button').textContent = (method === 'eon-eoff') ? 'Calculate Losses' : 'Calculate & Plot Transients';
+        }
+
+        function getFloatValue(id) {
+            const value = parseFloat(document.getElementById(id).value);
+            return isNaN(value) ? 0 : value;
+        }
+
+        function runCalculation() {
+            if (!document.getElementById('calculate-temp-button').onclick) {
+                document.getElementById('calculate-temp-button').onclick = calculateTemperature;
+                document.getElementById('use-heatsink').onchange = handleHeatsinkToggle;
+                handleHeatsinkToggle();
+            }
+
+            const method = document.querySelector('input[name="input-method"]:checked').value;
+            const Id = getFloatValue('param-current');
+            const Vds_on = getFloatValue('param-vds-on');
+            const dutyCycle = getFloatValue('param-duty-cycle') / 100;
+            const fsw = getFloatValue('param-frequency') * 1000;
+            
+            let conductionLoss = Vds_on * Id * dutyCycle;
+            let switchingLoss = 0, Eon = 0, Eoff = 0;
+
+            if (method === 'eon-eoff') {
+                Eon = getFloatValue('param-eon') * 1e-6;
+                Eoff = getFloatValue('param-eoff') * 1e-6;
+                switchingLoss = (Eon + Eoff) * fsw;
+                document.getElementById('plot-container').classList.add('hidden');
+                document.getElementById('result-eon-wrapper').classList.add('hidden');
+                document.getElementById('result-eoff-wrapper').classList.add('hidden');
+            } else {
+                const Vds_bus = getFloatValue('param-voltage');
+                const Vdrive = getFloatValue('param-v-drive');
+                const Rg_ext = getFloatValue('param-rg-ext');
+                const Rg_int = getFloatValue('param-rg-int');
+                const Vth = getFloatValue('param-vth');
+                const Vpl = getFloatValue('param-vpl');
+                const Rg = Rg_ext + Rg_int;
+
+                let Qgs, Qgd;
+                if (method === 'charge') {
+                    Qgs = getFloatValue('param-qgs') * 1e-9;
+                    Qgd = getFloatValue('param-qgd') * 1e-9;
+                } else {
+                    const Ciss = getFloatValue('param-ciss') * 1e-12;
+                    const Crss = getFloatValue('param-crss') * 1e-12;
+                    const Cgs_calc = Ciss - Crss;
+                    Qgs = Cgs_calc * Vpl;
+                    Qgd = Crss * Vds_bus;
+                }
+                
+                const Cgs_eff = (Vpl > 0) ? Qgs / Vpl : 0;
+                const t_delay_on_duration = (Vdrive > Vth) ? -Math.log(1 - Vth / Vdrive) * Rg * Cgs_eff : 0;
+                const t_current_rise_end = (Vdrive > Vpl) ? -Math.log(1 - Vpl / Vdrive) * Rg * Cgs_eff : t_delay_on_duration;
+                const t_current_rise_duration = t_current_rise_end - t_delay_on_duration;
+                const t_voltage_fall_duration = (Vdrive > Vpl) ? Rg * Qgd / (Vdrive - Vpl) : 0;
+                const t_voltage_fall_end = t_current_rise_end + t_voltage_fall_duration;
+                const t_off_start = t_voltage_fall_end * 4;
+                const t_delay_off_duration = (Vdrive > 0) ? -Math.log(Vpl / Vdrive) * Rg * Cgs_eff : 0;
+                const t_voltage_rise_duration = (Vpl > 0) ? Rg * Qgd / Vpl : 0;
+                const t_voltage_rise_end = t_off_start + t_delay_off_duration + t_voltage_rise_duration;
+                const t_current_fall_duration = (Vpl > Vth) ? -Math.log(Vth / Vpl) * Rg * Cgs_eff : 0;
+                const t_current_fall_end = t_voltage_rise_end + t_current_fall_duration;
+
+                const total_time = t_current_fall_end * 1.2;
+                const points = 500;
+                const dt = total_time / points;
+                let timeData = [], vgsData = [], vdsData = [], idData = [], powerData = [];
+                
+                for (let i = 0; i <= points; i++) {
+                    const t = i * dt;
+                    timeData.push(t * 1e9);
+                    let vgs_val, vds_val, id_val;
+                    if (t < t_off_start) {
+                        vgs_val = (t <= t_current_rise_end) ? Vdrive * (1 - Math.exp(-t / (Rg * Cgs_eff))) : Vpl;
+                        if (t > t_voltage_fall_end) vgs_val = Vdrive;
+                        vds_val = (t > t_current_rise_end && t <= t_voltage_fall_end) ? Vds_bus * (1 - (t - t_current_rise_end) / t_voltage_fall_duration) : (t > t_voltage_fall_end ? Vds_on : Vds_bus);
+                        id_val = (vgs_val > Vth) ? Id * Math.min(1, (vgs_val - Vth) / (Vpl - Vth)) : 0;
+                        if (t > t_voltage_fall_end) id_val = Id;
+                    } else {
+                        const t_rel = t - t_off_start;
+                        vgs_val = (t_rel <= t_delay_off_duration) ? Vdrive * Math.exp(-t_rel / (Rg * Cgs_eff)) : Vpl;
+                        const t_vr_start = t_off_start + t_delay_off_duration;
+                        vds_val = (t > t_vr_start && t <= t_voltage_rise_end) ? Vds_bus * ((t - t_vr_start) / t_voltage_rise_duration) : (t > t_voltage_rise_end ? Vds_bus : Vds_on);
+                        const t_cf_start = t_voltage_rise_end;
+                        if (t > t_cf_start && t <= t_current_fall_end) {
+                            vgs_val = Vpl * Math.exp(-(t - t_cf_start) / (Rg * Cgs_eff));
+                            id_val = Id * Math.max(0, (vgs_val - Vth) / (Vpl - Vth));
+                        } else if (t > t_current_fall_end) {
+                            id_val = 0;
+                            vgs_val = Vth * Math.exp(-(t - t_current_fall_end) / (Rg * Cgs_eff));
+                        } else {
+                            id_val = Id;
+                        }
+                    }
+                    vgsData.push(Math.max(0, vgs_val));
+                    vdsData.push(Math.max(0, Math.min(Vds_bus, vds_val)));
+                    idData.push(Math.max(0, id_val));
+                    const power_val = vdsData[i] * idData[i];
+                    powerData.push(power_val);
+                    if (t > 0 && t <= t_voltage_fall_end) Eon += power_val * dt;
+                    if (t > t_off_start && t <= t_current_fall_end) Eoff += power_val * dt;
+                }
+                
+                switchingLoss = (Eon + Eoff) * fsw;
+                plotWaveforms(timeData, vgsData, vdsData, idData, powerData);
+                
+                document.getElementById('info-td-on').textContent = (t_delay_on_duration * 1e9).toFixed(1);
+                document.getElementById('info-tri').textContent = (t_current_rise_duration * 1e9).toFixed(1);
+                document.getElementById('info-tfv').textContent = (t_voltage_fall_duration * 1e9).toFixed(1);
+                document.getElementById('info-td-off').textContent = (t_delay_off_duration * 1e9).toFixed(1);
+                document.getElementById('info-trv').textContent = (t_voltage_rise_duration * 1e9).toFixed(1);
+                document.getElementById('info-tfi').textContent = (t_current_fall_duration * 1e9).toFixed(1);
+
+                document.getElementById('plot-container').classList.remove('hidden');
+                document.getElementById('result-eon-wrapper').classList.remove('hidden');
+                document.getElementById('result-eoff-wrapper').classList.remove('hidden');
+            }
+
+            document.getElementById('results-container').classList.remove('hidden');
+            document.getElementById('result-conduction-loss').textContent = `${conductionLoss.toFixed(2)} W`;
+            document.getElementById('result-switching-loss').textContent = `${switchingLoss.toFixed(2)} W`;
+            document.getElementById('result-eon').textContent = `${(Eon * 1e6).toFixed(2)} µJ`;
+            document.getElementById('result-eoff').textContent = `${(Eoff * 1e6).toFixed(2)} µJ`;
+            document.getElementById('result-total-loss').textContent = `${(conductionLoss + switchingLoss).toFixed(2)} W`;
+            document.getElementById('temp-result-container').classList.add('hidden');
+        }
+
+        function handleHeatsinkToggle() {
+            const useHeatsink = document.getElementById('use-heatsink').checked;
+            document.getElementById('rth-ca-group').classList.toggle('hidden-group', useHeatsink);
+            document.getElementById('rth-cs-group').classList.toggle('hidden-group', !useHeatsink);
+            document.getElementById('rth-ha-group').classList.toggle('hidden-group', !useHeatsink);
+            document.getElementById('temp-result-container').classList.add('hidden');
+        }
+
+        function calculateTemperature() {
+            const totalLossText = document.getElementById('result-total-loss').textContent;
+            const totalLoss = parseFloat(totalLossText);
+            if (isNaN(totalLoss) || totalLoss < 0) return;
+
+            const Ta = getFloatValue('thermal-ta');
+            const Rth_jc = getFloatValue('thermal-rth-jc');
+            const useHeatsink = document.getElementById('use-heatsink').checked;
+            
+            let Tc = 0, Tj = 0, Ths = 0;
+
+            if (useHeatsink) {
+                const Rth_cs = getFloatValue('thermal-rth-cs');
+                const Rth_ha = getFloatValue('thermal-rth-ha');
+                Ths = Ta + totalLoss * Rth_ha;
+                Tc = Ths + totalLoss * Rth_cs;
+                Tj = Tc + totalLoss * Rth_jc;
+            } else {
+                const Rth_ca = getFloatValue('thermal-rth-ca');
+                Tc = Ta + totalLoss * Rth_ca;
+                Tj = Tc + totalLoss * Rth_jc;
+            }
+
+            document.getElementById('result-case-temp').textContent = `${Tc.toFixed(1)} °C`;
+            document.getElementById('result-junction-temp').textContent = `${Tj.toFixed(1)} °C`;
+            
+            document.getElementById('graphic-tj').textContent = Tj.toFixed(1);
+            document.getElementById('graphic-tc').textContent = Tc.toFixed(1);
+            document.getElementById('graphic-ta').textContent = Ta.toFixed(1);
+            document.getElementById('graphic-hs-layer').classList.toggle('hidden-group', !useHeatsink);
+            if(useHeatsink) {
+                 document.getElementById('graphic-ths').textContent = Ths.toFixed(1);
+            }
+
+            document.getElementById('temp-result-container').classList.remove('hidden');
+        }
+        
+        function createOrUpdateChart(id, label, time, data, color, yAxisLabel) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (charts[id]) {
+                charts[id].destroy();
+            }
+            const maxX = Math.max(...time);
+            let niceStep;
+            if (maxX > 0) {
+                const exponent = Math.floor(Math.log10(maxX));
+                const powerOf10 = Math.pow(10, exponent);
+                const normalizedMax = maxX / powerOf10;
+                let niceNormalizedStep;
+                if (normalizedMax < 1.5) niceNormalizedStep = 0.2;
+                else if (normalizedMax < 3) niceNormalizedStep = 0.5;
+                else if (normalizedMax < 7) niceNormalizedStep = 1;
+                else niceNormalizedStep = 2;
+                niceStep = niceNormalizedStep * powerOf10;
+            } else {
+                niceStep = 1; 
+            }
+            const niceMax = Math.ceil(maxX / niceStep) * niceStep;
+            charts[id] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: time,
+                    datasets: [{ label: label, data: data, borderColor: color, borderWidth: 2, pointRadius: 0, fill: false }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, title: { display: true, text: label, font: { size: 14 } } },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Time (ns)' },
+                            type: 'linear',
+                            min: 0,
+                            max: niceMax,
+                            ticks: { stepSize: niceStep }
+                        },
+                        y: { title: { display: true, text: yAxisLabel } }
+                    }
+                }
+            });
+        }
+
+        function plotWaveforms(time, vgs, vds, id, power) {
+            createOrUpdateChart('chart-vgs', 'Gate Voltage (Vgate)', time, vgs, 'rgba(255, 99, 132, 1)', 'Voltage (V)');
+            createOrUpdateChart('chart-id', 'Drain Current (Id)', time, id, 'rgba(75, 192, 192, 1)', 'Current (A)');
+            createOrUpdateChart('chart-vds', 'Drain-Source Voltage (Vds)', time, vds, 'rgba(54, 162, 235, 1)', 'Voltage (V)');
+            createOrUpdateChart('chart-power', 'Switching Power', time, power, 'rgba(255, 206, 86, 1)', 'Power (W)');
+        }
+    </script>
+</body>
+</html>
