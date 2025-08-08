@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Virtual Transformer Lab: Multi-Connection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Quantico:ital,wght@1,700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      .control-card {
+        background-color: #2d3748;
+        border: 2px solid #4a5568;
+      }
+      .transformer-body {
+        background-color: #e2e8f0;
+        border: 2px solid #4a5568;
+      }
+      .terminal {
+        background-color: #a0aec0;
+        border-width: 3px;
+        border-style: solid;
+        border-color: #2d3748;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        z-index: 10;
+        position: relative;
+      }
+      .terminal[data-phase="a"] {
+        border-color: #ef4444;
+      }
+      .terminal[data-phase="b"] {
+        border-color: #3b82f6;
+      }
+      .terminal[data-phase="c"] {
+        border-color: #f59e0b;
+      }
+      .terminal[data-phase="n"] {
+        border-color: #cbd5e1;
+      }
+      .terminal.selected,
+      .terminal.probe-connected {
+        background-color: #f56565;
+        transform: scale(1.2);
+      }
+      .terminal:hover {
+        transform: scale(1.1);
+      }
+      #wiring-svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 15;
+      }
+      .wire {
+        stroke-width: 4px;
+        transition: stroke 0.3s;
+        fill: none;
+        pointer-events: none;
+      }
+      body.unwiring .wire {
+        pointer-events: auto;
+        cursor: pointer;
+      }
+      body.unwiring .wire:hover {
+        stroke: #f56565;
+      }
+      .probe-wire {
+        stroke-width: 2px;
+        stroke-dasharray: 8 4;
+        fill: none;
+      }
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #4a5568;
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #f59e0b;
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+      .voltmeter {
+        background-color: #1a202c;
+        border: 4px solid #4a5568;
+      }
+      .voltmeter-screen {
+        font-family: "Quantico", sans-serif;
+        font-style: italic;
+        font-weight: 700;
+      }
+      .probe-handle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: grab;
+        transition: transform 0.2s;
+        border: 3px solid #718096;
+      }
+      .probe-handle:active {
+        cursor: grabbing;
+        transform: scale(0.9);
+      }
+      #show-scope-btn {
+        transition: background-color 0.2s;
+      }
+      #show-scope-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+        align-items: center;
+        justify-content: center;
+      }
+      .modal.flex {
+        display: flex;
+      }
+      .modal-content {
+        background-color: #1f2937;
+        padding: 20px;
+        border: 2px solid #4a5568;
+        position: relative;
+        border-radius: 8px;
+      }
+      .modal-close {
+        color: #aaa;
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      #oscilloscope-canvas {
+        background-color: #374151;
+        border-radius: 4px;
+        border: 1px solid #9ca3af;
+        cursor: crosshair;
+      }
+      #oscilloscope-canvas.grabbing {
+        cursor: grabbing;
+      }
+      .scope-channel-button {
+        background-color: #4b5563;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: bold;
+        padding: 0.5rem;
+        text-align: center;
+        border-bottom: 4px solid rgba(0, 0, 0, 0.4);
+        transition: all 0.1s ease-in-out;
+      }
+      .scope-channel-button.active {
+        transform: translateY(1px);
+        border-bottom-width: 2px;
+        box-shadow: 0 0 0 3px var(--channel-color, #fff);
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-800 text-white flex flex-col items-center justify-center min-h-screen p-4"
+  >
+    <div class="w-full max-w-7xl">
+      <div class="text-center mb-4">
+        <h1 class="text-3xl font-bold text-yellow-300">
+          Virtual Transformer Lab
+        </h1>
+        <div class="flex items-center justify-center gap-4 mt-2">
+          <p id="task-description" class="text-lg text-gray-300">
+            Task: Wire a Delta-Wye connection, apply power, and measure
+            voltages.
+          </p>
+          <select
+            id="task-select"
+            class="bg-gray-700 border border-gray-600 rounded-md p-1 text-base"
+          >
+            <option value="delta-wye">Delta-Wye (Δ-Y)</option>
+            <option value="delta-delta">Delta-Delta (Δ-Δ)</option>
+            <option value="wye-delta">Wye-Delta (Y-Δ)</option>
+            <option value="wye-wye">Wye-Wye (Y-Y)</option>
+            <option value="wye-open-delta">Y-Open Delta (Y-Δopen)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="lab-container" class="relative flex flex-col lg:flex-row gap-6">
+        <svg id="wiring-svg"></svg>
+        <!-- Left Panel -->
+        <div class="relative z-10 w-full lg:w-1/4 space-y-4">
+          <!-- Voltmeter -->
+          <div class="voltmeter rounded-lg p-4">
+            <h3 class="text-center font-bold text-lg mb-2">
+              Digital Voltmeter (DVM)
+            </h3>
+            <div
+              class="voltmeter-screen bg-black border-2 border-gray-500 text-5xl text-green-400 text-center rounded-lg py-4 mb-3"
+            >
+              <span id="meter-reading">0.0</span> V
+            </div>
+            <div class="flex justify-around items-center">
+              <div id="probe-plus-handle" class="probe-handle bg-red-600">
+                V+
+              </div>
+              <div id="probe-minus-handle" class="probe-handle bg-gray-600">
+                V-
+              </div>
+            </div>
+          </div>
+          <!-- General Controls -->
+          <div class="control-card rounded-lg p-4 text-center">
+            <h3 class="font-bold text-lg mb-3">Waveform Viewer</h3>
+            <div class="space-y-3">
+              <div
+                id="show-scope-btn"
+                class="w-full h-28 p-2 flex items-center justify-center rounded-lg cursor-pointer bg-indigo-600 hover:bg-indigo-700"
+              >
+                <svg
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink"
+                  x="0px"
+                  y="0px"
+                  viewBox="0 0 256 256"
+                  enable-background="new 0 0 256 256"
+                  xml:space="preserve"
+                >
+                  <metadata>
+                    Svg Vector Icons : http://www.onlinewebfonts.com/icon
+                  </metadata>
+                  <g>
+                    <g>
+                      <g>
+                        <path
+                          fill="#000000"
+                          data-title="Layer 0"
+                          xs="0"
+                          d="M15.7,47.3c-2.1,0.6-4,2.3-4.9,4c-0.7,1.5-0.8,8.1-0.8,73v71.3h12.3h12.3v6c0,4.8,0.1,6.2,0.8,6.7c0.6,0.7,2.9,0.8,18.1,0.8c11,0,17.7-0.2,18.3-0.5c0.8-0.5,0.9-1.1,0.9-6.7v-6.3H128h55.4v6.3c0,5.7,0.1,6.3,0.9,6.7c0.6,0.3,7.3,0.5,18.3,0.5c15.1,0,17.4-0.1,18.1-0.8c0.6-0.6,0.8-1.9,0.8-6.7v-6h12.3H246l-0.1-71.9l-0.1-71.9l-1.1-1.5c-0.6-0.8-2-2-3.1-2.5l-2.1-1l-111.3,0C67,46.9,16.4,47.1,15.7,47.3z M150.6,117.4v55.1H85.9H21.1v-55.1V62.3h64.8h64.8V117.4z M203.2,62.8c11.5,2.4,19.6,14.1,17.9,25.5c-1.4,9.1-8.2,16.6-17.2,19c-11.8,3-24.3-4.5-27.5-16.4c-2-7.9,0.2-16.1,6-21.9C188.1,63.4,195.5,61.2,203.2,62.8z M192.4,128.8c-0.1,9.8-0.2,11.2-0.9,11.4c-0.4,0-5.8-2.2-12-5.2c-8.4-3.9-11.3-5.4-11.3-6.1c0-0.7,2.8-2.2,11.1-6.1c6.1-2.9,11.6-5.3,12.2-5.3h1.1L192.4,128.8z M217.5,122.8c6,2.8,11.1,5.3,11.4,5.5c0.3,0.3,0.2,0.7-0.3,1.2c-1,1-22,10.8-23.1,10.8c-0.5,0-1-0.3-1.2-0.8s-0.3-5.2-0.3-10.5c0-5.4,0.1-10.1,0.3-10.5s0.7-0.8,1.2-0.8C206.1,117.6,211.5,120,217.5,122.8z M176,160.5c5.2,2.4,6.9,9.2,3.6,14c-3.8,5.2-11.6,5.2-15.4,0c-4.5-6.2,0-14.9,7.7-14.9C173,159.5,174.9,160,176,160.5z M202.6,160.5c3.4,1.7,5.4,4.9,5.4,8.5c0,3-0.9,5-3.3,7.1c-4.4,4-11.9,2.6-14.5-2.6c-1.1-2.3-1.3-5.7-0.5-7.9c0.7-1.8,3.2-4.4,5-5.2C196.8,159.3,200.5,159.4,202.6,160.5z M229.7,160.7c6.2,3.3,6.6,12.3,0.8,16.1c-1.7,1.2-2.5,1.3-5.5,1.3c-3.1,0-3.7-0.1-5.3-1.5c-2.3-1.8-4-5.1-4-7.5C215.7,162,223.4,157.3,229.7,160.7z"
+                        />
+                        <path
+                          fill="#000000"
+                          data-title="Layer 1"
+                          xs="1"
+                          d="M83.2,97.6l-6.5,14.1l-3,0.1l-3,0.1l-2.7,4.6c-1.4,2.5-2.8,4.4-3,4.3c-0.2-0.1-3.6-5.5-7.5-12c-4-6.5-7.4-11.8-7.5-11.8c-0.2,0-2.4,3.4-5,7.5l-4.6,7.5h-4.8h-4.8v5.8v5.8h6.7h6.7l2.9-4.9l2.8-4.9l7.6,12.4c4.2,6.7,7.7,12.2,7.8,12.1c0.1-0.1,2.2-3.4,4.7-7.4l4.5-7.1l3.9-0.2l3.9-0.2l3.7-8.3c2-4.5,3.8-8.3,3.9-8.3c0.2,0,5.3,10.5,11.4,23.2c6.1,12.7,11.2,23.2,11.4,23.4c0.2,0.1,3.2-6.5,6.8-14.6l6.5-14.8l7.7-0.2l7.7-0.2l0.1-5.7l0.1-5.6l-9.7,0.1l-9.7,0.1l-4.6,10.2c-2.6,5.6-4.8,10.1-4.9,9.9c-0.2-0.2-5.3-11.1-11.3-24.2c-6-13.1-11.1-24-11.3-24.2C89.9,83.6,86.8,89.9,83.2,97.6z"
+                        />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+                <span class="font-semibold">Oscilloscope</span>
+              </div>
+            </div>
+          </div>
+          <button
+            id="check-btn"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+          >
+            Check Connection
+          </button>
+          <button
+            id="reset-btn"
+            class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
+          >
+            Reset Lab
+          </button>
+        </div>
+
+        <!-- Right Panel: Lab Area -->
+        <div
+          id="lab-area"
+          class="relative z-10 bg-gray-700 rounded-xl shadow-2xl p-6 border-2 border-gray-600 w-full lg:w-3/4"
+        >
+          <div
+            class="control-card rounded-lg p-4 mb-6 flex justify-between items-center flex-wrap gap-4"
+          >
+            <div class="text-center">
+              <span class="font-semibold block mb-1">Power</span>
+              <label class="switch">
+                <input type="checkbox" id="power-switch" disabled />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="flex items-center gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-300"
+                  >Voltage (L-L): <span id="voltage-value">300</span>V</label
+                >
+                <input
+                  id="voltage-slider"
+                  type="range"
+                  min="50"
+                  max="420"
+                  value="300"
+                  step="10"
+                  class="w-32 md:w-40"
+                />
+              </div>
+            </div>
+            <div class="flex space-x-2 md:space-x-4">
+              <div class="text-center">
+                <div
+                  id="source-a"
+                  class="terminal w-8 h-8 rounded-full"
+                  data-name="Src A"
+                  data-phase="a"
+                ></div>
+                <p class="font-mono text-sm mt-1 text-red-400">A</p>
+              </div>
+              <div class="text-center">
+                <div
+                  id="source-b"
+                  class="terminal w-8 h-8 rounded-full"
+                  data-name="Src B"
+                  data-phase="b"
+                ></div>
+                <p class="font-mono text-sm mt-1 text-blue-400">B</p>
+              </div>
+              <div class="text-center">
+                <div
+                  id="source-c"
+                  class="terminal w-8 h-8 rounded-full"
+                  data-name="Src C"
+                  data-phase="c"
+                ></div>
+                <p class="font-mono text-sm mt-1 text-yellow-300">C</p>
+              </div>
+              <div class="text-center">
+                <div
+                  id="source-n"
+                  class="terminal w-8 h-8 rounded-full"
+                  data-name="Src N"
+                  data-phase="n"
+                ></div>
+                <p class="font-mono text-sm mt-1">N</p>
+              </div>
+            </div>
+          </div>
+          <div class="text-center mb-2">
+            <label class="font-bold text-lg">Turns Ratio (N1:N2): </label>
+            <input
+              type="number"
+              id="turns-ratio"
+              value="6"
+              min="1"
+              class="bg-gray-800 border border-gray-600 rounded-md p-1 w-20 text-center"
+            />
+            <p class="text-sm text-gray-400">
+              Click terminals to wire. <br />
+              Hold Alt+ Click wire to remove.
+            </p>
+          </div>
+          <div
+            class="flex flex-col md:flex-row justify-around items-center py-2"
+          >
+            <div class="m-2 p-2 text-center">
+              <p class="font-bold mb-2">T1</p>
+              <div
+                class="transformer-body rounded-lg p-4 w-40 h-40 relative flex justify-between"
+              >
+                <div class="flex flex-col justify-around items-center h-full">
+                  <p class="font-mono text-xs text-black">H1</p>
+                  <div
+                    id="H1-T1"
+                    class="terminal w-5 h-5"
+                    data-name="H1-T1"
+                    data-phase="a"
+                  ></div>
+                  <div
+                    id="H2-T1"
+                    class="terminal w-5 h-5"
+                    data-name="H2-T1"
+                    data-phase="b"
+                  ></div>
+                  <p class="font-mono text-xs text-black">H2</p>
+                </div>
+                <svg
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink"
+                  x="0px"
+                  y="0px"
+                  viewBox="0 0 256 256"
+                  enable-background="new 0 0 256 256"
+                  xml:space="preserve"
+                >
+                  <metadata>
+                    Svg Vector Icons : http://www.onlinewebfonts.com/icon
+                  </metadata>
+                  <g>
+                    <g>
+                      <g>
+                        <path
+                          fill="#888888"
+                          data-title="Layer 0"
+                          xs="0"
+                          d="M98,128v100.5h9.9h9.9V128V27.5h-9.9H98V128z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 1"
+                          xs="1"
+                          d="M138.1,128v100.5h9.9h9.9V128V27.5h-9.9h-9.9V128z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 2"
+                          xs="2"
+                          d="M16.3,33L10,33.1v9.6v9.6l22,0.1c21.5,0.1,22,0.1,23.8,1.2c8.3,4.4,8.3,16.1,0.1,20.2c-1.3,0.6-3,1.2-3.6,1.2H51v10.3v10.3l1.7,0.3c4,0.7,7.7,4,8.8,7.6c1.3,4.4,0.3,8.6-3,11.7c-3.3,3.1-3.3,3.1-27.2,3.1H10v10.1v10.1h21.4c23.9,0,23.9,0,27.2,3.1c3.2,3.1,4.3,7.3,3,11.7c-1.1,3.6-4.8,6.8-8.8,7.6l-1.7,0.3v9.8v9.8l1.9,0.3c2.8,0.4,5.9,2.5,7.5,5.1c3.4,5.5,1.3,13-4.5,16.1c-1.8,1-2.3,1-23.9,1.2l-22,0.1v9.6v9.7h22.7c25.5,0,25.3,0,32.1-3.3c4.8-2.4,10.5-7.7,13-12.4c6-10.9,5-24.2-2.5-34l-1.9-2.4l1.2-1.2c2-2.1,4.5-6.6,5.7-10.5c3-9.5,1.4-19.2-4.7-27.7l-2.1-3l2.1-2.9c8.4-11.7,8.2-26.8-0.4-37.4l-2.1-2.5l2.2-2.9c7.8-10.1,8.6-23.8,2.1-34.8c-2.7-4.5-7.8-9.2-12.6-11.6c-6.5-3.1-7.5-3.3-25.8-3.4C30,32.9,19.8,32.9,16.3,33z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 3"
+                          xs="3"
+                          d="M202.9,33.1c-4.5,0.3-5.1,0.4-9,1.9c-5.8,2.3-12.2,7.6-15.4,13c-0.9,1.5-2.2,4.4-2.9,6.5c-1.1,3.1-1.2,4.5-1.2,9.2c0,7.7,1.8,13.1,6.3,19l1.8,2.4l-1.7,2c-0.9,1.1-2.5,3.6-3.5,5.7c-5.1,10.6-4,22,3,31.9l2.1,2.9l-1.8,2.4c-4.4,5.7-6.9,13.8-6.4,20.8c0.5,6.5,3.5,14.2,7.3,18.1l1.4,1.4l-1.9,2.4c-4.6,5.8-6.6,11.8-6.7,19.3c0,9.1,2.5,15.2,9,21.7c3.2,3.2,4.7,4.3,7.8,5.9c6.8,3.3,6.7,3.3,32.1,3.3H246v-9.7v-9.6l-22-0.1c-21.8-0.1-22.1-0.1-23.9-1.2c-5.9-3.1-7.9-10.6-4.5-16.1c1.6-2.5,4.7-4.7,7.5-5.1l1.9-0.3v-10.2v-10.3l-1.7-0.3c-7.8-1.5-11.8-10.4-7.7-17.1c1.6-2.5,4.7-4.7,7.5-5.1l1.9-0.3v-10c0-9.3,0-10.1-0.8-10.1c-3.3,0-7.8-3.2-9.4-6.7c-1-2.2-1.2-6.5-0.2-8.7c1.4-3.4,6.3-7.2,9.4-7.2h1V85v-9.8l-1.9-0.3c-2.8-0.4-5.9-2.5-7.5-5.1c-3.4-5.5-1.3-13,4.5-16.1c1.8-1,2.2-1,23.9-1.2l22-0.1v-9.6v-9.7l-4.9,0c-2.8,0-11.5,0-19.5-0.1C213.6,32.9,205.2,33,202.9,33.1z"
+                        />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+                <div class="flex flex-col justify-around items-center h-full">
+                  <p class="font-mono text-xs text-black">X1</p>
+                  <div
+                    id="X1-T1"
+                    class="terminal w-5 h-5"
+                    data-name="X1-T1"
+                    data-phase="a"
+                  ></div>
+                  <div
+                    id="X2-T1"
+                    class="terminal w-5 h-5"
+                    data-name="X2-T1"
+                    data-phase="n"
+                  ></div>
+                  <p class="font-mono text-xs text-black">X2</p>
+                </div>
+              </div>
+            </div>
+            <div class="m-2 p-2 text-center">
+              <p class="font-bold mb-2">T2</p>
+              <div
+                class="transformer-body rounded-lg p-4 w-40 h-40 relative flex justify-between"
+              >
+                <div class="flex flex-col justify-around items-center h-full">
+                  <p class="font-mono text-xs text-black">H1</p>
+                  <div
+                    id="H1-T2"
+                    class="terminal w-5 h-5"
+                    data-name="H1-T2"
+                    data-phase="b"
+                  ></div>
+                  <div
+                    id="H2-T2"
+                    class="terminal w-5 h-5"
+                    data-name="H2-T2"
+                    data-phase="c"
+                  ></div>
+                  <p class="font-mono text-xs text-black">H2</p>
+                </div>
+                <svg
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink"
+                  x="0px"
+                  y="0px"
+                  viewBox="0 0 256 256"
+                  enable-background="new 0 0 256 256"
+                  xml:space="preserve"
+                >
+                  <metadata>
+                    Svg Vector Icons : http://www.onlinewebfonts.com/icon
+                  </metadata>
+                  <g>
+                    <g>
+                      <g>
+                        <path
+                          fill="#888888"
+                          data-title="Layer 0"
+                          xs="0"
+                          d="M98,128v100.5h9.9h9.9V128V27.5h-9.9H98V128z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 1"
+                          xs="1"
+                          d="M138.1,128v100.5h9.9h9.9V128V27.5h-9.9h-9.9V128z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 2"
+                          xs="2"
+                          d="M16.3,33L10,33.1v9.6v9.6l22,0.1c21.5,0.1,22,0.1,23.8,1.2c8.3,4.4,8.3,16.1,0.1,20.2c-1.3,0.6-3,1.2-3.6,1.2H51v10.3v10.3l1.7,0.3c4,0.7,7.7,4,8.8,7.6c1.3,4.4,0.3,8.6-3,11.7c-3.3,3.1-3.3,3.1-27.2,3.1H10v10.1v10.1h21.4c23.9,0,23.9,0,27.2,3.1c3.2,3.1,4.3,7.3,3,11.7c-1.1,3.6-4.8,6.8-8.8,7.6l-1.7,0.3v9.8v9.8l1.9,0.3c2.8,0.4,5.9,2.5,7.5,5.1c3.4,5.5,1.3,13-4.5,16.1c-1.8,1-2.3,1-23.9,1.2l-22,0.1v9.6v9.7h22.7c25.5,0,25.3,0,32.1-3.3c4.8-2.4,10.5-7.7,13-12.4c6-10.9,5-24.2-2.5-34l-1.9-2.4l1.2-1.2c2-2.1,4.5-6.6,5.7-10.5c3-9.5,1.4-19.2-4.7-27.7l-2.1-3l2.1-2.9c8.4-11.7,8.2-26.8-0.4-37.4l-2.1-2.5l2.2-2.9c7.8-10.1,8.6-23.8,2.1-34.8c-2.7-4.5-7.8-9.2-12.6-11.6c-6.5-3.1-7.5-3.3-25.8-3.4C30,32.9,19.8,32.9,16.3,33z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 3"
+                          xs="3"
+                          d="M202.9,33.1c-4.5,0.3-5.1,0.4-9,1.9c-5.8,2.3-12.2,7.6-15.4,13c-0.9,1.5-2.2,4.4-2.9,6.5c-1.1,3.1-1.2,4.5-1.2,9.2c0,7.7,1.8,13.1,6.3,19l1.8,2.4l-1.7,2c-0.9,1.1-2.5,3.6-3.5,5.7c-5.1,10.6-4,22,3,31.9l2.1,2.9l-1.8,2.4c-4.4,5.7-6.9,13.8-6.4,20.8c0.5,6.5,3.5,14.2,7.3,18.1l1.4,1.4l-1.9,2.4c-4.6,5.8-6.6,11.8-6.7,19.3c0,9.1,2.5,15.2,9,21.7c3.2,3.2,4.7,4.3,7.8,5.9c6.8,3.3,6.7,3.3,32.1,3.3H246v-9.7v-9.6l-22-0.1c-21.8-0.1-22.1-0.1-23.9-1.2c-5.9-3.1-7.9-10.6-4.5-16.1c1.6-2.5,4.7-4.7,7.5-5.1l1.9-0.3v-10.2v-10.3l-1.7-0.3c-7.8-1.5-11.8-10.4-7.7-17.1c1.6-2.5,4.7-4.7,7.5-5.1l1.9-0.3v-10c0-9.3,0-10.1-0.8-10.1c-3.3,0-7.8-3.2-9.4-6.7c-1-2.2-1.2-6.5-0.2-8.7c1.4-3.4,6.3-7.2,9.4-7.2h1V85v-9.8l-1.9-0.3c-2.8-0.4-5.9-2.5-7.5-5.1c-3.4-5.5-1.3-13,4.5-16.1c1.8-1,2.2-1,23.9-1.2l22-0.1v-9.6v-9.7l-4.9,0c-2.8,0-11.5,0-19.5-0.1C213.6,32.9,205.2,33,202.9,33.1z"
+                        />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+                <div class="flex flex-col justify-around items-center h-full">
+                  <p class="font-mono text-xs text-black">X1</p>
+                  <div
+                    id="X1-T2"
+                    class="terminal w-5 h-5"
+                    data-name="X1-T2"
+                    data-phase="b"
+                  ></div>
+                  <div
+                    id="X2-T2"
+                    class="terminal w-5 h-5"
+                    data-name="X2-T2"
+                    data-phase="n"
+                  ></div>
+                  <p class="font-mono text-xs text-black">X2</p>
+                </div>
+              </div>
+            </div>
+            <div class="m-2 p-2 text-center">
+              <p class="font-bold mb-2">T3</p>
+              <div
+                class="transformer-body rounded-lg p-4 w-40 h-40 relative flex justify-between"
+              >
+                <div class="flex flex-col justify-around items-center h-full">
+                  <p class="font-mono text-xs text-black">H1</p>
+                  <div
+                    id="H1-T3"
+                    class="terminal w-5 h-5"
+                    data-name="H1-T3"
+                    data-phase="c"
+                  ></div>
+                  <div
+                    id="H2-T3"
+                    class="terminal w-5 h-5"
+                    data-name="H2-T3"
+                    data-phase="a"
+                  ></div>
+                  <p class="font-mono text-xs text-black">H2</p>
+                </div>
+                <svg
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink"
+                  x="0px"
+                  y="0px"
+                  viewBox="0 0 256 256"
+                  enable-background="new 0 0 256 256"
+                  xml:space="preserve"
+                >
+                  <metadata>
+                    Svg Vector Icons : http://www.onlinewebfonts.com/icon
+                  </metadata>
+                  <g>
+                    <g>
+                      <g>
+                        <path
+                          fill="#888888"
+                          data-title="Layer 0"
+                          xs="0"
+                          d="M98,128v100.5h9.9h9.9V128V27.5h-9.9H98V128z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 1"
+                          xs="1"
+                          d="M138.1,128v100.5h9.9h9.9V128V27.5h-9.9h-9.9V128z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 2"
+                          xs="2"
+                          d="M16.3,33L10,33.1v9.6v9.6l22,0.1c21.5,0.1,22,0.1,23.8,1.2c8.3,4.4,8.3,16.1,0.1,20.2c-1.3,0.6-3,1.2-3.6,1.2H51v10.3v10.3l1.7,0.3c4,0.7,7.7,4,8.8,7.6c1.3,4.4,0.3,8.6-3,11.7c-3.3,3.1-3.3,3.1-27.2,3.1H10v10.1v10.1h21.4c23.9,0,23.9,0,27.2,3.1c3.2,3.1,4.3,7.3,3,11.7c-1.1,3.6-4.8,6.8-8.8,7.6l-1.7,0.3v9.8v9.8l1.9,0.3c2.8,0.4,5.9,2.5,7.5,5.1c3.4,5.5,1.3,13-4.5,16.1c-1.8,1-2.3,1-23.9,1.2l-22,0.1v9.6v9.7h22.7c25.5,0,25.3,0,32.1-3.3c4.8-2.4,10.5-7.7,13-12.4c6-10.9,5-24.2-2.5-34l-1.9-2.4l1.2-1.2c2-2.1,4.5-6.6,5.7-10.5c3-9.5,1.4-19.2-4.7-27.7l-2.1-3l2.1-2.9c8.4-11.7,8.2-26.8-0.4-37.4l-2.1-2.5l2.2-2.9c7.8-10.1,8.6-23.8,2.1-34.8c-2.7-4.5-7.8-9.2-12.6-11.6c-6.5-3.1-7.5-3.3-25.8-3.4C30,32.9,19.8,32.9,16.3,33z"
+                        />
+                        <path
+                          fill="#888888"
+                          data-title="Layer 3"
+                          xs="3"
+                          d="M202.9,33.1c-4.5,0.3-5.1,0.4-9,1.9c-5.8,2.3-12.2,7.6-15.4,13c-0.9,1.5-2.2,4.4-2.9,6.5c-1.1,3.1-1.2,4.5-1.2,9.2c0,7.7,1.8,13.1,6.3,19l1.8,2.4l-1.7,2c-0.9,1.1-2.5,3.6-3.5,5.7c-5.1,10.6-4,22,3,31.9l2.1,2.9l-1.8,2.4c-4.4,5.7-6.9,13.8-6.4,20.8c0.5,6.5,3.5,14.2,7.3,18.1l1.4,1.4l-1.9,2.4c-4.6,5.8-6.6,11.8-6.7,19.3c0,9.1,2.5,15.2,9,21.7c3.2,3.2,4.7,4.3,7.8,5.9c6.8,3.3,6.7,3.3,32.1,3.3H246v-9.7v-9.6l-22-0.1c-21.8-0.1-22.1-0.1-23.9-1.2c-5.9-3.1-7.9-10.6-4.5-16.1c1.6-2.5,4.7-4.7,7.5-5.1l1.9-0.3v-10.2v-10.3l-1.7-0.3c-7.8-1.5-11.8-10.4-7.7-17.1c1.6-2.5,4.7-4.7,7.5-5.1l1.9-0.3v-10c0-9.3,0-10.1-0.8-10.1c-3.3,0-7.8-3.2-9.4-6.7c-1-2.2-1.2-6.5-0.2-8.7c1.4-3.4,6.3-7.2,9.4-7.2h1V85v-9.8l-1.9-0.3c-2.8-0.4-5.9-2.5-7.5-5.1c-3.4-5.5-1.3-13,4.5-16.1c1.8-1,2.2-1,23.9-1.2l22-0.1v-9.6v-9.7l-4.9,0c-2.8,0-11.5,0-19.5-0.1C213.6,32.9,205.2,33,202.9,33.1z"
+                        />
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+                <div class="flex flex-col justify-around items-center h-full">
+                  <p class="font-mono text-xs text-black">X1</p>
+                  <div
+                    id="X1-T3"
+                    class="terminal w-5 h-5"
+                    data-name="X1-T3"
+                    data-phase="c"
+                  ></div>
+                  <div
+                    id="X2-T3"
+                    class="terminal w-5 h-5"
+                    data-name="X2-T3"
+                    data-phase="n"
+                  ></div>
+                  <p class="font-mono text-xs text-black">X2</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="control-card rounded-lg p-4 mt-6 flex justify-around items-center"
+          >
+            <h3 class="text-xl font-bold text-gray-300">Secondary Load</h3>
+            <div class="flex space-x-4 md:space-x-6">
+              <div class="text-center">
+                <div
+                  id="load-a"
+                  class="terminal w-8 h-8 rounded-full"
+                  data-name="Load a"
+                  data-phase="a"
+                ></div>
+                <p class="font-mono text-sm mt-1 text-red-400">a</p>
+              </div>
+              <div class="text-center">
+                <div
+                  id="load-b"
+                  class="terminal w-8 h-8 rounded-full"
+                  data-name="Load b"
+                  data-phase="b"
+                ></div>
+                <p class="font-mono text-sm mt-1 text-blue-400">b</p>
+              </div>
+              <div class="text-center">
+                <div
+                  id="load-c"
+                  class="terminal w-8 h-8 rounded-full"
+                  data-name="Load c"
+                  data-phase="c"
+                ></div>
+                <p class="font-mono text-sm mt-1 text-yellow-300">c</p>
+              </div>
+              <div class="text-center">
+                <div
+                  id="load-n"
+                  class="terminal w-8 h-8 rounded-full"
+                  data-name="Load N"
+                  data-phase="n"
+                ></div>
+                <p class="font-mono text-sm mt-1">n</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Message Box -->
+      <div
+        id="message-box"
+        class="text-center font-semibold p-2 mt-4 rounded-lg bg-gray-900 h-10 flex items-center justify-center"
+      >
+        Click terminals to begin wiring.
+      </div>
+    </div>
+
+    <!-- Oscilloscope Modal -->
+    <div id="scope-modal" class="modal">
+      <div class="modal-content w-11/12 max-w-6xl">
+        <span id="scope-modal-close-btn" class="modal-close">&times;</span>
+        <div class="flex flex-col">
+          <div class="flex gap-4">
+            <div class="flex-grow">
+              <canvas id="oscilloscope-canvas" class="w-full h-auto"></canvas>
+            </div>
+            <div
+              id="scope-measurements"
+              class="w-72 flex-shrink-0 p-4 bg-gray-800 rounded-lg space-y-3"
+            >
+              <!-- Channel Measurement displays will be generated by JS -->
+              <div id="channel-measurements"></div>
+              <!-- Cursor Measurement display area -->
+              <div id="cursor-measurements" class="hidden mt-4 pt-4 border-t-2 border-gray-600 space-y-1"></div>
+            </div>
+          </div>
+          <div
+            class="flex justify-center items-end gap-4 mt-4"
+            id="scope-channel-controls"
+          >
+            <!-- Channel buttons will be generated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Source Selector Modal -->
+    <div id="source-selector-modal" class="modal">
+      <div class="modal-content w-1/2 max-w-2xl">
+        <span id="source-modal-close-btn" class="modal-close">&times;</span>
+        <h2
+          id="source-selector-title"
+          class="text-xl font-bold mb-4 text-center"
+        >
+          Select Source for CH 1
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Primary Column -->
+          <div class="space-y-4">
+            <h3
+              class="text-lg font-bold text-center text-yellow-300 border-b-2 border-yellow-300 pb-1"
+            >
+              Primary Side
+            </h3>
+            <div>
+              <h4
+                class="font-semibold text-gray-400 border-b border-gray-600 mb-2 pb-1"
+              >
+                Line Voltages
+              </h4>
+              <div class="space-y-2" id="primary-line-sources"></div>
+            </div>
+            <div id="primary-phase-sources-container">
+              <h4
+                class="font-semibold text-gray-400 border-b border-gray-600 mb-2 pb-1"
+              >
+                Phase Voltages
+              </h4>
+              <div class="space-y-2" id="primary-phase-sources"></div>
+            </div>
+          </div>
+          <!-- Secondary Column -->
+          <div class="space-y-4">
+            <h3
+              class="text-lg font-bold text-center text-indigo-300 border-b-2 border-indigo-300 pb-1"
+            >
+              Secondary Side
+            </h3>
+            <div>
+              <h4
+                class="font-semibold text-gray-400 border-b border-gray-600 mb-2 pb-1"
+              >
+                Line Voltages
+              </h4>
+              <div class="space-y-2" id="secondary-line-sources"></div>
+            </div>
+            <div id="secondary-phase-sources-container">
+              <h4
+                class="font-semibold text-gray-400 border-b border-gray-600 mb-2 pb-1"
+              >
+                Phase Voltages
+              </h4>
+              <div class="space-y-2" id="secondary-phase-sources"></div>
+            </div>
+            <div id="secondary-special-sources-container">
+              <h4
+                class="font-semibold text-gray-400 border-b border-gray-600 mb-2 pb-1"
+              >
+                Special Measurements
+              </h4>
+              <div class="space-y-2" id="secondary-special-sources"></div>
+            </div>
+          </div>
+        </div>
+        <button
+          id="channel-off-btn"
+          class="w-full mt-6 bg-red-600 hover:bg-red-700 rounded p-2 font-semibold"
+        >
+          Turn Channel Off
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // --- DOM Elements & Constants ---
+      const labContainer = document.getElementById("lab-container");
+      const svg = document.getElementById("wiring-svg");
+      const messageBox = document.getElementById("message-box");
+      const checkBtn = document.getElementById("check-btn");
+      const resetBtn = document.getElementById("reset-btn");
+      const powerSwitch = document.getElementById("power-switch");
+      const turnsRatioInput = document.getElementById("turns-ratio");
+      const voltageSlider = document.getElementById("voltage-slider");
+      const voltageValueSpan = document.getElementById("voltage-value");
+      const meterReading = document.getElementById("meter-reading");
+      const probePlusHandle = document.getElementById("probe-plus-handle");
+      const probeMinusHandle = document.getElementById("probe-minus-handle");
+      const showScopeBtn = document.getElementById("show-scope-btn");
+      const scopeModal = document.getElementById("scope-modal");
+      const scopeModalCloseBtn = document.getElementById(
+        "scope-modal-close-btn"
+      );
+      const oscopeCanvas = document.getElementById("oscilloscope-canvas");
+      const oscopeCtx = oscopeCanvas.getContext("2d");
+      const sourceSelectorModal = document.getElementById(
+        "source-selector-modal"
+      );
+      const sourceModalCloseBtn = document.getElementById(
+        "source-modal-close-btn"
+      );
+      const taskSelect = document.getElementById("task-select");
+      const taskDescription = document.getElementById("task-description");
+
+      const CHANNEL_CONFIG = {
+        1: { color: "#f59e0b" }, // Yellow
+        2: { color: "#84cc16" }, // Lime
+        3: { color: "#3b82f6" }, // Blue
+        4: { color: "#ef4444" }, // Red
+      };
+
+      const VOLTAGE_SOURCES = {
+        primary: {
+          line: ["VAB", "VBC", "VCA"],
+          phase: ["VAN", "VBN", "VCN"],
+        },
+        secondary: {
+          line: ["Vab", "Vbc", "Vca"],
+          phase: ["Van", "Vbn", "Vcn"],
+          special: ["Vopen (3rd harm.)"],
+        },
+      };
+
+      // --- State ---
+      let state = {
+        startTerminal: null,
+        powerOn: false,
+        connectionCorrect: false,
+        wires: [],
+        probes: { plus: null, minus: null },
+        nodeVoltages: new Map(),
+        phasors: new Map(),
+        task: "delta-wye",
+        oscilloscope: {
+          channels: {
+            1: { active: false, source: null },
+            2: { active: false, source: null },
+            3: { active: false, source: null },
+            4: { active: false, source: null },
+          },
+          activeChannel: null,
+          cursors: {
+            show: false,
+            active: null, // 't1' or 't2'
+            t1: { x: 100 },
+            t2: { x: 300 },
+          },
+        },
+      };
+      let dragging = { probeType: null, line: null };
+
+      // --- Complex Number Class ---
+      class Complex {
+        constructor(re = 0, im = 0) {
+          this.re = re;
+          this.im = im;
+          this.hasHarmonics = false; // Add property for distortion
+        }
+        static fromPolar(mag, angRad) {
+          return new Complex(mag * Math.cos(angRad), mag * Math.sin(angRad));
+        }
+        add(c) {
+          return new Complex(this.re + c.re, this.im + c.im);
+        }
+        sub(c) {
+          return new Complex(this.re - c.re, this.im - c.im);
+        }
+        mul(s) {
+          return new Complex(this.re * s, this.im * s);
+        }
+        div(s) {
+          return new Complex(this.re / s, this.im / s);
+        }
+        get magnitude() {
+          return Math.sqrt(this.re * this.re + this.im * this.im);
+        }
+        get angle() {
+          return Math.atan2(this.im, this.re);
+        }
+      }
+
+      // --- Main Event Handlers ---
+      function onLabClick(e) {
+        const terminal = e.target.closest(".terminal");
+        const wire = e.target.closest(".wire");
+        if (wire) {
+          removeWireByElement(wire);
+          return;
+        }
+        if (terminal) {
+          handleWiring(terminal);
+        }
+      }
+
+      function onLabDoubleClick(e) {
+        if (state.powerOn) return;
+        const terminal = e.target.closest(".terminal");
+        if (!terminal) return;
+        const termId = terminal.id;
+        const wiresToRemove = state.wires.filter((w) => w.ids.includes(termId));
+        wiresToRemove.forEach(removeWireByElement);
+        if (wiresToRemove.length > 0) {
+          setMessage(
+            `Removed all wires from ${terminal.dataset.name}.`,
+            "yellow"
+          );
+          checkConnection();
+        }
+      }
+
+      // --- Wiring Logic ---
+      function handleWiring(terminal) {
+        if (state.powerOn) return;
+        if (!state.startTerminal) {
+          state.startTerminal = terminal;
+          terminal.classList.add("selected");
+          setMessage(`Connecting from ${terminal.dataset.name}...`, "blue");
+        } else {
+          if (state.startTerminal !== terminal) {
+            drawWire(state.startTerminal, terminal);
+            setMessage(
+              `Connected ${state.startTerminal.dataset.name} to ${terminal.dataset.name}.`,
+              "green"
+            );
+          } else {
+            setMessage("Wiring canceled.", "yellow");
+          }
+          state.startTerminal.classList.remove("selected");
+          state.startTerminal = null;
+        }
+      }
+
+      function drawWire(term1, term2, options = {}) {
+        const { color, isProbe } = { color: null, isProbe: false, ...options };
+        const containerRect = labContainer.getBoundingClientRect();
+        const startRect = term1.getBoundingClientRect();
+        const endRect = term2.getBoundingClientRect();
+        const x1 = startRect.left + startRect.width / 2 - containerRect.left;
+        const y1 = startRect.top + startRect.height / 2 - containerRect.top;
+        const x2 = endRect.left + endRect.width / 2 - containerRect.left;
+        const y2 = endRect.top + endRect.height / 2 - containerRect.top;
+        const midX = (x1 + x2) / 2,
+          midY = (y1 + y2) / 2;
+        const dx = x2 - x1,
+          dy = y2 - y1;
+        const cx = midX - dy * 0.2,
+          cy = midY + dx * 0.2;
+        const path = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path"
+        );
+        path.setAttribute("d", `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`);
+        path.setAttribute("stroke", color || getWireColor(term1));
+        path.classList.add(isProbe ? "probe-wire" : "wire");
+        svg.appendChild(path);
+        if (!isProbe) {
+          state.wires.push({ ids: [term1.id, term2.id].sort(), element: path });
+        }
+        return path;
+      }
+
+      function getWireColor(term1) {
+        const phase = term1.dataset.phase;
+        const colors = { a: "#ef4444", b: "#3b82f6", c: "#f59e0b" };
+        return colors[phase] || "#9ca3af";
+      }
+
+      function removeWireByElement(wireElement) {
+        const index = state.wires.findIndex((w) => w.element === wireElement);
+        if (index > -1) {
+          state.wires.splice(index, 1);
+          wireElement.remove();
+          setMessage("Wire removed.", "yellow");
+        }
+      }
+
+      // --- Voltmeter Probe Logic ---
+      function onProbeDragStart(e, probeType) {
+        e.preventDefault();
+        disconnectProbe(probeType);
+        dragging.probeType = probeType;
+        const containerRect = labContainer.getBoundingClientRect();
+        const handleRect = e.target.getBoundingClientRect();
+        const startX =
+          handleRect.left + handleRect.width / 2 - containerRect.left;
+        const startY =
+          handleRect.top + handleRect.height / 2 - containerRect.top;
+        dragging.line = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path"
+        );
+        dragging.line.setAttribute(
+          "stroke",
+          probeType === "plus" ? "#ef4444" : "#4b5563"
+        );
+        dragging.line.classList.add("probe-wire");
+        svg.appendChild(dragging.line);
+        const onDrag = (ev) => {
+          const mouseX = ev.clientX - containerRect.left,
+            mouseY = ev.clientY - containerRect.top;
+          const midX = (startX + mouseX) / 2,
+            midY = (startY + mouseY) / 2;
+          const dx = mouseX - startX,
+            dy = mouseY - startY;
+          const cx = midX - dy * 0.2,
+            cy = midY + dx * 0.2;
+          dragging.line.setAttribute(
+            "d",
+            `M ${startX} ${startY} Q ${cx} ${cy} ${mouseX} ${mouseY}`
+          );
+        };
+        onDrag(e);
+        const onDrop = (ev) => {
+          dragging.line.remove();
+          const terminal = document
+            .elementFromPoint(ev.clientX, ev.clientY)
+            ?.closest(".terminal");
+          if (terminal) connectProbe(terminal, dragging.probeType);
+          dragging = { probeType: null, line: null };
+          document.removeEventListener("mousemove", onDrag);
+          document.removeEventListener("mouseup", onDrop);
+        };
+        document.addEventListener("mousemove", onDrag);
+        document.addEventListener("mouseup", onDrop);
+      }
+
+      function connectProbe(terminal, probeType) {
+        const handle =
+          probeType === "plus" ? probePlusHandle : probeMinusHandle;
+        const wire = drawWire(handle, terminal, {
+          color: probeType === "plus" ? "#ef4444" : "#4b5563",
+          isProbe: true,
+        });
+        terminal.classList.add("probe-connected");
+        state.probes[probeType] = { terminal, wire };
+        updateMeterReading();
+      }
+
+      function disconnectProbe(probeType) {
+        if (state.probes[probeType]) {
+          state.probes[probeType].wire.remove();
+          state.probes[probeType].terminal.classList.remove("probe-connected");
+          state.probes[probeType] = null;
+          updateMeterReading();
+        }
+      }
+
+      function updateMeterReading() {
+        const p1 = state.probes.plus?.terminal?.id;
+        const p2 = state.probes.minus?.terminal?.id;
+        if (p1 && p2 && state.powerOn) {
+          const v1 = state.nodeVoltages.get(p1) || new Complex();
+          const v2 = state.nodeVoltages.get(p2) || new Complex();
+          const vDiff = v1.sub(v2);
+          meterReading.textContent = (
+            vDiff.magnitude +
+            (Math.random() - 0.5) * vDiff.magnitude * 0.01
+          ).toFixed(1);
+        } else {
+          meterReading.textContent = "0.0";
+        }
+      }
+
+      // --- Oscilloscope Logic ---
+      function openSourceSelector(channelNumber) {
+        state.oscilloscope.activeChannel = channelNumber;
+        document.getElementById(
+          "source-selector-title"
+        ).textContent = `Select Source for CH ${channelNumber}`;
+
+        const isPrimaryWye = state.task.startsWith("wye");
+        const isSecondaryWye = state.task.endsWith("wye");
+        const isOpenDelta = state.task === "wye-open-delta";
+
+        document.getElementById("primary-phase-sources-container").style.display =
+          isPrimaryWye ? "block" : "none";
+        document.getElementById(
+          "secondary-phase-sources-container"
+        ).style.display = isSecondaryWye ? "block" : "none";
+        document.getElementById(
+          "secondary-special-sources-container"
+        ).style.display = isOpenDelta ? "block" : "none";
+
+        sourceSelectorModal.classList.add("flex");
+      }
+
+      function selectSourceForChannel(sourceName) {
+        const chNum = state.oscilloscope.activeChannel;
+        if (!chNum) return;
+        state.oscilloscope.channels[chNum] = {
+          active: true,
+          source: sourceName,
+        };
+        updateChannelButtons();
+        drawScopeScreen();
+        sourceSelectorModal.classList.remove("flex");
+      }
+
+      function turnOffChannel() {
+        const chNum = state.oscilloscope.activeChannel;
+        if (!chNum) return;
+        state.oscilloscope.channels[chNum] = { active: false, source: null };
+        updateChannelButtons();
+        drawScopeScreen();
+        sourceSelectorModal.classList.remove("flex");
+      }
+
+      function updateChannelButtons() {
+        Object.keys(state.oscilloscope.channels).forEach((chNum) => {
+          const { active } = state.oscilloscope.channels[chNum];
+          document
+            .getElementById(`ch${chNum}-btn`)
+            ?.classList.toggle("active", active);
+        });
+      }
+
+      function drawScopeScreen() {
+        if (!scopeModal.classList.contains("flex")) return;
+        const rect = oscopeCanvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        oscopeCanvas.width = rect.width * dpr;
+        oscopeCanvas.height = rect.height * dpr;
+        oscopeCtx.scale(dpr, dpr);
+        const w = rect.width;
+        const h = rect.height;
+
+        const freq = 50,
+          timePerDiv = 5,
+          totalTime = ((w / (w / 10)) * timePerDiv) / 1000;
+        let maxV = 50;
+        Object.values(state.oscilloscope.channels).forEach((ch) => {
+          if (ch.active && state.phasors.has(ch.source)) {
+            maxV = Math.max(maxV, state.phasors.get(ch.source).magnitude);
+          }
+        });
+        const voltsPerDiv = Math.ceil((maxV * 1.3) / 4 / 50) * 50; // Add 30% headroom for harmonics
+
+        oscopeCtx.clearRect(0, 0, w, h);
+        drawScopeGrid(w, h, voltsPerDiv, timePerDiv);
+        const channelMeasurementContainer = document.getElementById("channel-measurements");
+        channelMeasurementContainer.innerHTML = "";
+
+        for (const chNum in state.oscilloscope.channels) {
+          const { active, source } = state.oscilloscope.channels[chNum];
+          if (!active || !state.phasors.has(source)) continue;
+
+          const phasor = state.phasors.get(source);
+
+          drawWaveform(
+            phasor,
+            source,
+            CHANNEL_CONFIG[chNum].color,
+            w,
+            h,
+            totalTime,
+            voltsPerDiv
+          );
+
+          const vPeak = phasor.magnitude;
+          const vRms =
+            source === "Vopen (3rd harm.)" ? "N/A" : (vPeak / Math.sqrt(2)).toFixed(1) + "V";
+          const label = source === "Vopen (3rd harm.)" ? "Vp (harm.)" : "Vp (fund.)";
+
+          channelMeasurementContainer.innerHTML += `
+            <div style="border-left: 4px solid ${
+              CHANNEL_CONFIG[chNum].color
+            };" class="pl-2 mb-2">
+                <h4 class="font-bold text-xs" style="color:${
+                  CHANNEL_CONFIG[chNum].color
+                };">CH${chNum}: ${source}</h4>
+                <p class="text-xs font-mono text-gray-300">${label}: ${vPeak.toFixed(1)}V</p>
+                <p class="text-xs font-mono text-gray-300"> Vrms: ${vRms}</p>
+                <p class="text-xs font-mono text-gray-300"> Freq: ${
+                  source === "Vopen (3rd harm.)" ? "150.0" : "50.0"
+                }Hz</p>
+          ${
+            phasor.hasHarmonics
+              ? '<p class="text-xs font-mono text-orange-400">Harmonics Detected</p>'
+              : ""
+          }
+            </div>`;
+        }
+        drawCursors(w, h, totalTime);
+      }
+
+      function drawScopeGrid(w, h, voltsPerDiv, timePerDiv) {
+        oscopeCtx.strokeStyle = "#718096";
+        oscopeCtx.font = "12px Inter";
+        oscopeCtx.fillStyle = "#9ca3af";
+        for (let i = 0; i <= 10; i++) {
+          const x = i * (w / 10);
+          oscopeCtx.beginPath();
+          oscopeCtx.setLineDash([]);
+          oscopeCtx.moveTo(x, 0);
+          oscopeCtx.lineTo(x, h);
+          oscopeCtx.stroke();
+          if (i < 10) {
+            for (let j = 1; j < 5; j++) {
+              const mx = x + j * (w / 50);
+              oscopeCtx.beginPath();
+              oscopeCtx.setLineDash([2, 3]);
+              oscopeCtx.moveTo(mx, 0);
+              oscopeCtx.lineTo(mx, h);
+              oscopeCtx.stroke();
+            }
+          }
+          const timeLabel = (i - 5) * timePerDiv;
+          oscopeCtx.fillText(timeLabel.toFixed(0) + "ms", x - 10, h / 2 + 15);
+        }
+        for (let i = 0; i <= 8; i++) {
+          const y = i * (h / 8);
+          oscopeCtx.beginPath();
+          oscopeCtx.setLineDash([]);
+          oscopeCtx.moveTo(0, y);
+          oscopeCtx.lineTo(w, y);
+          oscopeCtx.stroke();
+          if (i < 8) {
+            for (let j = 1; j < 5; j++) {
+              const my = y + j * (h / 40);
+              oscopeCtx.beginPath();
+              oscopeCtx.setLineDash([2, 3]);
+              oscopeCtx.moveTo(0, my);
+              oscopeCtx.lineTo(w, my);
+              oscopeCtx.stroke();
+            }
+          }
+          const voltLabel = (4 - i) * voltsPerDiv;
+          if (voltLabel !== 0)
+            oscopeCtx.fillText(voltLabel.toFixed(0) + "V", w / 2 + 5, y - 5);
+        }
+      }
+
+      function getWaveformValueAtTime(phasor, sourceName, time) {
+          let v = 0;
+          const vPeak = phasor.magnitude;
+          const phase = phasor.angle;
+          const omega = 2 * Math.PI * 50;
+
+          if (sourceName === "Vopen (3rd harm.)") {
+              v = vPeak * Math.cos(3 * omega * time);
+          } else {
+              v = vPeak * Math.cos(omega * time + phase);
+              if (phasor.hasHarmonics) {
+                  const harmonic_amplitude = vPeak * 0.25;
+                  v += harmonic_amplitude * Math.cos(3 * omega * time + phase);
+              }
+          }
+          return v;
+      }
+
+      function drawWaveform(
+        phasor,
+        sourceName,
+        color,
+        w,
+        h,
+        totalTime,
+        voltsPerDiv
+      ) {
+        const vPeak = phasor.magnitude;
+        const voltsPerPixel = (voltsPerDiv * 8) / h;
+        if (voltsPerPixel === 0) return;
+
+        oscopeCtx.strokeStyle = color;
+        oscopeCtx.lineWidth = 2;
+        oscopeCtx.beginPath();
+
+        for (let x = 0; x < w; x++) {
+          const t = (x / w) * totalTime;
+          const v = getWaveformValueAtTime(phasor, sourceName, t);
+          const y = h / 2 - v / voltsPerPixel;
+          if (x === 0) oscopeCtx.moveTo(x, y);
+          else oscopeCtx.lineTo(x, y);
+        }
+        oscopeCtx.stroke();
+      }
+
+      function drawCursors(w, h, totalTime) {
+          const { cursors } = state.oscilloscope;
+          if (!cursors.show) return;
+
+          const timePerPixel = totalTime / w;
+          const t1_s = cursors.t1.x * timePerPixel;
+          const t2_s = cursors.t2.x * timePerPixel;
+          const deltaT_ms = (t2_s - t1_s) * 1000;
+          const freq = 50;
+          const period_ms = 1000 / freq;
+          const phaseShift = ((deltaT_ms % period_ms) / period_ms) * 360;
+
+          const cursorMeasurementsEl = document.getElementById("cursor-measurements");
+          let measurementHTML = `<h4 class="font-bold text-sm text-cyan-300">Cursor Measurements</h4>
+                               <p class="text-xs font-mono">Δt (T2-T1): <span class="text-white">${deltaT_ms.toFixed(2)} ms</span></p>
+                               <p class="text-xs font-mono">Phase Shift: <span class="text-white">${phaseShift.toFixed(1)}°</span></p>
+                               <p class="text-xs font-mono">1/Δt: <span class="text-white">${(1000/Math.abs(deltaT_ms)).toFixed(1)} Hz</span></p>
+                               `;
+
+          for (const chNum in state.oscilloscope.channels) {
+              const { active, source } = state.oscilloscope.channels[chNum];
+              if (!active || !state.phasors.has(source)) continue;
+              const phasor = state.phasors.get(source);
+              const v1 = getWaveformValueAtTime(phasor, source, t1_s);
+              const v2 = getWaveformValueAtTime(phasor, source, t2_s);
+              measurementHTML += `
+                  <div class="pt-1 mt-1 border-t border-gray-700">
+                    <p class="text-xs font-mono" style="color:${CHANNEL_CONFIG[chNum].color};">CH${chNum} ΔV: <span class="text-white">${(v2 - v1).toFixed(1)} V</span></p>
+                    <p class="text-xs font-mono text-gray-400">T1: ${v1.toFixed(1)}V, T2: ${v2.toFixed(1)}V</p>
+                  </div>`;
+          }
+          cursorMeasurementsEl.innerHTML = measurementHTML;
+          
+          // Draw lines on canvas
+          [cursors.t1, cursors.t2].forEach((cursor, i) => {
+              oscopeCtx.strokeStyle = "#06b6d4"; // Cyan
+              oscopeCtx.lineWidth = 1;
+              oscopeCtx.setLineDash([4, 4]);
+              oscopeCtx.beginPath();
+              oscopeCtx.moveTo(cursor.x, 0);
+              oscopeCtx.lineTo(cursor.x, h);
+              oscopeCtx.stroke();
+
+              // Draw handle
+              oscopeCtx.fillStyle = "#06b6d4";
+              oscopeCtx.setLineDash([]);
+              oscopeCtx.beginPath();
+              oscopeCtx.moveTo(cursor.x, 0);
+              oscopeCtx.lineTo(cursor.x - 5, 10);
+              oscopeCtx.lineTo(cursor.x + 5, 10);
+              oscopeCtx.closePath();
+              oscopeCtx.fill();
+              oscopeCtx.fillStyle = "#FFF";
+              oscopeCtx.fillText(`T${i+1}`, cursor.x - 5, 22);
+          });
+      }
+
+      // --- System & Validation Logic ---
+      function _findNodes() {
+        const adj = new Map();
+        document
+          .querySelectorAll(".terminal")
+          .forEach((t) => adj.set(t.id, []));
+        state.wires.forEach((w) => {
+          adj.get(w.ids[0]).push(w.ids[1]);
+          adj.get(w.ids[1]).push(w.ids[0]);
+        });
+        const visited = new Set(),
+          nodes = [];
+        document.querySelectorAll(".terminal").forEach((t) => {
+          if (!visited.has(t.id)) {
+            const node = new Set(),
+              q = [t.id];
+            visited.add(t.id);
+            while (q.length > 0) {
+              const u = q.shift();
+              node.add(u);
+              adj.get(u).forEach((v) => {
+                if (!visited.has(v)) {
+                  visited.add(v);
+                  q.push(v);
+                }
+              });
+            }
+            nodes.push(node);
+          }
+        });
+        return nodes;
+      }
+
+      const findNodeContaining = (nodes, ...ids) =>
+        nodes.find((n) => ids.every((id) => n.has(id)));
+
+      function validatePrimaryWye(nodes) {
+        const errors = [],
+          warnings = [];
+        const priNeutral = findNodeContaining(nodes, "H2-T1", "H2-T2", "H2-T3");
+        if (!priNeutral) errors.push("Primary Wye neutral not formed.");
+        if (!findNodeContaining(nodes, "H1-T1", "source-a"))
+          errors.push("Primary Source A connection error.");
+        if (!findNodeContaining(nodes, "H1-T2", "source-b"))
+          errors.push("Primary Source B connection error.");
+        if (!findNodeContaining(nodes, "H1-T3", "source-c"))
+          errors.push("Primary Source C connection error.");
+        if (priNeutral && !priNeutral.has("source-n")) {
+          warnings.push("Primary neutral is floating.");
+        }
+        return { errors, warnings };
+      }
+
+      function validatePrimaryDelta(nodes) {
+        const errors = [],
+          warnings = [];
+        if (!findNodeContaining(nodes, "H2-T1", "H1-T2", "source-b"))
+          errors.push("Primary Phase B connection error.");
+        if (!findNodeContaining(nodes, "H2-T2", "H1-T3", "source-c"))
+          errors.push("Primary Phase C connection error.");
+        if (!findNodeContaining(nodes, "H2-T3", "H1-T1", "source-a"))
+          errors.push("Primary Phase A connection error.");
+        return { errors, warnings };
+      }
+
+      function validateSecondaryWye(nodes) {
+        const errors = [],
+          warnings = [];
+        const secNeutral = findNodeContaining(nodes, "X2-T1", "X2-T2", "X2-T3");
+        if (!secNeutral) errors.push("Secondary Wye neutral not formed.");
+        if (!findNodeContaining(nodes, "X1-T1", "load-a"))
+          errors.push("Load 'a' not connected.");
+        if (!findNodeContaining(nodes, "X1-T2", "load-b"))
+          errors.push("Load 'b' not connected.");
+        if (!findNodeContaining(nodes, "X1-T3", "load-c"))
+          errors.push("Load 'c' not connected.");
+        if (secNeutral && !secNeutral.has("load-n")) {
+          warnings.push("Secondary neutral is floating.");
+        }
+        return { errors, warnings };
+      }
+
+      function validateSecondaryDelta(nodes) {
+        const errors = [],
+          warnings = [];
+        if (!findNodeContaining(nodes, "X2-T1", "X1-T2", "load-b"))
+          errors.push("Secondary connection error at Load B.");
+        if (!findNodeContaining(nodes, "X2-T2", "X1-T3", "load-c"))
+          errors.push("Secondary connection error at Load C.");
+        if (!findNodeContaining(nodes, "X2-T3", "X1-T1", "load-a"))
+          errors.push("Secondary connection error at Load A.");
+        const nNode = nodes.find((n) => n.has("load-n"));
+        if (nNode && nNode.size > 1)
+          errors.push("Load neutral should not be connected in a Delta sec.");
+        return { errors, warnings };
+      }
+
+      function validateWyeOpenDelta(nodes) {
+        const pri = validatePrimaryWye(nodes);
+        const errors = [...pri.errors],
+          warnings = [...pri.warnings];
+
+        if (!findNodeContaining(nodes, "X2-T1", "X1-T2", "load-b"))
+          errors.push("Open-Delta connection error at Load B.");
+        if (!findNodeContaining(nodes, "X1-T1", "load-a"))
+          errors.push("Load 'a' not connected to Open-Delta.");
+        if (!findNodeContaining(nodes, "X2-T2", "load-c"))
+          errors.push("Load 'c' not connected to Open-Delta.");
+
+        const t3_x1 = findNodeContaining(nodes, "X1-T3");
+        const t3_x2 = findNodeContaining(nodes, "X2-T3");
+        if (t3_x1 && t3_x1.size > 1)
+          errors.push("T3 secondary must be isolated for Open-Delta.");
+        if (t3_x2 && t3_x2.size > 1)
+          errors.push("T3 secondary must be isolated for Open-Delta.");
+        
+        return { errors, warnings };
+      }
+
+      function checkConnection() {
+        const nodes = _findNodes();
+        let primaryResult, secondaryResult;
+
+        switch (state.task) {
+          case "delta-wye":
+            primaryResult = validatePrimaryDelta(nodes);
+            secondaryResult = validateSecondaryWye(nodes);
+            break;
+          case "delta-delta":
+            primaryResult = validatePrimaryDelta(nodes);
+            secondaryResult = validateSecondaryDelta(nodes);
+            break;
+          case "wye-delta":
+            primaryResult = validatePrimaryWye(nodes);
+            secondaryResult = validateSecondaryDelta(nodes);
+            break;
+          case "wye-wye":
+            primaryResult = validatePrimaryWye(nodes);
+            secondaryResult = validateSecondaryWye(nodes);
+            break;
+          case "wye-open-delta":
+            const res = validateWyeOpenDelta(nodes);
+            primaryResult = { errors: res.errors, warnings: res.warnings }; // Simplified for combining
+            secondaryResult = { errors: [], warnings: [] };
+            break;
+        }
+
+        const allErrors = [...primaryResult.errors, ...(secondaryResult.errors || [])];
+        const allWarnings = [...primaryResult.warnings, ...(secondaryResult.warnings || [])];
+
+        if (allErrors.length > 0) {
+          setMessage(`Error: ${allErrors[0]}`, "red");
+          state.connectionCorrect = false;
+          powerSwitch.disabled = true;
+          powerSwitch.checked = false;
+          togglePower(false);
+          return false;
+        }
+
+        state.connectionCorrect = true;
+        powerSwitch.disabled = false;
+        if (allWarnings.length > 0) {
+          setMessage(
+            `Connection correct. Warning: ${allWarnings.join(" & ")}`,
+            "yellow"
+          );
+        } else {
+          setMessage("Connection correct! You can apply power.", "green");
+        }
+        return true;
+      }
+
+      function togglePower(isOn) {
+        state.powerOn = isOn;
+        showScopeBtn.classList.toggle("disabled", !isOn);
+        if (isOn) {
+          if (!state.connectionCorrect && !checkConnection()) {
+            powerSwitch.checked = false;
+            state.powerOn = false;
+            showScopeBtn.classList.add("disabled");
+            return;
+          }
+          setMessage("Power ON. Use DVM or Oscilloscope.", "yellow");
+          calculateVoltages();
+          setInputsDisabled(true);
+        } else {
+          setMessage("Power OFF.", "blue");
+          setInputsDisabled(false);
+        }
+        updateMeterReading();
+        if (scopeModal.classList.contains("flex")) {
+          drawScopeScreen();
+        }
+      }
+
+      function calculateVoltages() {
+        state.nodeVoltages.clear();
+        state.phasors.clear();
+        const nodes = _findNodes();
+        const vIn = parseFloat(voltageSlider.value);
+        const ratio = parseFloat(turnsRatioInput.value) || 1;
+        const rad = (deg) => (deg * Math.PI) / 180;
+        const sqrt3 = Math.sqrt(3);
+
+        const isPrimaryWye = state.task.startsWith("wye");
+        const priNeutralNode = findNodeContaining(nodes, 'H2-T1', 'H2-T2', 'H2-T3');
+        const isPrimaryNeutralOpen = isPrimaryWye && priNeutralNode && !priNeutralNode.has('source-n');
+        
+        let v_an, v_bn, v_cn, v_ab, v_bc, v_ca;
+        const isSecondaryWye = state.task.endsWith('wye');
+
+        // Calculate secondary fundamental voltages
+        if (state.task === "delta-wye") {
+            const vPhaseSecMag = vIn / ratio;
+            v_an = Complex.fromPolar(vPhaseSecMag, rad(-30));
+            v_bn = Complex.fromPolar(vPhaseSecMag, rad(-150));
+            v_cn = Complex.fromPolar(vPhaseSecMag, rad(90));
+        } else if (state.task === "wye-delta" || state.task === 'wye-open-delta') {
+            const vLineSecMag = vIn / (ratio * sqrt3);
+            v_ab = Complex.fromPolar(vLineSecMag, rad(-30));
+            v_bc = Complex.fromPolar(vLineSecMag, rad(-150));
+            v_ca = Complex.fromPolar(vLineSecMag, rad(90));
+        } else if (state.task === "delta-delta") {
+            const vLineSecMag = vIn / ratio;
+            v_ab = Complex.fromPolar(vLineSecMag, rad(0));
+            v_bc = Complex.fromPolar(vLineSecMag, rad(-120));
+            v_ca = Complex.fromPolar(vLineSecMag, rad(120));
+        } else if (state.task === "wye-wye") {
+            const vPhaseSecMag = (vIn / sqrt3) / ratio;
+            v_an = Complex.fromPolar(vPhaseSecMag, rad(-30));
+            v_bn = Complex.fromPolar(vPhaseSecMag, rad(-150));
+            v_cn = Complex.fromPolar(vPhaseSecMag, rad(90));
+        }
+        
+        // Propagate harmonics in specific cases
+        if (isPrimaryNeutralOpen) {
+            if (state.task === "wye-wye") {
+                if(v_an) v_an.hasHarmonics = true;
+                if(v_bn) v_bn.hasHarmonics = true;
+                if(v_cn) v_cn.hasHarmonics = true;
+            } else if (state.task === "wye-open-delta") {
+                const V_AN_mag = vIn / sqrt3;
+                const harm_peak = 3 * (V_AN_mag * 0.25) / ratio;
+                const v_open = new Complex(harm_peak, 0); // Magnitude is peak of 3rd harmonic
+                state.phasors.set("Vopen (3rd harm.)", v_open);
+            }
+        }
+
+        // --- Assign node voltages on SECONDARY ---
+        if (isSecondaryWye) {
+            state.phasors.set("Van", v_an); state.phasors.set("Vbn", v_bn); state.phasors.set("Vcn", v_cn);
+            state.phasors.set("Vab", v_an.sub(v_bn)); state.phasors.set("Vbc", v_bn.sub(v_cn)); state.phasors.set("Vca", v_cn.sub(v_an));
+            const groundNode = findNodeContaining(nodes, "X2-T1");
+            groundNode?.forEach(id => state.nodeVoltages.set(id, new Complex(0,0)));
+            findNodeContaining(nodes, "load-a")?.forEach(id => state.nodeVoltages.set(id, v_an));
+            findNodeContaining(nodes, "load-b")?.forEach(id => state.nodeVoltages.set(id, v_bn));
+            findNodeContaining(nodes, "load-c")?.forEach(id => state.nodeVoltages.set(id, v_cn));
+        } else { // Delta or Open-Delta
+            state.phasors.set("Vab", v_ab); state.phasors.set("Vbc", v_bc); state.phasors.set("Vca", v_ca);
+            const VcNode = new Complex(0,0);
+            const VbNode = state.task === 'wye-open-delta' ? v_bc.mul(-1) : v_bc; // Reference adjust
+            const VaNode = v_ab.add(VbNode);
+            findNodeContaining(nodes, "load-a")?.forEach(id => state.nodeVoltages.set(id, VaNode));
+            findNodeContaining(nodes, "load-b")?.forEach(id => state.nodeVoltages.set(id, VbNode));
+            findNodeContaining(nodes, "load-c")?.forEach(id => state.nodeVoltages.set(id, VcNode));
+        }
+
+        // --- Assign node voltages on PRIMARY ---
+        const V_in_AB = Complex.fromPolar(vIn, rad(0));
+        const V_in_BC = Complex.fromPolar(vIn, rad(-120));
+        const V_in_CA = Complex.fromPolar(vIn, rad(120));
+        state.phasors.set("VAB", V_in_AB); state.phasors.set("VBC", V_in_BC); state.phasors.set("VCA", V_in_CA);
+
+        if (isPrimaryWye) {
+            const V_AN = Complex.fromPolar(vIn / sqrt3, rad(-30));
+            const V_BN = Complex.fromPolar(vIn / sqrt3, rad(-150));
+            const V_CN = Complex.fromPolar(vIn / sqrt3, rad(90));
+
+            if (isPrimaryNeutralOpen) {
+                V_AN.hasHarmonics = true; V_BN.hasHarmonics = true; V_CN.hasHarmonics = true;
+            }
+            state.phasors.set("VAN", V_AN); state.phasors.set("VBN", V_BN); state.phasors.set("VCN", V_CN);
+
+            findNodeContaining(nodes, "source-a")?.forEach(id => state.nodeVoltages.set(id, V_AN));
+            findNodeContaining(nodes, "source-b")?.forEach(id => state.nodeVoltages.set(id, V_BN));
+            findNodeContaining(nodes, "source-c")?.forEach(id => state.nodeVoltages.set(id, V_CN));
+            findNodeContaining(nodes, "source-n")?.forEach(id => state.nodeVoltages.set(id, new Complex(0,0)));
+        } else {
+            const V_C = new Complex(0,0);
+            const V_A = V_in_CA;
+            const V_B = V_A.sub(V_in_AB);
+            findNodeContaining(nodes, "source-a")?.forEach(id => state.nodeVoltages.set(id, V_A));
+            findNodeContaining(nodes, "source-b")?.forEach(id => state.nodeVoltages.set(id, V_B));
+            findNodeContaining(nodes, "source-c")?.forEach(id => state.nodeVoltages.set(id, V_C));
+        }
+      }
+
+      // --- UI & Utility Functions ---
+      function updateTask() {
+        state.task = taskSelect.value;
+        const taskName = taskSelect.options[taskSelect.selectedIndex].text;
+        taskDescription.innerHTML = `Task: Wire a ${taskName} connection, apply power, and measure voltages.`;
+        resetLab();
+      }
+
+      function resetLab() {
+        state.wires.forEach((w) => w.element.remove());
+        disconnectProbe("plus");
+        disconnectProbe("minus");
+        state = { ...state, // keep task
+          startTerminal: null, powerOn: false, connectionCorrect: false, wires: [],
+          oscilloscope: { ...state.oscilloscope, channels: { 1: { active: false, source: null }, 2: { active: false, source: null }, 3: { active: false, source: null }, 4: { active: false, source: null }, }, activeChannel: null, },
+        };
+        updateChannelButtons();
+        powerSwitch.checked = false;
+        powerSwitch.disabled = true;
+        voltageSlider.value = 300;
+        voltageSlider.dispatchEvent(new Event("input"));
+        setInputsDisabled(false);
+        updateMeterReading();
+        setMessage("Lab Reset. Click terminals to begin wiring.", "blue");
+      }
+
+      function setInputsDisabled(disabled) {
+        checkBtn.disabled = disabled;
+        turnsRatioInput.disabled = disabled;
+        voltageSlider.disabled = disabled;
+        taskSelect.disabled = disabled;
+      }
+
+      function setMessage(text, color) {
+        const colors = { green: "text-green-400", red: "text-red-400", yellow: "text-yellow-400", blue: "text-blue-400", };
+        messageBox.textContent = text;
+        messageBox.className = `text-center font-semibold p-2 mt-4 rounded-lg bg-gray-900 h-10 flex items-center justify-center transition-colors ${colors[color]}`;
+      }
+      
+      function getMousePos(canvas, evt) {
+          const rect = canvas.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          return {
+              x: (evt.clientX - rect.left) * dpr,
+              y: (evt.clientY - rect.top) * dpr
+          };
+      }
+
+      // --- Initial Setup ---
+      function initialize() {
+        labContainer.addEventListener("click", onLabClick);
+        labContainer.addEventListener("dblclick", onLabDoubleClick);
+        checkBtn.addEventListener("click", checkConnection);
+        resetBtn.addEventListener("click", resetLab);
+        taskSelect.addEventListener("change", updateTask);
+
+        document.addEventListener("keydown", (e) => { if (e.key === "Alt") document.body.classList.add("unwiring"); });
+        document.addEventListener("keyup", (e) => { if (e.key === "Alt") document.body.classList.remove("unwiring"); });
+        window.addEventListener("blur", () => document.body.classList.remove("unwiring"));
+
+        probePlusHandle.addEventListener("mousedown", (e) => onProbeDragStart(e, "plus"));
+        probeMinusHandle.addEventListener("mousedown", (e) => onProbeDragStart(e, "minus"));
+        powerSwitch.addEventListener("change", (e) => togglePower(e.target.checked));
+
+        voltageSlider.addEventListener("input", (e) => {
+          voltageValueSpan.textContent = e.target.value;
+          if (state.powerOn) { calculateVoltages(); updateMeterReading(); drawScopeScreen(); }
+        });
+        turnsRatioInput.addEventListener("input", () => {
+          if (state.powerOn) { calculateVoltages(); updateMeterReading(); drawScopeScreen(); }
+        });
+
+        showScopeBtn.addEventListener("click", () => { 
+            if (showScopeBtn.classList.contains("disabled")) return;
+            scopeModal.classList.add("flex"); 
+            // Must defer this to allow layout to calculate
+            setTimeout(() => {
+                const rect = oscopeCanvas.getBoundingClientRect();
+                const { cursors } = state.oscilloscope;
+                if (!cursors.show) { // Initialize positions only if not already shown
+                    cursors.t1.x = rect.width * 0.25;
+                    cursors.t2.x = rect.width * 0.75;
+                }
+                drawScopeScreen();
+            }, 0);
+        });
+        scopeModalCloseBtn.addEventListener("click", () => scopeModal.classList.remove("flex"));
+
+        const scopeChannelControls = document.getElementById("scope-channel-controls");
+        const channelContainer = document.createElement("div");
+        channelContainer.className = "flex justify-center items-end gap-4";
+
+        Object.keys(CHANNEL_CONFIG).forEach((chNum) => {
+          const config = CHANNEL_CONFIG[chNum];
+          const container = document.createElement("div");
+          container.className = "flex flex-col items-center gap-1";
+          container.innerHTML = `<svg class="w-6 h-6" style="color: ${config.color}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h2.5l2-8 3 16 3-8 2.5 8H21" /></svg><button id="ch${chNum}-btn" class="scope-channel-button w-16" style="--channel-color: ${config.color}; background-color: ${config.color};">${chNum}</button>`;
+          container.querySelector("button").onclick = () => openSourceSelector(chNum);
+          channelContainer.appendChild(container);
+        });
+        scopeChannelControls.appendChild(channelContainer);
+
+        const cursorControlsContainer = document.createElement('div');
+        cursorControlsContainer.className = "border-l-2 border-gray-600 pl-4 flex flex-col items-center gap-1";
+        cursorControlsContainer.innerHTML = `<svg class="w-6 h-6 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 4v1m0 14v1m6-16v1m0 14v1M5 12H4m16 0h-1m-4 5h-4" /></svg><button id="toggle-cursors-btn" class="scope-channel-button w-24">Cursors</button>`;
+        scopeChannelControls.appendChild(cursorControlsContainer);
+        document.getElementById('toggle-cursors-btn').addEventListener('click', () => {
+            state.oscilloscope.cursors.show = !state.oscilloscope.cursors.show;
+            document.getElementById('cursor-measurements').classList.toggle('hidden', !state.oscilloscope.cursors.show);
+            document.getElementById('toggle-cursors-btn').classList.toggle('active', state.oscilloscope.cursors.show);
+            drawScopeScreen();
+        });
+
+        // Add canvas listeners for cursors
+        oscopeCanvas.addEventListener('mousedown', (e) => {
+            if (!state.oscilloscope.cursors.show) return;
+            const mouseX = getMousePos(oscopeCanvas, e).x / (window.devicePixelRatio || 1);
+            const {t1, t2} = state.oscilloscope.cursors;
+            if (Math.abs(mouseX - t1.x) < 10) {
+                state.oscilloscope.cursors.active = 't1';
+                oscopeCanvas.classList.add('grabbing');
+            } else if (Math.abs(mouseX - t2.x) < 10) {
+                state.oscilloscope.cursors.active = 't2';
+                oscopeCanvas.classList.add('grabbing');
+            }
+        });
+        oscopeCanvas.addEventListener('mousemove', (e) => {
+            const { cursors } = state.oscilloscope;
+            if (!cursors.show || !cursors.active) return;
+            const mouseX = getMousePos(oscopeCanvas, e).x / (window.devicePixelRatio || 1);
+            const rect = oscopeCanvas.getBoundingClientRect();
+            cursors[cursors.active].x = Math.max(0, Math.min(rect.width, mouseX));
+            drawScopeScreen();
+        });
+        const stopCursorDrag = () => {
+            state.oscilloscope.cursors.active = null;
+            oscopeCanvas.classList.remove('grabbing');
+        };
+        oscopeCanvas.addEventListener('mouseup', stopCursorDrag);
+        oscopeCanvas.addEventListener('mouseleave', stopCursorDrag);
+
+
+        const containers = {
+          primary: { line: document.getElementById("primary-line-sources"), phase: document.getElementById("primary-phase-sources"), },
+          secondary: { line: document.getElementById("secondary-line-sources"), phase: document.getElementById("secondary-phase-sources"), special: document.getElementById("secondary-special-sources"), },
+        };
+        const createButton = (sourceName) => { const btn = document.createElement("button"); btn.className = "w-full text-left p-2 rounded-md hover:bg-gray-600"; btn.textContent = sourceName; btn.onclick = () => selectSourceForChannel(sourceName); return btn; };
+        for (const side in VOLTAGE_SOURCES) { for (const type in VOLTAGE_SOURCES[side]) { VOLTAGE_SOURCES[side][type].forEach((sourceName) => { const button = createButton(sourceName); containers[side][type].appendChild(button); }); } }
+        document.getElementById("channel-off-btn").addEventListener("click", turnOffChannel);
+        sourceModalCloseBtn.addEventListener("click", () => sourceSelectorModal.classList.remove("flex"));
+
+        updateTask();
+      }
+
+      initialize();
+    </script>
+  </body>
+</html>
