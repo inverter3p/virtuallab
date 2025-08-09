@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>H-Bridge PWM Simulator</title>
+    <title>H-Bridge PWM Simulator with FFT Analysis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1/dist/chartjs-adapter-moment.min.js"></script>
@@ -23,8 +23,8 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-4">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">H-Bridge PWM Simulator</h1>
-            <p class="text-md text-gray-600 mt-2">Interactively explore Bipolar and Unipolar PWM concepts.</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Advanced H-Bridge PWM Simulator</h1>
+            <p class="text-md text-gray-600 mt-2">Featuring real-time FFT-based harmonic analysis.</p>
             <div class="flex justify-center mt-3">
                  <svg width="100" height="24" viewBox="0 0 100 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M0 22L10 22L10 2L15 2L15 22L28 22L28 2L33 2L33 22L48 22L48 2L53 2L53 22L70 22L70 2L75 2L75 22L90 22L90 2L95 2L95 22L100 22" stroke="#a1a1aa" stroke-width="2"/>
@@ -38,17 +38,14 @@
                 <h2 class="text-xl font-semibold mb-6 border-b pb-3">Controls</h2>
                 
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Modulation Type</label>
-                    <div class="flex items-center space-x-4">
-                        <label class="flex items-center space-x-2 text-sm cursor-pointer">
-                            <input type="radio" name="modulationType" value="unipolar" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500" checked>
-                            <span>Unipolar</span>
-                        </label>
-                        <label class="flex items-center space-x-2 text-sm cursor-pointer">
-                            <input type="radio" name="modulationType" value="bipolar" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                            <span>Bipolar</span>
-                        </label>
-                    </div>
+                    <label for="modulationStrategy" class="block text-sm font-medium text-gray-700 mb-2">Modulation Strategy</label>
+                    <select id="modulationStrategy" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="unipolar" selected>Unipolar SPWM</option>
+                        <option value="bipolar">Bipolar SPWM</option>
+                        <option value="dpwm_min">DPWM (Clamp Low)</option>
+                        <option value="dpwm_max">DPWM (Clamp High)</option>
+                        <option value="dpwm_60_deg">DPWM (60° Clamp)</option>
+                    </select>
                 </div>
 
                 <div class="space-y-6">
@@ -72,7 +69,7 @@
 
                     <div>
                         <label for="carrierFrequency" class="block text-sm font-medium text-gray-700">Carrier Freq. (Hz)</label>
-                        <input type="range" id="carrierFrequency" min="500" max="2000" step="50" value="1000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <input type="range" id="carrierFrequency" min="500" max="4000" step="50" value="1000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                         <span id="carrierFrequencyValue" class="text-sm text-gray-500 float-right">1000 Hz</span>
                     </div>
                      <div>
@@ -108,7 +105,7 @@
                     <!-- Harmonics Table Container -->
                     <div class="xl:col-span-2">
                         <div class="mt-4">
-                            <h4 class="text-lg font-semibold text-center mb-2 text-gray-800">Top Harmonics</h4>
+                            <h4 class="text-lg font-semibold text-center mb-2 text-gray-800">Top Harmonics by Amplitude</h4>
                             <div class="overflow-x-auto">
                                 <table class="min-w-full bg-white border border-gray-200 rounded-lg">
                                     <thead>
@@ -131,143 +128,143 @@
     </div>
 
     <script>
+        // --- FFT ALGORITHM ---
+        function fft(real, imag) {
+            const n = real.length;
+            if (n !== imag.length) throw new Error("Mismatched arrays");
+            if (n === 0) return;
+            if ((n & (n - 1)) !== 0) throw new Error("Array length must be a power of 2");
+            for (let i = 1, j = 0; i < n; i++) {
+                let bit = n >> 1;
+                for (; (j & bit) !== 0; bit >>= 1) j ^= bit;
+                j ^= bit;
+                if (i < j) { [real[i], real[j]] = [real[j], real[i]]; [imag[i], imag[j]] = [imag[j], imag[i]]; }
+            }
+            for (let len = 2; len <= n; len <<= 1) {
+                const halfLen = len >> 1; const angle = -2 * Math.PI / len; const wLenReal = Math.cos(angle); const wLenImag = Math.sin(angle);
+                for (let i = 0; i < n; i += len) {
+                    let wReal = 1; let wImag = 0;
+                    for (let j = 0; j < halfLen; j++) {
+                        const uReal = real[i + j]; const uImag = imag[i + j]; const vReal = real[i + j + halfLen] * wReal - imag[i + j + halfLen] * wImag; const vImag = real[i + j + halfLen] * wImag + imag[i + j + halfLen] * wReal;
+                        real[i + j] = uReal + vReal; imag[i + j] = uImag + vImag; real[i + j + halfLen] = uReal - vReal; imag[i + j + halfLen] = uImag - vImag;
+                        const nextWReal = wReal * wLenReal - wImag * wLenImag; wImag = wReal * wLenImag + wImag * wLenReal; wReal = nextWReal;
+                    }
+                }
+            }
+        }
+
         // DOM Elements
-        const modulationTypeRadios = document.querySelectorAll('input[name="modulationType"]');
+        const modulationStrategySelect = document.getElementById('modulationStrategy');
         const amplitudeSlider = document.getElementById('amplitude');
         const dcModulationCheckbox = document.getElementById('dcModulation');
         const modFrequencyContainer = document.getElementById('modFrequencyContainer');
         const modFrequencySlider = document.getElementById('modFrequency');
         const carrierFrequencySlider = document.getElementById('carrierFrequency');
         const vdcSlider = document.getElementById('vdc');
-
         const amplitudeValueSpan = document.getElementById('amplitudeValue');
         const modFrequencyValueSpan = document.getElementById('modFrequencyValue');
         const carrierFrequencyValueSpan = document.getElementById('carrierFrequencyValue');
         const vdcValueSpan = document.getElementById('vdcValue');
         const thdValueSpan = document.getElementById('thdValue');
         const fundamentalValueSpan = document.getElementById('fundamentalValue');
-
-        // Chart contexts
         const ctxModCarrier = document.getElementById('modulatingCarrierChart').getContext('2d');
         const ctxPwmA = document.getElementById('pwmAChart').getContext('2d');
         const ctxPwmB = document.getElementById('pwmBChart').getContext('2d');
         const ctxOutput = document.getElementById('outputVoltageChart').getContext('2d');
         const ctxHarmonic = document.getElementById('harmonicSpectrumChart').getContext('2d');
-
         let charts = {};
         const sampleRate = 100000;
+        const FFT_SIZE = 16384; 
 
         // --- Main Update Function ---
         function updateSimulation() {
-            const m = parseFloat(amplitudeSlider.value);
-            const isDC = dcModulationCheckbox.checked;
-            const fm = isDC ? 0 : parseFloat(modFrequencySlider.value);
-            const fc = parseFloat(carrierFrequencySlider.value);
-            const vdc = parseFloat(vdcSlider.value);
-            const modulationType = document.querySelector('input[name="modulationType"]:checked').value;
-            
-            amplitudeValueSpan.textContent = m.toFixed(2);
-            modFrequencyValueSpan.textContent = `${fm} Hz`;
-            carrierFrequencyValueSpan.textContent = `${fc} Hz`;
-            vdcValueSpan.textContent = `${vdc} V`;
-
-            const data = generatePWMData(m, fm, fc, vdc, modulationType, sampleRate, isDC);
-            updateCharts(data, modulationType, vdc, isDC);
-            updateHarmonicsTable(data.spectrum, data.fundamental, isDC, fm);
+            thdValueSpan.textContent = "Calculating...";
+            fundamentalValueSpan.textContent = "Calculating...";
+            setTimeout(() => {
+                const m = parseFloat(amplitudeSlider.value);
+                const isDC = dcModulationCheckbox.checked;
+                const fm = isDC ? 0 : parseFloat(modFrequencySlider.value);
+                const fc = parseFloat(carrierFrequencySlider.value);
+                const vdc = parseFloat(vdcSlider.value);
+                const modulationType = modulationStrategySelect.value;
+                amplitudeValueSpan.textContent = m.toFixed(2);
+                modFrequencyValueSpan.textContent = `${fm} Hz`;
+                carrierFrequencyValueSpan.textContent = `${fc} Hz`;
+                vdcValueSpan.textContent = `${vdc} V`;
+                const data = generatePWMData(m, fm, fc, vdc, modulationType, sampleRate, isDC);
+                const analysis = analyzeHarmonics(data.Vpwm_AB, sampleRate, fm, fc, isDC);
+                const finalData = { ...data, ...analysis };
+                fundamentalValueSpan.textContent = `${finalData.fundamental.toFixed(2)} V`;
+                thdValueSpan.textContent = (isDC ? 'N/A' : finalData.thd.toFixed(2) + '%');
+                updateCharts(finalData, modulationType, vdc, isDC);
+                updateHarmonicsTable(finalData.spectrum, finalData.fundamental, isDC, fm);
+            }, 10);
         }
 
         // --- Data Generation ---
         function generatePWMData(m, fm, fc, vdc, type, fs, isDC) {
-            const N = fs;
-            const time = Array.from({ length: N }, (_, i) => i / fs);
-            const twoPi = 2 * Math.PI;
-
-            const tri = time.map(t => 2 * Math.abs((t * fc) - Math.floor((t * fc) + 0.5)));
-
+            const N = fs; const time = Array.from({ length: N }, (_, i) => i / fs); const twoPi = 2 * Math.PI; const tri = time.map(t => 2 * Math.abs((t * fc) - Math.floor((t * fc) + 0.5)));
             let sin_A, sin_B, pwm_A, pwm_B;
-
-            if (isDC) {
-                if (type === 'unipolar') {
-                    const mod_A_level = 0.5 + m / 2;
-                    const mod_B_level = 0.5 - m / 2;
-                    sin_A = time.map(() => mod_A_level);
-                    sin_B = time.map(() => mod_B_level);
-                } else { // bipolar
-                    sin_A = time.map(() => m);
-                    sin_B = time.map(() => 1 - m);
-                }
-                pwm_A = sin_A.map((val, i) => (val >= tri[i] ? 1 : 0));
-                pwm_B = sin_B.map((val, i) => (val >= tri[i] ? 1 : 0));
-            } else { // AC modulation
-                sin_A = time.map(t => (m * Math.sin(twoPi * fm * t) + 1) / 2);
-                if (type === 'unipolar') {
-                    sin_B = time.map(t => (m * Math.sin(twoPi * fm * t - Math.PI) + 1) / 2);
-                    pwm_A = sin_A.map((val, i) => (val >= tri[i] ? 1 : 0));
-                    pwm_B = sin_B.map((val, i) => (val >= tri[i] ? 1 : 0));
-                } else { // bipolar
-                    pwm_A = sin_A.map((val, i) => (val >= tri[i] ? 1 : 0));
-                    pwm_B = pwm_A.map(val => 1 - val); 
-                }
+            switch (type) {
+                case 'bipolar': sin_A = isDC ? time.map(() => m) : time.map(t => (m * Math.sin(twoPi * fm * t) + 1) / 2); pwm_A = sin_A.map((val, i) => (val >= tri[i] ? 1 : 0)); pwm_B = pwm_A.map(val => 1 - val); sin_B = time.map(() => null); break;
+                case 'dpwm_min': sin_A = []; sin_B = []; time.forEach(t => { const v = isDC ? m : m * Math.sin(twoPi * fm * t); if (v >= 0) { sin_A.push(v); sin_B.push(0); } else { sin_A.push(0); sin_B.push(-v); } }); break;
+                case 'dpwm_max': sin_A = []; sin_B = []; time.forEach(t => { const v = isDC ? m : m * Math.sin(twoPi * fm * t); if (v >= 0) { sin_A.push(1); sin_B.push(1 - v); } else { sin_A.push(1 + v); sin_B.push(1); } }); break;
+                case 'dpwm_60_deg': sin_A = []; sin_B = []; time.forEach(t => { const angle = (twoPi * fm * t) % twoPi; let offset = 0; const ref_A_unipolar = (1 + m * Math.sin(angle)) / 2; const ref_B_unipolar = (1 - m * Math.sin(angle)) / 2; const start_pos_clamp = Math.PI / 3, end_pos_clamp = 2 * Math.PI / 3; const start_neg_clamp = 4 * Math.PI / 3, end_neg_clamp = 5 * Math.PI / 3; if (angle >= start_pos_clamp && angle < end_pos_clamp) offset = 1 - ref_A_unipolar; else if (angle >= start_neg_clamp && angle < end_neg_clamp) offset = 0 - ref_A_unipolar; sin_A.push(ref_A_unipolar + offset); sin_B.push(ref_B_unipolar + offset); }); break;
+                default: sin_A = isDC ? time.map(() => 0.5 + m / 2) : time.map(t => (m * Math.sin(twoPi * fm * t) + 1) / 2); sin_B = isDC ? time.map(() => 0.5 - m / 2) : time.map(t => (-m * Math.sin(twoPi * fm * t) + 1) / 2); break;
             }
-
-            const Vpwm_A = pwm_A.map(val => val * vdc);
-            const Vpwm_B = pwm_B.map(val => val * vdc);
-            const Vpwm_AB = Vpwm_A.map((val, i) => val - Vpwm_B[i]);
-            
-            const { spectrum, fundamental, thd } = calculateFFT(Vpwm_AB, fs, fm, isDC, m);
-            
-            const Vsin_AB = isDC 
-                ? time.map(() => fundamental)
-                : time.map(t => fundamental * Math.sin(twoPi * fm * t));
-
-            return { time, sin_A, sin_B, tri, pwm_A, pwm_B, Vpwm_AB, Vsin_AB, spectrum, fundamental, thd };
+            if (type !== 'bipolar') { pwm_A = sin_A.map((val, i) => val > tri[i] ? 1 : 0); pwm_B = sin_B.map((val, i) => val > tri[i] ? 1 : 0); }
+            const Vpwm_A = pwm_A.map(val => val * vdc); const Vpwm_B = pwm_B.map(val => val * vdc); const Vpwm_AB = Vpwm_A.map((val, i) => val - Vpwm_B[i]);
+            return { time, sin_A, sin_B, tri, pwm_A, pwm_B, Vpwm_AB };
         }
         
-        // --- FFT Calculation ---
-        function calculateFFT(data, fs, fm, isDC, m) {
-            const vdc = parseFloat(vdcSlider.value);
-            const fc = parseFloat(carrierFrequencySlider.value);
-            const modulationType = document.querySelector('input[name="modulationType"]:checked').value;
+        // --- HARMONIC ANALYSIS FUNCTION ---
+        function analyzeHarmonics(data, fs, fm, fc, isDC) {
+            const N = FFT_SIZE;
+            if (data.length < N) return { spectrum: [], fundamental: 0, thd: 0 };
             
+            const real = data.slice(0, N); const imag = new Array(N).fill(0);
+            fft(real, imag);
+
+            const freqResolution = fs / N;
+            const fullSpectrum = [];
+            for (let i = 0; i <= N / 2; i++) {
+                const mag = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]);
+                const amplitude = (i === 0) ? mag / N : 2 * mag / N;
+                fullSpectrum.push({ x: i * freqResolution, y: amplitude });
+            }
+
+            const harmonicSpectrum = [];
             let fundamentalAmplitude = 0;
-            let spectrum = [];
-            let thd = 0;
+            let harmonicPowerSum = 0;
 
             if (isDC) {
-                if (modulationType === 'bipolar') {
-                    fundamentalAmplitude = (2 * m - 1) * vdc;
-                } else { // unipolar
-                    fundamentalAmplitude = m * vdc;
+                const dcComponent = fullSpectrum[0];
+                fundamentalAmplitude = dcComponent.y;
+                harmonicSpectrum.push({ ...dcComponent, order: 0 });
+            } else { // AC Mode
+                const maxHarmonicOrder = Math.min(100, Math.floor((fs / 2) / fm)); // Cap at 100th harmonic
+                for (let h = 1; h <= maxHarmonicOrder; h++) {
+                    const targetFreq = h * fm;
+                    const closest = fullSpectrum.reduce((prev, curr) => (Math.abs(curr.x - targetFreq) < Math.abs(prev.x - targetFreq)) ? curr : prev);
+                    
+                    if (Math.abs(closest.x - targetFreq) < freqResolution * 1.5 && closest.y > 0.01) { // Looser tolerance for finding bin
+                        harmonicSpectrum.push({ x: targetFreq, y: closest.y, order: h });
+                    }
                 }
-                const harmonicOrdersFc = [fc, 2*fc, 3*fc, 4*fc, 5*fc, 6*fc];
-                spectrum = harmonicOrdersFc.map(freq => ({x: freq, y: vdc / (freq/fc * 6) }));
-                spectrum.unshift({x: 0, y: Math.abs(fundamentalAmplitude)});
-                thdValueSpan.textContent = 'N/A';
-            } else {
-                fundamentalAmplitude = m * vdc;
-                const harmonicOrders = [1];
-                const fcm_ratio = fc / fm;
-                if (modulationType === 'bipolar') {
-                    harmonicOrders.push(fcm_ratio - 2, fcm_ratio + 2, 2*fcm_ratio - 3, 2*fcm_ratio-1, 2*fcm_ratio+1, 2*fcm_ratio+3);
-                } else { // unipolar
-                    harmonicOrders.push(2*fcm_ratio - 3, 2*fcm_ratio -1, 2*fcm_ratio + 1, 2*fcm_ratio+3);
+
+                if (harmonicSpectrum.length > 0 && harmonicSpectrum[0].order === 1) {
+                    fundamentalAmplitude = harmonicSpectrum[0].y;
+                    harmonicPowerSum = harmonicSpectrum.slice(1).reduce((sum, h) => sum + h.y * h.y, 0);
                 }
-                spectrum = harmonicOrders.map(order => {
-                    const amplitude = (order === 1) ? fundamentalAmplitude : fundamentalAmplitude / (order * 4);
-                    return {x: order * fm, y: amplitude};
-                }).filter(h => h.x > 0);
-                const harmonicPowerSum = spectrum.slice(1).reduce((sum, h) => sum + Math.pow(h.y, 2), 0);
-                thd = (Math.sqrt(harmonicPowerSum) / fundamentalAmplitude) * 100;
-                thdValueSpan.textContent = `${thd.toFixed(2)}%`;
             }
-            
-            fundamentalValueSpan.textContent = `${fundamentalAmplitude.toFixed(2)} V`;
-            return { spectrum, fundamental: fundamentalAmplitude, thd };
+
+            const thd = (fundamentalAmplitude > 0.01) ? (Math.sqrt(harmonicPowerSum) / fundamentalAmplitude) * 100 : 0;
+            return { spectrum: harmonicSpectrum, fundamental: fundamentalAmplitude, thd };
         }
         
         // --- Harmonics Table Update ---
         function getOrdinal(n) {
-            if (n % 1 !== 0) return n;
+            if (n % 1 !== 0) return n.toFixed(1);
             const s = ["th", "st", "nd", "rd"], v = n % 100;
             return n + (s[(v - 20) % 10] || s[v] || s[0]);
         }
@@ -276,52 +273,42 @@
             const tableBody = document.getElementById('harmonicsTableBody');
             tableBody.innerHTML = ''; 
 
-            if (!harmonics || harmonics.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="3" class="px-4 py-3 text-center text-sm text-gray-500">No harmonics to display.</td></tr>';
+            if (!harmonics || harmonics.length === 0 || fundamentalAmplitude < 0.01) {
+                tableBody.innerHTML = '<tr><td colspan="3" class="px-4 py-3 text-center text-sm text-gray-500">No significant harmonics found.</td></tr>';
                 return;
             }
+
+            const fundamentalHarmonic = harmonics[0];
+            const otherHarmonics = harmonics.slice(1).sort((a, b) => b.y - a.y);
             
             const createRow = (h, isFundamental = false) => {
                 const row = document.createElement('tr');
+                row.className = isFundamental ? 'bg-indigo-50' : '';
                 const orderCell = document.createElement('td');
-                orderCell.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-700';
-                
-                if (isFundamental) {
-                    orderCell.textContent = isDC ? `DC Component` : `1st (Fundamental)`;
-                } else {
-                    orderCell.textContent = isDC ? `${h.x.toFixed(0)} Hz` : `${getOrdinal(Math.round(h.x / fm))} Harmonic`;
-                }
-
+                orderCell.className = `px-4 py-3 whitespace-nowrap text-sm ${isFundamental ? 'font-semibold text-indigo-800' : 'text-gray-700'}`;
+                if(isFundamental) orderCell.textContent = isDC ? 'DC Component' : `1st (Fundamental)`;
+                else orderCell.textContent = `${getOrdinal(h.order)} Harmonic`;
                 const ampPercentCell = document.createElement('td');
                 ampPercentCell.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-700';
-                const baseAmp = Math.abs(fundamentalAmplitude);
-                const percent = baseAmp > 0 ? ((h.y / baseAmp) * 100).toFixed(2) : '---';
-                ampPercentCell.textContent = isFundamental ? '100.00 %' : `${percent} %`;
-
+                ampPercentCell.textContent = isFundamental ? '100.00 %' : `${((h.y / fundamentalAmplitude) * 100).toFixed(2)} %`;
                 const ampVoltageCell = document.createElement('td');
-                ampVoltageCell.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-700';
+                ampVoltageCell.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium';
                 ampVoltageCell.textContent = `${h.y.toFixed(2)} V`;
-
-                row.appendChild(orderCell);
-                row.appendChild(ampPercentCell);
-                row.appendChild(ampVoltageCell);
+                row.appendChild(orderCell); row.appendChild(ampPercentCell); row.appendChild(ampVoltageCell);
                 return row;
             }
-
-            tableBody.appendChild(createRow(harmonics[0], true));
-
-            harmonics.slice(1).sort((a, b) => a.x - b.x).slice(0, 5).forEach(h => {
-                tableBody.appendChild(createRow(h, false));
-            });
+            
+            tableBody.appendChild(createRow(fundamentalHarmonic, true));
+            otherHarmonics.slice(0, 5).forEach(h => { tableBody.appendChild(createRow(h, false)); });
         }
-
+        
         // --- Chart Initialization and Updates ---
         const chartAreaBackgroundColorPlugin = {
             id: 'chartAreaBackgroundColor',
             beforeDraw(chart) {
                 const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
                 ctx.save();
-                ctx.fillStyle = '#EAEAF2';
+                ctx.fillStyle = '#f3f4f6'; // Light gray background
                 ctx.fillRect(left, top, width, height);
                 ctx.restore();
             }
@@ -329,125 +316,47 @@
 
         function createChart(ctx, config) {
             if (charts[ctx.canvas.id]) charts[ctx.canvas.id].destroy();
-            charts[ctx.canvas.id] = new Chart(ctx, { ...config, plugins: [...(config.plugins || []), chartAreaBackgroundColorPlugin] });
+            const existingPlugins = config.plugins || [];
+            config.plugins = [...existingPlugins, chartAreaBackgroundColorPlugin];
+            charts[ctx.canvas.id] = new Chart(ctx, config);
         }
 
         function updateCharts(data, type, vdc, isDC) {
-            const gridColor = 'white';
-            const darkGray = '#4b5563';
-            const legendOptions = {
-                display: true, position: 'bottom',
-                labels: { color: '#374151', usePointStyle: false, boxWidth: 30, boxHeight: 2, padding: 20 }
-            };
-            const commonOptions = {
-                maintainAspectRatio: false, animation: false,
-                scales: {
-                    x: { type: 'linear', min: 0, max: 0.04, title: { display: true, text: 'Time (s)', color: '#374151' }, ticks: { maxTicksLimit: 5, color: '#4b5563', callback: value => value.toFixed(3) }, grid: { color: gridColor, drawBorder: false }},
-                    y: { beginAtZero: true, ticks: { color: '#4b5563' }, grid: { color: gridColor, drawBorder: false }}
-                },
-                plugins: { tooltip: { enabled: false }, legend: legendOptions },
-                elements: { point: { radius: 0 }}
-            };
+            const gridColor = '#ffffff'; const darkGray = '#4b5563'; const legendOptions = { display: true, position: 'bottom', labels: { color: '#374151', usePointStyle: false, boxWidth: 30, boxHeight: 2, padding: 20 }};
+            const commonOptions = { maintainAspectRatio: false, animation: false, scales: { x: { type: 'linear', min: 0, max: 0.04, title: { display: true, text: 'Time (s)', color: '#374151' }, ticks: { maxTicksLimit: 5, color: '#4b5563', callback: value => value.toFixed(3) }, grid: { color: gridColor, drawBorder: false }}, y: { beginAtZero: true, ticks: { color: '#4b5563'}, grid: { color: gridColor, drawBorder: false }}}, plugins: { tooltip: { enabled: false }, legend: legendOptions }, elements: { point: { radius: 0 }}};
+            const typeNameMap = { 'unipolar': 'Unipolar', 'bipolar': 'Bipolar', 'dpwm_min': 'DPWM (Low)', 'dpwm_max': 'DPWM (High)', 'dpwm_60_deg': 'DPWM (60°)' };
+            const Vsin_AB = isDC ? data.time.map(() => data.fundamental) : data.time.map(t => data.fundamental * Math.sin(2 * Math.PI * parseFloat(modFrequencySlider.value) * t));
+            createChart(ctxModCarrier, { type: 'line', data: { labels: data.time, datasets: [ { label: 'Carrier', data: data.tri, borderColor: darkGray, borderWidth: 1, order: 1 }, { label: 'Phase A Ref.', data: data.sin_A, borderColor: '#ef4444', borderWidth: 2, tension: 0.1, order: 0 }, ...(type !== 'bipolar' ? [{ label: 'Phase B Ref.', data: data.sin_B, borderColor: '#3b82f6', borderWidth: 2, tension: 0.1, order: 0 }] : []) ]}, options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: `Modulating & Carrier Signals (${typeNameMap[type]})`, color: '#111827'}}, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, beginAtZero: false, min: -0.2, max: 1.2, title: {display: true, text: 'Amplitude', color: '#374151'}}}}});
+            createChart(ctxPwmA, { type: 'line', data: { labels: data.time, datasets: [ { label: 'Pole A State', data: data.pwm_A, borderColor: '#ef4444', borderWidth: 1.5, stepped: true } ]}, options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Pole A State (to GND)', color: '#111827'}}, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, min: -0.2, max: 1.2, title: {display: true, text: 'State', color: '#374151'}}}}});
+            createChart(ctxPwmB, { type: 'line', data: { labels: data.time, datasets: [ { label: 'Pole B State', data: data.pwm_B, borderColor: '#3b82f6', borderWidth: 1.5, stepped: true } ]}, options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Pole B State (to GND)', color: '#111827'}}, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, min: -0.2, max: 1.2, title: {display: true, text: 'State', color: '#374151'}}}}});
+            createChart(ctxOutput, { type: 'line', data: { labels: data.time, datasets: [ { label: 'Output Voltage (Vab)', data: data.Vpwm_AB, borderColor: darkGray, borderWidth: 1.5, stepped: true }, { label: 'Fundamental', data: Vsin_AB, borderColor: '#111827', borderWidth: 2.5, tension: 0.1 } ]}, options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Output Voltage (Vab) & Fundamental', color: '#111827'}}, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, beginAtZero: false, min: -1.2 * vdc, max: 1.2 * vdc, title: {display: true, text: 'Voltage (V)', color: '#374151'}}}}});
             
-            const modCarrierDatasets = [
-                { label: 'Carrier', data: data.tri, borderColor: darkGray, borderWidth: 1, order: 1 },
-                { label: 'Phase A Ref.', data: data.sin_A, borderColor: 'red', borderWidth: 2, tension: 0.1, order: 0 },
-            ];
-            if (type === 'unipolar') {
-                modCarrierDatasets.push({ label: 'Phase B Ref.', data: data.sin_B, borderColor: 'blue', borderWidth: 2, tension: 0.1, order: 0 });
-            }
-            createChart(ctxModCarrier, {
-                type: 'line', data: { labels: data.time, datasets: modCarrierDatasets },
-                options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: `Modulating & Carrier Signals (${type})`, color: '#111827'} }, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, beginAtZero: false, min: -0.2, max: 1.2, title: {display: true, text: 'Amplitude', color: '#374151'}}} }
-            });
-
-            createChart(ctxPwmA, {
-                type: 'line', data: { labels: data.time, datasets: [
-                    { label: 'PWM A', data: data.pwm_A, borderColor: 'red', borderWidth: 1, stepped: true }
-                ]},
-                options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'PWM A Output'} }, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, beginAtZero: false, min: -0.2, max: 1.2, title: {display: true, text: 'Amplitude'}}} }
-            });
-
-             createChart(ctxPwmB, {
-                type: 'line', data: { labels: data.time, datasets: [
-                    { label: 'PWM B', data: data.pwm_B, borderColor: 'blue', borderWidth: 1, stepped: true }
-                ]},
-                options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'PWM B Output'} }, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, beginAtZero: false, min: -0.2, max: 1.2, title: {display: true, text: 'Amplitude'}}} }
-            });
-
-            createChart(ctxOutput, {
-                type: 'line', data: { labels: data.time, datasets: [
-                    { label: 'Output Voltage (Vab)', data: data.Vpwm_AB, borderColor: darkGray, borderWidth: 1, stepped: true },
-                    { label: 'Fundamental', data: data.Vsin_AB, borderColor: 'black', borderWidth: 2, tension: 0.1 }
-                ]},
-                options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Output Voltage (Vab) & Fundamental'} }, scales: {...commonOptions.scales, y: {...commonOptions.scales.y, beginAtZero: false, min: -1.2 * vdc, max: 1.2 * vdc, title: {display: true, text: 'Voltage (V)'}}} }
-            });
-            
-            // 5. Harmonic Spectrum Chart (MODIFIED)
             const fc_val = parseFloat(carrierFrequencySlider.value);
             createChart(ctxHarmonic, {
-                type: 'bar',
-                data: {
-                    datasets: [{
-                        label: 'Harmonic Amplitude',
-                        data: data.spectrum, // Use absolute voltage data
-                        backgroundColor: 'rgba(79, 70, 229, 0.8)',
-                        borderWidth: 1,
-                        barThickness: 12
-                    }]
-                },
+                type: 'bar', data: { datasets: [{ label: 'Harmonic Amplitude', data: data.spectrum, backgroundColor: 'rgba(79, 70, 229, 0.8)', borderWidth: 1, barThickness: 12 }] },
                 options: {
                     maintainAspectRatio: false,
-                    plugins: {
-                        ...commonOptions.plugins,
-                        legend: { display: false },
-                        title: { display: true, text: 'Voltage Harmonic Spectrum', color: '#111827' },
-                        tooltip: {
-                            enabled: true,
-                            callbacks: {
-                                title: ctx => `Frequency: ${ctx[0].parsed.x.toFixed(0)} Hz`,
-                                label: ctx => `Amplitude: ${ctx.parsed.y.toFixed(2)} V` // Show Volts in tooltip
-                            }
-                        }
-                    },
+                    plugins: { ...commonOptions.plugins, legend: { display: false }, title: { display: true, text: 'Voltage Harmonic Spectrum', color: '#111827' }, tooltip: { enabled: true, callbacks: { title: ctx => `Freq: ${ctx[0].parsed.x.toFixed(0)} Hz`, label: ctx => `Amp: ${ctx.parsed.y.toFixed(2)} V` } } },
                     scales: {
-                        x: {
-                            type: 'linear',
-                            title: { display: true, text: 'Frequency (Hz)', color: '#374151' },
-                            min: 0,
-                            max: isDC ? fc_val * 4.5 : (fc_val * (type === 'unipolar' ? 2.5 : 2.5)),
-                            ticks: { color: '#4b5563' },
-                            grid: { color: gridColor, drawBorder: false }
-                        },
-                        y: {
-                            title: { display: true, text: 'Amplitude (V)', color: '#374151' }, // Y-axis title is now Volts
-                            beginAtZero: true,
-                            max: vdc * 1.1, // Dynamic y-axis based on Vdc
-                            ticks: { color: '#4b5563' },
-                            grid: { color: gridColor, drawBorder: false }
-                        }
+                        x: { type: 'linear', title: { display: true, text: 'Frequency (Hz)', color: '#374151' }, min: 0, max: isDC ? fc_val * 3.5 : fc_val * (type === 'unipolar' || type.includes('dpwm') ? 2.5 : 1.5) + 3 * parseFloat(modFrequencySlider.value), grid: { color: gridColor, drawBorder: false } },
+                        y: { type: 'linear', title: { display: true, text: 'Amplitude (V)', color: '#374151' }, beginAtZero: true, max: vdc * 1.2, grid: { color: gridColor, drawBorder: false } }
                     }
                 }
             });
         }
         
-        // --- Event handler for DC checkbox ---
         function handleDCModulationChange() {
             const isChecked = dcModulationCheckbox.checked;
             modFrequencySlider.disabled = isChecked;
             modFrequencyContainer.classList.toggle('opacity-50', isChecked);
+            modFrequencyContainer.classList.toggle('cursor-not-allowed', isChecked);
             updateSimulation();
         }
 
-        // --- Event Listeners ---
-        const allControls = [amplitudeSlider, modFrequencySlider, vdcSlider, carrierFrequencySlider, dcModulationCheckbox, ...modulationTypeRadios];
+        const allControls = [amplitudeSlider, modFrequencySlider, vdcSlider, carrierFrequencySlider, dcModulationCheckbox, modulationStrategySelect];
         allControls.forEach(el => el.addEventListener('input', updateSimulation));
         
-        // --- Initial Setup ---
-        window.onload = () => {
-             handleDCModulationChange();
-             updateSimulation();
-        };
+        window.onload = () => { handleDCModulationChange(); updateSimulation(); };
     </script>
 
 </body>
