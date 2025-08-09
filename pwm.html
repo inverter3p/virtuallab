@@ -226,28 +226,34 @@
             fft(real, imag);
 
             const freqResolution = fs / N;
-            const fullSpectrum = [];
-            for (let i = 0; i <= N / 2; i++) {
-                const mag = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]);
-                const amplitude = (i === 0) ? mag / N : 2 * mag / N;
-                fullSpectrum.push({ x: i * freqResolution, y: amplitude });
-            }
-
             const harmonicSpectrum = [];
             let fundamentalAmplitude = 0;
             let harmonicPowerSum = 0;
 
             if (isDC) {
-                const dcComponent = fullSpectrum[0];
-                fundamentalAmplitude = dcComponent.y;
-                harmonicSpectrum.push({ ...dcComponent, order: 0 });
+                // *** THE FIX ***: Calculate the true signed DC level by averaging the signal.
+                fundamentalAmplitude = data.slice(0, N).reduce((a, b) => a + b, 0) / N;
+
+                // For the plot, we need the positive magnitude.
+                const dcMagnitudeForPlot = Math.abs(fundamentalAmplitude);
+                harmonicSpectrum.push({ x: 0, y: dcMagnitudeForPlot, order: 0 });
+
+                // (Optional) find switching harmonics around carrier for DC mode
+                // ... can be added here if desired ...
             } else { // AC Mode
-                const maxHarmonicOrder = Math.min(100, Math.floor((fs / 2) / fm)); // Cap at 100th harmonic
+                const fullSpectrum = [];
+                for (let i = 0; i <= N / 2; i++) {
+                    const mag = Math.sqrt(real[i] * real[i] + imag[i] * imag[i]);
+                    const amplitude = (i === 0) ? mag / N : 2 * mag / N;
+                    fullSpectrum.push({ x: i * freqResolution, y: amplitude });
+                }
+
+                const maxHarmonicOrder = Math.min(100, Math.floor((fs / 2) / fm));
                 for (let h = 1; h <= maxHarmonicOrder; h++) {
                     const targetFreq = h * fm;
                     const closest = fullSpectrum.reduce((prev, curr) => (Math.abs(curr.x - targetFreq) < Math.abs(prev.x - targetFreq)) ? curr : prev);
                     
-                    if (Math.abs(closest.x - targetFreq) < freqResolution * 1.5 && closest.y > 0.01) { // Looser tolerance for finding bin
+                    if (Math.abs(closest.x - targetFreq) < freqResolution * 1.5 && closest.y > 0.01) {
                         harmonicSpectrum.push({ x: targetFreq, y: closest.y, order: h });
                     }
                 }
@@ -258,7 +264,7 @@
                 }
             }
 
-            const thd = (fundamentalAmplitude > 0.01) ? (Math.sqrt(harmonicPowerSum) / fundamentalAmplitude) * 100 : 0;
+            const thd = (fundamentalAmplitude > 0.01 && !isDC) ? (Math.sqrt(harmonicPowerSum) / fundamentalAmplitude) * 100 : 0;
             return { spectrum: harmonicSpectrum, fundamental: fundamentalAmplitude, thd };
         }
         
@@ -273,7 +279,7 @@
             const tableBody = document.getElementById('harmonicsTableBody');
             tableBody.innerHTML = ''; 
 
-            if (!harmonics || harmonics.length === 0 || fundamentalAmplitude < 0.01) {
+            if (!harmonics || harmonics.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="3" class="px-4 py-3 text-center text-sm text-gray-500">No significant harmonics found.</td></tr>';
                 return;
             }
@@ -290,10 +296,17 @@
                 else orderCell.textContent = `${getOrdinal(h.order)} Harmonic`;
                 const ampPercentCell = document.createElement('td');
                 ampPercentCell.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-700';
-                ampPercentCell.textContent = isFundamental ? '100.00 %' : `${((h.y / fundamentalAmplitude) * 100).toFixed(2)} %`;
+                // For DC, % of Fund. is meaningless for other harmonics. For AC, use abs value of fund.
+                const baseAmpForPercent = Math.abs(fundamentalAmplitude);
+                if (isFundamental || baseAmpForPercent < 0.01) {
+                    ampPercentCell.textContent = isFundamental ? '100.00 %' : '---';
+                } else {
+                    ampPercentCell.textContent = `${((h.y / baseAmpForPercent) * 100).toFixed(2)} %`;
+                }
                 const ampVoltageCell = document.createElement('td');
                 ampVoltageCell.className = 'px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium';
-                ampVoltageCell.textContent = `${h.y.toFixed(2)} V`;
+                // *** THE FIX ***: Use the signed fundamentalAmplitude for the fundamental row.
+                ampVoltageCell.textContent = isFundamental ? `${fundamentalAmplitude.toFixed(2)} V` : `${h.y.toFixed(2)} V`;
                 row.appendChild(orderCell); row.appendChild(ampPercentCell); row.appendChild(ampVoltageCell);
                 return row;
             }
@@ -308,7 +321,7 @@
             beforeDraw(chart) {
                 const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
                 ctx.save();
-                ctx.fillStyle = '#f3f4f6'; // Light gray background
+                ctx.fillStyle = '#f3f4f6';
                 ctx.fillRect(left, top, width, height);
                 ctx.restore();
             }
@@ -316,8 +329,7 @@
 
         function createChart(ctx, config) {
             if (charts[ctx.canvas.id]) charts[ctx.canvas.id].destroy();
-            const existingPlugins = config.plugins || [];
-            config.plugins = [...existingPlugins, chartAreaBackgroundColorPlugin];
+            config.plugins = [...(config.plugins || []), chartAreaBackgroundColorPlugin];
             charts[ctx.canvas.id] = new Chart(ctx, config);
         }
 
@@ -338,7 +350,7 @@
                     maintainAspectRatio: false,
                     plugins: { ...commonOptions.plugins, legend: { display: false }, title: { display: true, text: 'Voltage Harmonic Spectrum', color: '#111827' }, tooltip: { enabled: true, callbacks: { title: ctx => `Freq: ${ctx[0].parsed.x.toFixed(0)} Hz`, label: ctx => `Amp: ${ctx.parsed.y.toFixed(2)} V` } } },
                     scales: {
-                        x: { type: 'linear', title: { display: true, text: 'Frequency (Hz)', color: '#374151' }, min: 0, max: isDC ? fc_val * 3.5 : fc_val * (type === 'unipolar' || type.includes('dpwm') ? 2.5 : 1.5) + 3 * parseFloat(modFrequencySlider.value), grid: { color: gridColor, drawBorder: false } },
+                        x: { type: 'linear', title: { display: true, text: 'Frequency (Hz)', color: '#374151' }, min: 0, max: isDC ? fc_val * 3.5 : Math.min(100, (fc_val/parseFloat(modFrequencySlider.value)) * 2.5) * parseFloat(modFrequencySlider.value), grid: { color: gridColor, drawBorder: false } },
                         y: { type: 'linear', title: { display: true, text: 'Amplitude (V)', color: '#374151' }, beginAtZero: true, max: vdc * 1.2, grid: { color: gridColor, drawBorder: false } }
                     }
                 }
