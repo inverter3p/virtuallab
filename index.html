@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Lab Project</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* For vertical alignment of icons */
+        .material-icons {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 md:p-12">
+        <!-- Header Section -->
+        <header class="text-center mb-8">
+            <!-- Logo -->
+            <img src="eeku.png" alt="EEKU Logo" class="mx-auto h-24 w-auto mb-6" onerror="this.onerror=null;this.src='https://placehold.co/200x100/FFFFFF/000000?text=EEKU+Logo';">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">Virtual Lab Experiments</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mt-2">Collection of Web Applications for EEKU Students</p>
+        </header>
+
+        <!-- Lab Links Section -->
+        <main>
+            <ul class="space-y-4">
+                <!-- Lab 5: Synchronous Motor -->
+                <li>
+                    <a href="lab5-smotor.html" class="block p-6 bg-sky-50 dark:bg-gray-700 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center">
+                            <span class="material-icons text-blue-600 dark:text-blue-400 mr-4">sync</span>
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Lab 5: Synchronous Motor</h2>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">An experiment on the principles and operation of synchronous motors.</p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+
+                <!-- Lab 6: Three Phase Transformer -->
+                <li>
+                    <a href="lab6-transformer.html" class="block p-6 bg-sky-50 dark:bg-gray-700 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center">
+                            <span class="material-icons text-green-600 dark:text-green-400 mr-4">transform</span>
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Lab 6: Three Phase Transformer</h2>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">Study the characteristics and connections of three-phase transformers.</p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+                
+                <!-- Other Labs from the image -->
+                <li>
+                    <a href="pwm.html" class="block p-6 bg-sky-50 dark:bg-gray-700 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center">
+                            <span class="material-icons text-indigo-600 dark:text-indigo-400 mr-4">show_chart</span>
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Pulse Width Modulation (PWM)</h2>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">Explore PWM techniques for controlling power electronics.</p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="rainflow.html" class="block p-6 bg-sky-50 dark:bg-gray-700 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center">
+                            <span class="material-icons text-yellow-600 dark:text-yellow-400 mr-4">analytics</span>
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Rainflow Counting Algorithm</h2>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">Analyze stress and strain data for lifetime analysis of devices.</p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="svm.html" class="block p-6 bg-sky-50 dark:bg-gray-700 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center">
+                            <span class="material-icons text-purple-600 dark:text-purple-400 mr-4">hub</span>
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Space Vector Modulation (SVM)</h2>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">Learn about an advanced PWM algorithm for AC drives.</p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="switching-loss.html" class="block p-6 bg-sky-50 dark:bg-gray-700 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 border border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center">
+                            <span class="material-icons text-red-600 dark:text-red-400 mr-4">bolt</span>
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Switching Loss Analysis</h2>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">Investigate power loss in semiconductor switching devices.</p>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-10">
+            <p class="text-sm text-gray-500 dark:text-gray-400">&copy; 2025 EEKU. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+</body>
+</html>
