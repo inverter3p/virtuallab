@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EX05: Synchronous Motors - Virtual Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .data-table input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.375rem;
+            text-align: center;
+        }
+        .data-table th, .data-table td {
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .nameplate-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .nameplate-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .nameplate-item label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4B5563;
+        }
+        .nameplate-item input {
+            padding: 0.5rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.375rem;
+            margin-top: 0.25rem;
+        }
+        .section-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .instruction-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background-color: #EEF2FF;
+            color: #4338CA;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            border: 1px solid #C7D2FE;
+        }
+        .instruction-btn:hover {
+            background-color: #E0E7FF;
+        }
+        .instruction-btn .material-icons-outlined {
+            font-size: 20px;
+        }
+        #instruction-modal.hidden {
+            display: none;
+        }
+        .prose ol { margin-left: 1.25rem; }
+        .prose li { margin-bottom: 0.5rem; }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.75rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .hint {
+            font-size: 0.875rem;
+            color: #6B7280;
+            background-color: #F3F4F6;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            margin-top: 0.5rem;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="section-card pdf-section flex flex-col sm:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-700">EX05: Synchronous Motors</h1>
+                <p class="text-gray-600 mt-1">Department of Electrical Engineering, Kasetsart University</p>
+            </div>
+            <button id="export-pdf" class="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                Export as PDF
+            </button>
+        </header>
+
+        <div class="section-card pdf-section">
+            <h2 class="text-2xl font-semibold border-b pb-2 mb-4 text-blue-800 section-header">
+                <span class="material-icons-outlined">list_alt</span>Procedure
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button class="instruction-btn justify-center" data-modal-target="section1"><span class="material-icons-outlined">badge</span>1. Nameplate Data</button>
+                <button class="instruction-btn justify-center" data-modal-target="section2"><span class="material-icons-outlined">electrical_services</span>2. Circuit Connection</button>
+                <button class="instruction-btn justify-center" data-modal-target="section3"><span class="material-icons-outlined">play_circle</span>3. Starting Motor</button>
+                <button class="instruction-btn justify-center" data-modal-target="section4"><span class="material-icons-outlined">edit_note</span>4. V-Curve Data</button>
+            </div>
+        </div>
+
+        <div class="section-card pdf-section">
+            <h2 class="text-2xl font-semibold text-blue-800 border-b pb-2 mb-4">1. Nameplate Data</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-medium mb-3">Synchronous Motor</h3>
+                    <div class="nameplate-grid">
+                        <div class="nameplate-item"><label for="sm-mfg">Manufacturer</label><input id="sm-mfg" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-model">Model</label><input id="sm-model" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-type">Type</label><input id="sm-type" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-phase">Phase</label><input id="sm-phase" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-serial">Serial No.</label><input id="sm-serial" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-pf">PF</label><input id="sm-pf" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-kva">kVA</label><input id="sm-kva" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-hz">Hz</label><input id="sm-hz" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-speed">Speed</label><input id="sm-speed" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-amp">Amp</label><input id="sm-amp" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-volt">Volt</label><input id="sm-volt" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-field-volt">Field Volt</label><input id="sm-field-volt" type="text"></div>
+                        <div class="nameplate-item"><label for="sm-field-amp">Field Amp</label><input id="sm-field-amp" type="text"></div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-medium mb-3">DC Generator</h3>
+                    <div class="nameplate-grid">
+                        <div class="nameplate-item"><label for="dc-mfg">Manufacturer</label><input id="dc-mfg" type="text"></div>
+                        <div class="nameplate-item"><label for="dc-model">Model</label><input id="dc-model" type="text"></div>
+                        <div class="nameplate-item"><label for="dc-type">Type</label><input id="dc-type" type="text"></div>
+                        <div class="nameplate-item"><label for="dc-serial">Serial No.</label><input id="dc-serial" type="text"></div>
+                        <div class="nameplate-item"><label for="dc-speed">Speed</label><input id="dc-speed" type="text"></div>
+                        <div class="nameplate-item"><label for="dc-kw">kW</label><input id="dc-kw" type="text"></div>
+                        <div class="nameplate-item"><label for="dc-class">Class</label><input id="dc-class" type="text"></div>
+                        <div class="nameplate-item"><label for="dc-volt">Volt</label><input id="dc-volt" type="text"></div>
+                        <div class="nameplate-item"><label for="dc-amp">Amp</label><input id="dc-amp" type="text"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card pdf-section">
+            <h2 class="text-2xl font-semibold text-blue-800 border-b pb-2 mb-4">2. Circuit Diagram</h2>
+            <div class="flex justify-center items-center bg-gray-100 rounded-lg p-4">
+                <img src="synchronous-motor.png" alt="Circuit Diagram Placeholder" class="w-full h-auto rounded-md shadow-md">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-section">
+            <div class="section-card">
+                <h3 class="text-xl font-medium mb-3">No-Load Test Data</h3>
+                <table class="w-full data-table">
+                    <thead><tr class="bg-gray-200"><th>If (A)</th><th>Ia (A)</th><th>V (V)</th><th>P (W)</th><th>PF</th></tr></thead>
+                    <tbody id="no-load-table-body">
+                        <tr>
+                            <td colspan="5" class="text-left text-gray-600 bg-gray-50 p-2 font-semibold">Initial Setup: Adjust If to get minimum Ia</td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" class="if-input"  placeholder="0.00"></td>
+                            <td><input type="number" class="ia-input"  placeholder="0.00"></td>
+                            <td><input type="number" class="v-input"  placeholder="0.00"></td>
+                            <td><input type="number" class="p-input"  placeholder="0.00"></td>
+                            <td><input type="number" class="pf-input"  placeholder="0.00"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-left text-gray-600 bg-gray-50 p-2 font-semibold">Varying Field Current</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="add-no-load-row" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Row</button>
+            </div>
+            <div class="section-card">
+                 <h3 class="text-xl font-medium mb-3">Half-Load Test Data</h3>
+                <table class="w-full data-table">
+                    <thead><tr class="bg-gray-200"><th>If (A)</th><th>Ia (A)</th><th>V (V)</th><th>P (W)</th><th>PF</th></tr></thead>
+                    <tbody id="half-load-table-body">
+                         <tr>
+                            <td colspan="5" class="text-left text-gray-600 bg-gray-50 p-2 font-semibold">Initial Setup: Adjust If to get minimum Ia</td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" class="if-input"  placeholder="0.00"></td>
+                            <td><input type="number" class="ia-input"  placeholder="0.00"></td>
+                            <td><input type="number" class="v-input"  placeholder="0.00"></td>
+                            <td><input type="number" class="p-input"  placeholder="0.00"></td>
+                            <td><input type="number" class="pf-input"  placeholder="0.00"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-left text-gray-600 bg-gray-50 p-2 font-semibold">Varying Field Current</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="add-half-load-row" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">Add Row</button>
+            </div>
+        </div>
+
+        <div class="section-card pdf-section">
+            <h2 class="text-2xl font-semibold text-blue-800 border-b pb-2 mb-4 section-header">
+                <span class="material-icons-outlined">show_chart</span>V-Curves (Ia versus If)
+            </h2>
+            <div class="chart-container"><canvas id="v-curve-chart"></canvas></div>
+        </div>
+
+        <div class="section-card pdf-section">
+            <h2 class="text-2xl font-semibold text-blue-800 border-b pb-2 mb-4 section-header">
+                <span class="material-icons-outlined">show_chart</span>Power Factor Curves (PF versus If)
+            </h2>
+            <div class="chart-container"><canvas id="pf-curve-chart"></canvas></div>
+        </div>
+
+        <div class="section-card pdf-section">
+            <h2 class="text-2xl font-semibold border-b pb-2 mb-4 text-blue-800 section-header">
+                <span class="material-icons-outlined">quiz</span>Questions
+            </h2>
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-semibold">1. Explain the conditions and effects of under-excitation, normal excitation, and over-excitation.</h3>
+                    <div class="hint"><strong>Hint:</strong> Think about the relationship between the internal generated voltage (E) and the terminal supply voltage (V) in each case. How does this affect reactive power (VArs) flow?</div>
+                    <textarea placeholder="Type your answer here..."></textarea>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">2. What is a synchronous condenser?</h3>
+                    <div class="hint"><strong>Hint:</strong> Consider a synchronous motor running with no mechanical load. What happens when you over-excite its field winding, and how could this be useful for the power grid?</div>
+                    <textarea placeholder="Type your answer here..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instruction Modal -->
+    <div id="instruction-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 relative">
+            <button id="modal-close-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-800 rounded-full p-1">
+                <span class="material-icons-outlined">close</span>
+            </button>
+            <h3 id="modal-title" class="text-2xl font-bold mb-4 text-blue-800"></h3>
+            <div id="modal-content" class="text-gray-700 space-y-3 prose"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const createChart = (ctx, label) => {
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [
+                            { label: 'No-Load', data: [], borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.5)', tension: 0.1, fill: false },
+                            { label: 'Half-Load', data: [], borderColor: 'rgb(239, 68, 68)', backgroundColor: 'rgba(239, 68, 68, 0.5)', tension: 0.1, fill: false }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: { type: 'linear', position: 'bottom', title: { display: true, text: 'Field Current (If) [A]' } },
+                            y: { title: { display: true, text: label }, beginAtZero: true }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            };
+
+            const vCurveChart = createChart(document.getElementById('v-curve-chart').getContext('2d'), 'Armature Current (Ia) [A]');
+            const pfCurveChart = createChart(document.getElementById('pf-curve-chart').getContext('2d'), 'Power Factor (PF)');
+
+            const setupTable = (tableBodyId, addRowBtnId, chartDatasetIndex) => {
+                const tableBody = document.getElementById(tableBodyId);
+                const addRowBtn = document.getElementById(addRowBtnId);
+
+                const addRow = () => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="number" class="if-input"  placeholder="0.00"></td>
+                        <td><input type="number" class="ia-input"  placeholder="0.00"></td>
+                        <td><input type="number" class="v-input"  placeholder="0.00"></td>
+                        <td><input type="number" class="p-input"  placeholder="0.00"></td>
+                        <td><input type="number" class="pf-input"  placeholder="0.00"></td>
+                    `;
+                    tableBody.appendChild(row);
+                };
+
+                const updateCharts = () => {
+                    const vCurveData = [];
+                    const pfCurveData = [];
+                    tableBody.querySelectorAll('tr').forEach(row => {
+                        if (row.querySelector('input') === null) return;
+                        const if_val = parseFloat(row.querySelector('.if-input').value);
+                        const ia = parseFloat(row.querySelector('.ia-input').value);
+                        const pf = parseFloat(row.querySelector('.pf-input').value);
+                        
+                        if (!isNaN(if_val)) {
+                            if (!isNaN(ia)) vCurveData.push({x: if_val, y: ia});
+                            if (!isNaN(pf)) pfCurveData.push({x: if_val, y: pf});
+                        }
+                    });
+                    vCurveData.sort((a, b) => a.x - b.x);
+                    pfCurveData.sort((a, b) => a.x - b.x);
+                    vCurveChart.data.datasets[chartDatasetIndex].data = vCurveData;
+                    pfCurveChart.data.datasets[chartDatasetIndex].data = pfCurveData;
+                    vCurveChart.update();
+                    pfCurveChart.update();
+                };
+
+                addRowBtn.addEventListener('click', addRow);
+                tableBody.addEventListener('input', updateCharts);
+                for (let i = 0; i < 4; i++) addRow();
+                updateCharts();
+            };
+
+            setupTable('no-load-table-body', 'add-no-load-row', 0);
+            setupTable('half-load-table-body', 'add-half-load-row', 1);
+
+            const instructions = {
+                section1: { title: '1. Record Nameplate Data', content: `<p>Fill in the manufacturer information and electrical ratings for both the Synchronous Motor and the DC Generator.</p>` },
+                section2: { title: '2. Implement Circuit', content: `<p>Wire the components as shown in the experiment's circuit diagram (Figure 1).</p>` },
+                section3: { title: '3. Starting the Synchronous Motor', content: `<h4>3.1 Before Power Up</h4><ol><li>Ensure the autotransformer is at the 0 position.</li><li>Adjust the field rheostat (R1) until the field current ammeter (A1) reads half of its rated value.</li><li>Turn OFF the DC source for the field circuit for now.</li><li>Bypass the main AC ammeter (A2) and the wattmeter by switching ON S2 and S3.</li></ol><h4>3.2 Power Up the Motor</h4><ol><li>Switch on the main circuit breaker (S1).</li><li>Start the synchronous motor by gradually increasing the voltage using the autotransformer until it reaches the motor's rated voltage.</li><li>When the rotor speed is close to the synchronous speed, switch ON the DC source for the field circuit. The motor should "pull in" and lock into synchronous speed.</li><li>After the motor is synchronized, switch OFF S2 and S3 to route the current through the ammeter (A2) and the wattmeter.</li></ol>` },
+                section4: { title: '4. V-Curve Data Collection', content: `<p><strong>For No-Load Test:</strong></p><ol><li>Adjust the field rheostat (R1) to find the point where the armature current (A2) is at its absolute minimum. Record this in the first row.</li><li>From this minimum point, vary the field current (A1) in approximately 5 steps, both by increasing and decreasing it, until the armature current (A2) reaches its rated value. Record data for each step.</li></ol><p><strong>For Half-Load Test:</strong></p><ol><li>Load the synchronous motor by connecting a load to the DC generator until the motor is outputting half of its rated kW.</li><li>Repeat the entire data collection process from the no-load test.</li></ol>` }
+            };
+
+            const modal = document.getElementById('instruction-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            const closeModalBtn = document.getElementById('modal-close-btn');
+
+            document.querySelectorAll('.instruction-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const target = button.dataset.modalTarget;
+                    const data = instructions[target];
+                    if (data) {
+                        modalTitle.innerHTML = data.title;
+                        modalContent.innerHTML = data.content;
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    }
+                });
+            });
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            // --- PDF Export Logic (Reverted to all html2canvas) ---
+            document.getElementById('export-pdf').addEventListener('click', async () => {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const pageMargin = 10;
+                const contentWidth = pdfWidth - (pageMargin * 2);
+                let currentY = pageMargin;
+
+                const exportButton = document.getElementById('export-pdf');
+                exportButton.style.display = 'none';
+                window.scrollTo(0, 0);
+
+                const sections = document.querySelectorAll('.pdf-section');
+
+                for (const section of sections) {
+                    const canvas = await html2canvas(section, { scale: 2, useCORS: true });
+                    const imgData = canvas.toDataURL('image/png');
+                    const ratio = canvas.width / canvas.height;
+                    const pdfImgHeight = contentWidth / ratio;
+
+                    if (currentY > pageMargin && currentY + pdfImgHeight > pdfHeight - pageMargin) {
+                        pdf.addPage();
+                        currentY = pageMargin;
+                    }
+
+                    pdf.addImage(imgData, 'PNG', pageMargin, currentY, contentWidth, pdfImgHeight);
+                    currentY += pdfImgHeight + 5;
+                }
+
+                pdf.save('EX05_Synchronous_Motors_Lab_Report.pdf');
+                exportButton.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>
