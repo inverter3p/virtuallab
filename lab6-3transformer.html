@@ -118,12 +118,35 @@
             Department of Electrical Engineering, Kasetsart University
           </p>
         </div>
-        <button
-          id="export-pdf"
-          class="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105"
+        <div
+          id="header-actions"
+          class="flex flex-col sm:flex-row items-center gap-2 mt-4 sm:mt-0"
         >
-          Export as PDF
-        </button>
+          <button
+            id="save-data"
+            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 w-full sm:w-auto"
+          >
+            Save Data
+          </button>
+          <button
+            id="load-data-btn"
+            class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 w-full sm:w-auto"
+          >
+            Load Data
+          </button>
+          <input
+            type="file"
+            id="load-data-input"
+            class="hidden"
+            accept=".json"
+          />
+          <button
+            id="export-pdf"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 w-full sm:w-auto"
+          >
+            Export as PDF
+          </button>
+        </div>
       </header>
 
       <div class="section-card pdf-section">
@@ -318,12 +341,12 @@
               <td class="font-mono">
                 V<sub>phase</sub> or √3 V<sub>phase</sub>
               </td>
-              <td><input type="number" placeholder="0.0" /></td>
+              <td><input type="number" id="s1_pol_2series" placeholder="0.0" /></td>
             </tr>
             <tr>
               <td class="label-col">3 secondary windings in series (open)</td>
               <td class="font-mono">0 V or 2 * V<sub>phase</sub></td>
-              <td><input type="number" placeholder="0.0" /></td>
+              <td><input type="number" id="s1_pol_3series" placeholder="0.0" /></td>
             </tr>
           </tbody>
         </table>
@@ -342,15 +365,15 @@
             <tr>
               <td rowspan="3" class="font-bold align-middle">Primary</td>
               <td class="label-col">Line Voltage (V<sub>AB</sub>)</td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s1_v_pri_ab" placeholder="300.0" /></td>
             </tr>
             <tr>
               <td class="label-col">Line Voltage (V<sub>BC</sub>)</td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s1_v_pri_bc" placeholder="300.0" /></td>
             </tr>
             <tr>
               <td class="label-col">Line Voltage (V<sub>CA</sub>)</td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s1_v_pri_ca" placeholder="300.0" /></td>
             </tr>
             <tr class="bg-gray-50">
               <td colspan="3"></td>
@@ -358,15 +381,15 @@
             <tr>
               <td rowspan="3" class="font-bold align-middle">Secondary</td>
               <td class="label-col">Line/Phase Voltage (V<sub>ab</sub>)</td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s1_v_sec_ab" placeholder="100.0" /></td>
             </tr>
             <tr>
               <td class="label-col">Line/Phase Voltage (V<sub>bc</sub>)</td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s1_v_sec_bc" placeholder="100.0" /></td>
             </tr>
             <tr>
               <td class="label-col">Line/Phase Voltage (V<sub>ca</sub>)</td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s1_v_sec_ca" placeholder="100.0" /></td>
             </tr>
           </tbody>
         </table>
@@ -417,15 +440,15 @@
               <td rowspan="3" class="font-bold align-middle">Primary (Δ)</td>
               <td rowspan="3" class="align-middle">Line/Phase Voltage</td>
               <td class="label-col">V<sub>AB</sub></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s2_v_pri_ab" placeholder="300.0" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>BC</sub></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s2_v_pri_bc" placeholder="300.0" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>CA</sub></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s2_v_pri_ca" placeholder="300.0" /></td>
             </tr>
             <tr class="bg-gray-50">
               <td colspan="4"></td>
@@ -434,28 +457,28 @@
               <td rowspan="6" class="font-bold align-middle">Secondary (Y)</td>
               <td rowspan="3" class="align-middle">Phase Voltage</td>
               <td class="label-col">V<sub>an</sub></td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s2_v_sec_phase_an" placeholder="100.0" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>bn</sub></td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s2_v_sec_phase_bn" placeholder="100.0" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>cn</sub></td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s2_v_sec_phase_cn" placeholder="100.0" /></td>
             </tr>
             <tr>
               <td rowspan="3" class="align-middle border-t">Line Voltage</td>
               <td class="label-col">V<sub>ab</sub></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s2_v_sec_line_ab" placeholder="173.2" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>bc</sub></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s2_v_sec_line_bc" placeholder="173.2" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>ca</sub></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s2_v_sec_line_ca" placeholder="173.2" /></td>
             </tr>
           </tbody>
         </table>
@@ -545,28 +568,28 @@
               <td rowspan="6" class="font-bold align-middle">Primary (Y)</td>
               <td rowspan="3" class="align-middle">Phase Voltage</td>
               <td class="label-col">V<sub>AN</sub></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s3_v_pri_phase_an" placeholder="173.2" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>BN</sub></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s3_v_pri_phase_bn" placeholder="173.2" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>CN</sub></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s3_v_pri_phase_cn" placeholder="173.2" /></td>
             </tr>
             <tr>
               <td rowspan="3" class="align-middle border-t">Line Voltage</td>
               <td class="label-col">V<sub>AB</sub></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s3_v_pri_line_ab" placeholder="300.0" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>BC</sub></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s3_v_pri_line_bc" placeholder="300.0" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>CA</sub></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s3_v_pri_line_ca" placeholder="300.0" /></td>
             </tr>
             <tr class="bg-gray-50">
               <td colspan="4"></td>
@@ -575,15 +598,15 @@
               <td rowspan="3" class="font-bold align-middle">Secondary (Δ)</td>
               <td rowspan="3" class="align-middle">Line/Phase Voltage</td>
               <td class="label-col">V<sub>ab</sub></td>
-              <td><input type="number" placeholder="57.7" /></td>
+              <td><input type="number" id="s3_v_sec_ab" placeholder="57.7" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>bc</sub></td>
-              <td><input type="number" placeholder="57.7" /></td>
+              <td><input type="number" id="s3_v_sec_bc" placeholder="57.7" /></td>
             </tr>
             <tr>
               <td class="label-col">V<sub>ca</sub></td>
-              <td><input type="number" placeholder="57.7" /></td>
+              <td><input type="number" id="s3_v_sec_ca" placeholder="57.7" /></td>
             </tr>
           </tbody>
         </table>
@@ -614,11 +637,13 @@
             <input
               class="md:col-start-1 bg-gray-100"
               type="number"
+              id="s3_freq_s1open"
               placeholder="e.g. 150"
             />
             <input
               class="md:col-start-2 bg-gray-100"
               type="number"
+              id="s3_freq_s1closed"
               placeholder="e.g. 50"
             />
           </div>
@@ -737,33 +762,33 @@
             <tr>
               <td rowspan="6" class="font-bold align-middle">Primary</td>
               <td class="label-col">Phase Voltage (V<sub>AN</sub>)</td>
-              <td><input type="number" placeholder="173.2" /></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s4_v_pri_phase_an_open" placeholder="173.2" /></td>
+              <td><input type="number" id="s4_v_pri_phase_an_closed" placeholder="173.2" /></td>
             </tr>
             <tr>
               <td class="label-col">Phase Voltage (V<sub>BN</sub>)</td>
-              <td><input type="number" placeholder="173.2" /></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s4_v_pri_phase_bn_open" placeholder="173.2" /></td>
+              <td><input type="number" id="s4_v_pri_phase_bn_closed" placeholder="173.2" /></td>
             </tr>
             <tr>
               <td class="label-col">Phase Voltage (V<sub>CN</sub>)</td>
-              <td><input type="number" placeholder="173.2" /></td>
-              <td><input type="number" placeholder="173.2" /></td>
+              <td><input type="number" id="s4_v_pri_phase_cn_open" placeholder="173.2" /></td>
+              <td><input type="number" id="s4_v_pri_phase_cn_closed" placeholder="173.2" /></td>
             </tr>
             <tr>
               <td class="label-col border-t">Line Voltage (V<sub>AB</sub>)</td>
-              <td><input type="number" placeholder="300.0" /></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s4_v_pri_line_ab_open" placeholder="300.0" /></td>
+              <td><input type="number" id="s4_v_pri_line_ab_closed" placeholder="300.0" /></td>
             </tr>
             <tr>
               <td class="label-col">Line Voltage (V<sub>BC</sub>)</td>
-              <td><input type="number" placeholder="300.0" /></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s4_v_pri_line_bc_open" placeholder="300.0" /></td>
+              <td><input type="number" id="s4_v_pri_line_bc_closed" placeholder="300.0" /></td>
             </tr>
             <tr>
               <td class="label-col">Line Voltage (V<sub>CA</sub>)</td>
-              <td><input type="number" placeholder="300.0" /></td>
-              <td><input type="number" placeholder="300.0" /></td>
+              <td><input type="number" id="s4_v_pri_line_ca_open" placeholder="300.0" /></td>
+              <td><input type="number" id="s4_v_pri_line_ca_closed" placeholder="300.0" /></td>
             </tr>
             <tr class="bg-gray-50">
               <td colspan="4"></td>
@@ -771,33 +796,33 @@
             <tr>
               <td rowspan="6" class="font-bold align-middle">Secondary</td>
               <td class="label-col">Phase Voltage (V<sub>an</sub>)</td>
-              <td><input type="number" placeholder="57.7" /></td>
-              <td><input type="number" placeholder="57.7" /></td>
+              <td><input type="number" id="s4_v_sec_phase_an_open" placeholder="57.7" /></td>
+              <td><input type="number" id="s4_v_sec_phase_an_closed" placeholder="57.7" /></td>
             </tr>
             <tr>
               <td class="label-col">Phase Voltage (V<sub>bn</sub>)</td>
-              <td><input type="number" placeholder="57.7" /></td>
-              <td><input type="number" placeholder="57.7" /></td>
+              <td><input type="number" id="s4_v_sec_phase_bn_open" placeholder="57.7" /></td>
+              <td><input type="number" id="s4_v_sec_phase_bn_closed" placeholder="57.7" /></td>
             </tr>
             <tr>
               <td class="label-col">Phase Voltage (V<sub>cn</sub>)</td>
-              <td><input type="number" placeholder="57.7" /></td>
-              <td><input type="number" placeholder="57.7" /></td>
+              <td><input type="number" id="s4_v_sec_phase_cn_open" placeholder="57.7" /></td>
+              <td><input type="number" id="s4_v_sec_phase_cn_closed" placeholder="57.7" /></td>
             </tr>
             <tr>
               <td class="label-col border-t">Line Voltage (V<sub>ab</sub>)</td>
-              <td><input type="number" placeholder="100.0" /></td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s4_v_sec_line_ab_open" placeholder="100.0" /></td>
+              <td><input type="number" id="s4_v_sec_line_ab_closed" placeholder="100.0" /></td>
             </tr>
             <tr>
               <td class="label-col">Line Voltage (V<sub>bc</sub>)</td>
-              <td><input type="number" placeholder="100.0" /></td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s4_v_sec_line_bc_open" placeholder="100.0" /></td>
+              <td><input type="number" id="s4_v_sec_line_bc_closed" placeholder="100.0" /></td>
             </tr>
             <tr>
               <td class="label-col">Line Voltage (V<sub>ca</sub>)</td>
-              <td><input type="number" placeholder="100.0" /></td>
-              <td><input type="number" placeholder="100.0" /></td>
+              <td><input type="number" id="s4_v_sec_line_ca_open" placeholder="100.0" /></td>
+              <td><input type="number" id="s4_v_sec_line_ca_closed" placeholder="100.0" /></td>
             </tr>
           </tbody>
         </table>
@@ -921,6 +946,7 @@
           <span class="material-icons-outlined">draw</span>Analysis & Conclusion
         </h2>
         <textarea
+          id="analysis_conclusion"
           placeholder="Summarize your findings, discuss the voltage and phase relationships for each connection type, and explain the effects of floating neutrals or harmonics observed in the waveforms..."
         ></textarea>
       </div>
@@ -938,14 +964,20 @@
               1. Discuss the third harmonics phenomena in the following
               three-phase transformer connections: Δ-Δ, Δ-Y, Y-Δ, Y-Y.
             </h3>
-            <textarea placeholder="Type your answer here..."></textarea>
+            <textarea
+              id="q1_answer"
+              placeholder="Type your answer here..."
+            ></textarea>
           </div>
           <div>
             <h3 class="text-lg font-semibold">
               2. Describe the applications of the following three-phase
               transformer connections: Δ-Δ, Δ-Y, Y-Δ, Y-Y.
             </h3>
-            <textarea placeholder="Type your answer here..."></textarea>
+            <textarea
+              id="q2_answer"
+              placeholder="Type your answer here..."
+            ></textarea>
           </div>
         </div>
       </div>
@@ -1082,7 +1114,117 @@
           });
         });
 
-        // --- PDF EXPORT LOGIC ---
+        // --- SAVE/LOAD LOGIC ---
+        const saveDataButton = document.getElementById("save-data");
+        const loadDataButton = document.getElementById("load-data-btn");
+        const loadDataInput = document.getElementById("load-data-input");
+
+        const readFileAsBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(file);
+          });
+        };
+
+        saveDataButton.addEventListener("click", async () => {
+          const labData = {};
+          const dataInputs = document.querySelectorAll(
+            'input[type="number"], textarea'
+          );
+
+          dataInputs.forEach((input) => {
+            if (input.id) {
+              labData[input.id] = input.value;
+            }
+          });
+
+          const fileInputs = document.querySelectorAll(
+            'input[type="file"].waveform-input'
+          );
+          for (const input of fileInputs) {
+            if (input.id && input.files[0]) {
+              try {
+                labData[input.id] = await readFileAsBase64(input.files[0]);
+              } catch (error) {
+                console.error("Error reading file:", error);
+                alert("Could not save one of the waveform images.");
+              }
+            } else if (input.id) {
+                // If there's an image preview but no file, save the preview src
+                const previewImage = input.nextElementSibling;
+                if (previewImage && previewImage.src && previewImage.src.startsWith('data:image')) {
+                    labData[input.id] = previewImage.src;
+                }
+            }
+          }
+
+          const jsonString = JSON.stringify(labData, null, 2);
+          const blob = new Blob([jsonString], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "lab6-transformer-data.json";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+
+        loadDataButton.addEventListener("click", () => {
+          loadDataInput.click();
+        });
+
+        loadDataInput.addEventListener("change", (event) => {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const loadedData = JSON.parse(e.target.result);
+
+              for (const id in loadedData) {
+                const element = document.getElementById(id);
+                if (element) {
+                  if (
+                    (element.tagName === "INPUT" && element.type === "number") ||
+                    element.tagName === "TEXTAREA"
+                  ) {
+                    element.value = loadedData[id];
+                  } else if (
+                    element.tagName === "INPUT" &&
+                    element.type === "file"
+                  ) {
+                    const previewImage = element.nextElementSibling;
+                    if (previewImage && previewImage.tagName === "IMG") {
+                      const base64String = loadedData[id];
+                      if (
+                        base64String &&
+                        typeof base64String === "string" &&
+                        base64String.startsWith("data:image")
+                      ) {
+                        previewImage.src = base64String;
+                        previewImage.classList.remove("hidden");
+                      }
+                    }
+                  }
+                }
+              }
+              alert("Data loaded successfully!");
+            } catch (error) {
+              console.error("Error parsing JSON file:", error);
+              alert(
+                "Failed to load data. The file may be corrupt or not in the correct format."
+              );
+            }
+          };
+          reader.readAsText(file);
+          event.target.value = null;
+        });
+
         // --- PDF EXPORT LOGIC ---
         document
           .getElementById("export-pdf")
@@ -1099,17 +1241,18 @@
             const contentWidth = pdfWidth - pageMargin * 2;
             let currentY = pageMargin;
 
-            const exportButton = document.getElementById("export-pdf");
-            exportButton.style.display = "none"; // Hide button during export
-            window.scrollTo(0, 0); // Scroll to top to ensure all elements are in viewport for html2canvas
+            const headerActions = document.getElementById("header-actions");
+            headerActions.style.display = "none"; // Hide buttons during export
+            window.scrollTo(0, 0);
 
             const appContainer = document.getElementById("app-container");
-            const elementsToExport = Array.from(appContainer.children); // Get all direct children of the app-container
+            const elementsToExport = Array.from(
+              appContainer.getElementsByClassName("pdf-section")
+            );
 
-            // Helper function to add content to PDF, handling page breaks
             const addContentToPdf = async (element) => {
               const originalDisplay = element.style.display;
-              element.style.display = "block"; // Ensure visibility for html2canvas
+              element.style.display = "block";
 
               const canvas = await html2canvas(element, {
                 scale: 2,
@@ -1118,18 +1261,17 @@
                 allowTaint: true,
                 scrollY: -window.scrollY,
                 windowHeight: document.documentElement.offsetHeight,
-                width: element.offsetWidth, // Ensure html2canvas captures the element's actual width
-                height: element.offsetHeight, // Ensure html2canvas captures the element's actual height
+                width: element.offsetWidth,
+                height: element.offsetHeight,
               });
               const imgData = canvas.toDataURL("image/png");
               const imgProps = pdf.getImageProperties(imgData);
               const pdfImgHeight =
                 (imgProps.height * contentWidth) / imgProps.width;
 
-              // Check if adding this element will exceed the current page's height
               if (currentY + pdfImgHeight + pageMargin > pdfHeight) {
                 pdf.addPage();
-                currentY = pageMargin; // Reset Y position for the new page
+                currentY = pageMargin;
               }
 
               pdf.addImage(
@@ -1140,26 +1282,17 @@
                 contentWidth,
                 pdfImgHeight
               );
-              currentY += pdfImgHeight + 10; // Add some padding below the element
+              currentY += pdfImgHeight + 5;
 
-              element.style.display = originalDisplay; // Restore original display
+              element.style.display = originalDisplay;
             };
 
             for (const element of elementsToExport) {
-              if (element.classList.contains("page-break-after")) {
-                pdf.addPage();
-                currentY = pageMargin; // Reset Y position for the new page
-              } else if (element.classList.contains("pdf-section")) {
-                // For main sections, we'll try to capture them as a whole first
-                await addContentToPdf(element);
-              } else {
-                // For any other direct child (like the header or other non-section elements)
-                await addContentToPdf(element);
-              }
+              await addContentToPdf(element);
             }
 
             pdf.save("EX06_Three-Phase_Transformer_Lab_Report.pdf");
-            exportButton.style.display = "block"; // Show button after export
+            headerActions.style.display = "flex"; // Show buttons after export
           });
       });
     </script>
