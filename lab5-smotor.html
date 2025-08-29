@@ -113,9 +113,18 @@
                 <h1 class="text-3xl font-bold text-blue-700">EX05: Synchronous Motors</h1>
                 <p class="text-gray-600 mt-1">Department of Electrical Engineering, Kasetsart University</p>
             </div>
-            <button id="export-pdf" class="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                Export as PDF
-            </button>
+            <div id="action-buttons-container" class="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
+                <button id="save-data" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                   Save Data
+               </button>
+               <button id="load-data" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                   Load Data
+               </button>
+               <input type="file" id="load-file-input" accept=".json" style="display: none;">
+               <button id="export-pdf" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                   Export as PDF
+               </button>
+           </div>
         </header>
 
         <div class="section-card pdf-section">
@@ -244,12 +253,12 @@
                 <div>
                     <h3 class="text-lg font-semibold">1. Explain the conditions and effects of under-excitation, normal excitation, and over-excitation.</h3>
                     <div class="hint"><strong>Hint:</strong> Think about the relationship between the internal generated voltage (E) and the terminal supply voltage (V) in each case. How does this affect reactive power (VArs) flow?</div>
-                    <textarea placeholder="Type your answer here..."></textarea>
+                    <textarea id="q1-answer" placeholder="Type your answer here..."></textarea>
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold">2. What is a synchronous condenser?</h3>
                     <div class="hint"><strong>Hint:</strong> Consider a synchronous motor running with no mechanical load. What happens when you over-excite its field winding, and how could this be useful for the power grid?</div>
-                    <textarea placeholder="Type your answer here..."></textarea>
+                    <textarea id="q2-answer" placeholder="Type your answer here..."></textarea>
                 </div>
             </div>
         </div>
@@ -268,6 +277,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- EXISTING CHART AND TABLE LOGIC ---
             const createChart = (ctx, label) => {
                 return new Chart(ctx, {
                     type: 'line',
@@ -338,6 +348,7 @@
             setupTable('no-load-table-body', 'add-no-load-row', 0);
             setupTable('half-load-table-body', 'add-half-load-row', 1);
 
+            // --- EXISTING INSTRUCTION MODAL LOGIC ---
             const instructions = {
                 section1: { title: '1. Record Nameplate Data', content: `<p>Fill in the manufacturer information and electrical ratings for both the Synchronous Motor and the DC Generator.</p>` },
                 section2: { title: '2. Implement Circuit', content: `<p>Wire the components as shown in the experiment's circuit diagram (Figure 1).</p>` },
@@ -370,7 +381,7 @@
             closeModalBtn.addEventListener('click', closeModal);
             modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-            // --- PDF Export Logic (Reverted to all html2canvas) ---
+            // --- EXISTING PDF EXPORT LOGIC (WITH SLIGHT MODIFICATION) ---
             document.getElementById('export-pdf').addEventListener('click', async () => {
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
@@ -380,8 +391,8 @@
                 const contentWidth = pdfWidth - (pageMargin * 2);
                 let currentY = pageMargin;
 
-                const exportButton = document.getElementById('export-pdf');
-                exportButton.style.display = 'none';
+                const actionButtons = document.getElementById('action-buttons-container');
+                actionButtons.style.display = 'none'; // Hide all buttons
                 window.scrollTo(0, 0);
 
                 const sections = document.querySelectorAll('.pdf-section');
@@ -402,11 +413,130 @@
                 }
 
                 pdf.save('EX05_Synchronous_Motors_Lab_Report.pdf');
-                exportButton.style.display = 'block';
+                actionButtons.style.display = 'flex'; // Show all buttons again
             });
+
+            // --- NEW SAVE AND LOAD FUNCTIONALITY ---
+
+            // Function to gather all data from the page into a single object
+            const gatherAllData = () => {
+                const data = {
+                    nameplate: {},
+                    noLoadData: [],
+                    halfLoadData: [],
+                    questions: {}
+                };
+                
+                document.querySelectorAll('.nameplate-item input').forEach(input => {
+                    data.nameplate[input.id] = input.value;
+                });
+
+                const getTableData = (tableBodyId) => {
+                    const rowsData = [];
+                    document.getElementById(tableBodyId).querySelectorAll('tr').forEach(row => {
+                        const inputs = row.querySelectorAll('input');
+                        if (inputs.length > 0) {
+                            rowsData.push({
+                                if: inputs[0].value, ia: inputs[1].value, v: inputs[2].value,
+                                p: inputs[3].value, pf: inputs[4].value,
+                            });
+                        }
+                    });
+                    return rowsData;
+                };
+                data.noLoadData = getTableData('no-load-table-body');
+                data.halfLoadData = getTableData('half-load-table-body');
+
+                data.questions['q1-answer'] = document.getElementById('q1-answer').value;
+                data.questions['q2-answer'] = document.getElementById('q2-answer').value;
+                
+                return data;
+            };
+
+            // Function to populate the page with data from a loaded object
+            const populateAllData = (data) => {
+                if (data.nameplate) {
+                    for (const [id, value] of Object.entries(data.nameplate)) {
+                        const el = document.getElementById(id);
+                        if (el) el.value = value;
+                    }
+                }
+                
+                const populateTable = (tableBodyId, tableData) => {
+                    const tableBody = document.getElementById(tableBodyId);
+                    tableBody.querySelectorAll('tr').forEach(row => {
+                        if (row.querySelector('input')) row.remove();
+                    });
+
+                    if (tableData) {
+                        tableData.forEach(rowData => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><input type="number" class="if-input" value="${rowData.if || ''}" placeholder="0.00"></td>
+                                <td><input type="number" class="ia-input" value="${rowData.ia || ''}" placeholder="0.00"></td>
+                                <td><input type="number" class="v-input" value="${rowData.v || ''}" placeholder="0.00"></td>
+                                <td><input type="number" class="p-input" value="${rowData.p || ''}" placeholder="0.00"></td>
+                                <td><input type="number" class="pf-input" value="${rowData.pf || ''}" placeholder="0.00"></td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+                };
+                populateTable('no-load-table-body', data.noLoadData);
+                populateTable('half-load-table-body', data.halfLoadData);
+
+                if (data.questions) {
+                    for (const [id, value] of Object.entries(data.questions)) {
+                        const el = document.getElementById(id);
+                        if (el) el.value = value;
+                    }
+                }
+
+                // Trigger chart updates by dispatching an 'input' event
+                document.getElementById('no-load-table-body').dispatchEvent(new Event('input', { bubbles: true }));
+                document.getElementById('half-load-table-body').dispatchEvent(new Event('input', { bubbles: true }));
+            };
+
+            // Event listener for the Save button
+            document.getElementById('save-data').addEventListener('click', () => {
+                const data = gatherAllData();
+                const dataStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'synchronous-motor-data.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            // Event listeners for the Load button and hidden file input
+            const loadFileInput = document.getElementById('load-file-input');
+            document.getElementById('load-data').addEventListener('click', () => {
+                loadFileInput.click();
+            });
+
+            loadFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        populateAllData(data);
+                    } catch (error) {
+                        console.error('Error parsing JSON file:', error);
+                        alert('Could not load file. Please select a valid JSON data file.');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = null; // Reset input to allow loading the same file again
+            });
+
         });
     </script>
 </body>
 </html>
-
-
