@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แนวทางการตอบคำถามวิชายานยนต์ไฟฟ้า (01205362)</title>
+    
+    <!-- Google Fonts: Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- MathJax for beautiful equations -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --light-green: #DDF4E7;
+            --medium-green: #67C090;
+            --medium-blue: #26667F;
+            --dark-blue: #124170;
+            --text-color: #333;
+            --background-light: #f8f9fa;
+            --background-white: #ffffff;
+            --danger-red: #d9534f;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            line-height: 1.8;
+            color: var(--text-color);
+            background-color: var(--background-light);
+            margin: 0; padding: 0;
+            scroll-behavior: smooth;
+        }
+        .container {
+            max-width: 900px; margin: 20px auto; padding: 20px;
+            background-color: var(--background-white);
+            border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        header {
+            text-align: center; border-bottom: 2px solid var(--medium-blue);
+            padding-bottom: 20px; margin-bottom: 30px;
+        }
+        header h1 { color: var(--dark-blue); margin: 0; }
+        header p { color: #555; font-size: 1.1em; }
+        nav { text-align: center; margin-bottom: 30px; }
+        nav a {
+            text-decoration: none; color: var(--background-white);
+            background-color: var(--medium-blue); padding: 10px 20px;
+            border-radius: 5px; margin: 5px; display: inline-block;
+            transition: background-color 0.3s;
+        }
+        nav a:hover { background-color: var(--dark-blue); }
+        .part-section {
+            margin-bottom: 40px; padding: 20px; border: 1px solid #ddd;
+            border-radius: 8px; background-color: #fdfdfd;
+        }
+        h2 { color: var(--dark-blue); border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .question { margin-bottom: 25px; }
+        .question > p { font-weight: bold; color: var(--text-color); }
+        .explanation {
+            background-color: var(--light-green); border-left: 5px solid var(--medium-green);
+            padding: 15px; margin-top: 10px; border-radius: 0 5px 5px 0;
+        }
+        details { cursor: pointer; }
+        summary {
+            font-weight: bold; color: var(--dark-blue); padding: 10px;
+            background-color: #eef7f2; border-radius: 5px; outline: none;
+        }
+        .result { font-weight: bold; color: var(--danger-red); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: var(--medium-blue); color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .note {
+            font-style: italic; color: #555; border: 1px dashed #ccc;
+            padding: 10px; margin-top: 15px; background-color: #fafafa;
+            border-radius: 5px;
+        }
+        .mandatory { color: var(--danger-red); }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header><h1>แนวทางการตอบคำถามข้อสอบวิชายานยนต์ไฟฟ้า</h1><p>01205362 - กลางภาค 1/2568</p></header>
+    <nav><a href="#part1">ส่วนที่ 1</a><a href="#part2">ส่วนที่ 2</a><a href="#part3">ส่วนที่ 3</a><a href="#part4">ส่วนที่ 4</a></nav>
+    <div class="note"><strong>ข้อควรจำ:</strong> เครื่องมือนี้จัดทำขึ้นเพื่อเป็นแนวทาง ช่วยให้นักศึกษาเข้าใจแนวคิดและขั้นตอนการคำนวณ ไม่ได้ใช้เพื่อการให้คะแนน</div>
+
+    <!-- #################### PART 1 #################### -->
+    <section id="part1" class="part-section">
+        <h2>ส่วนที่ 1: คำถามสั้น</h2>
+        <div class="question">
+            <p>(1) ZEV ต่างจาก BEV อย่างไร</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation"><strong>ZEV (Zero-Emission Vehicle)</strong> คือยานพาหนะที่ไม่ปล่อยมลพิษจากท่อไอเสีย เป็นหมวดหมู่ที่กว้างกว่า<br><strong>BEV (Battery Electric Vehicle)</strong> คือประเภทย่อยของ ZEV ที่ใช้พลังงานจากแบตเตอรี่เท่านั้น<br><strong>สรุป:</strong> BEV ทุกคันคือ ZEV แต่ ZEV อาจเป็นรถประเภทอื่นก็ได้ เช่น FCEV (รถไฮโดรเจน)</div></details>
+        </div>
+        <div class="question">
+            <p>(2)<span class="mandatory">*</span> อธิบายข้อดีของการให้เครื่องยนต์ทำงานคู่กับมอเตอร์ไฟฟ้าในรถยนต์ไฮบริด</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">เพื่อ <strong>เพิ่มประสิทธิภาพโดยรวม</strong> โดยให้แต่ละระบบทำงานในจุดที่ตัวเองถนัด:<ul><li><strong>มอเตอร์ไฟฟ้า</strong>: มีประสิทธิภาพสูงที่ความเร็วต่ำและตอนออกตัว</li><li><strong>เครื่องยนต์</strong>: มีประสิทธิภาพสูงสุดเมื่อทำงานที่ภาระปานกลางและความเร็วรอบคงที่</li></ul>ทำให้สามารถ <strong>ดับเครื่องยนต์</strong> ตอนรถติด, <strong>ช่วยเสริมแรง</strong> ตอนเร่งแซง, และนำพลังงานกลับมาใช้ตอนเบรก <strong>(Regenerative Braking)</strong> ได้</div></details>
+        </div>
+        <div class="question">
+            <p>(3)<span class="mandatory">*</span> อธิบาย power flow ของรถยนต์ HEV แบบอนุกรม</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">ใน HEV แบบอนุกรม (Series Hybrid) <strong>เครื่องยนต์ไม่ได้เชื่อมต่อกับล้อโดยตรง</strong><br><strong>Power Flow:</strong> เครื่องยนต์ → หมุนเจนเนอเรเตอร์ → ผลิตไฟฟ้า → ส่งไปที่มอเตอร์เพื่อขับเคลื่อนล้อ (ส่วนเกินจะนำไปชาร์จแบตเตอรี่) รถจึงถูกขับเคลื่อนด้วยมอเตอร์ไฟฟ้าเสมอ โดยมีเครื่องยนต์ทำหน้าที่เป็นโรงไฟฟ้าเคลื่อนที่</div></details>
+        </div>
+        <div class="question">
+            <p>(4) ยกตัวอย่างโหมดการชาร์จแบตเตอรี่ระหว่างขับเคลื่อนของรถไฮบริดมา 2 รูปแบบ</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation"><ol><li><strong>Regenerative Braking:</strong> เมื่อเบรกหรือชะลอรถ มอเตอร์จะทำหน้าที่เป็นเจนเนอเรเตอร์ เปลี่ยนพลังงานจลน์เป็นไฟฟ้าชาร์จกลับเข้าแบตเตอรี่</li><li><strong>Engine Charging:</strong> ระบบสั่งให้เครื่องยนต์ทำงานเพื่อปั่นเจนเนอเรเตอร์ และนำไฟฟ้าส่วนเกินจากการขับเคลื่อนไปชาร์จแบตเตอรี่ เพื่อรักษาระดับประจุ (SOC)</li></ol></div></details>
+        </div>
+        <div class="question">
+            <p>(5)<span class="mandatory">*</span> ยกตัวอย่างสถานการณ์ที่รถต้องการ tractive force สูงที่สุด พร้อมทั้งสมการที่เกี่ยวข้อง</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">สถานการณ์ที่ต้องการแรงขับเคลื่อนสูงสุดคือ <strong>การเร่งความเร็วขึ้นทางลาดชันจากจุดหยุดนิ่ง</strong> เพราะต้องเอาชนะแรงต้านทุกอย่างพร้อมกัน: แรงต้านการหมุน (\(F_r\)), แรงต้านจากความชัน (\(F_g\)), และแรงเฉื่อยจากการเร่ง (\(F_a\))<br>$$ F_t = F_r + F_w + F_g + F_a $$โดยที่ \(F_w\) (แรงต้านอากาศ) เป็นศูนย์ที่จุดหยุดนิ่ง</div></details>
+        </div>
+        <div class="question">
+            <p>(6) อธิบายการประมาณค่า maximum speed ของรถไฟฟ้าโดยใช้กราฟ</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">ทำได้โดยการวาดกราฟ 2 เส้นเทียบกับความเร็ว: 1) <strong>Tractive Effort Curve</strong> (แรงขับเคลื่อนสูงสุดที่รถทำได้) และ 2) <strong>Total Resistance Curve</strong> (แรงต้านรวม) <strong>จุดที่กราฟทั้งสองเส้นตัดกัน</strong> คือความเร็วสูงสุด (Maximum Speed) เพราะเป็นจุดที่แรงขับเคลื่อนเท่ากับแรงต้านพอดี</div></details>
+        </div>
+        <div class="question">
+            <p>(7) อธิบายแนวคิดการออกแบบรูปแบบการขับขี่แบบ WLTC</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation"><strong>WLTC (Worldwide Harmonised Light Vehicle Test Procedure)</strong> ถูกออกแบบมาเพื่อจำลอง <strong>การขับขี่ในชีวิตจริง</strong> ได้ดีกว่ามาตรฐานเก่า โดยมีลักษณะการเร่งและเบรกที่หลากหลาย แบ่งการทดสอบเป็น 4 เฟส (ต่ำ, กลาง, สูง, สูงพิเศษ) เพื่อสะท้อนการขับขี่ในเมืองและบนทางด่วน</div></details>
+        </div>
+        <div class="question">
+            <p>(8)<span class="mandatory">*</span> efficiency map ของมอเตอร์และอินเวอร์เตอร์ มีประโยชน์ต่อการออกแบบรถไฟฟ้าอย่างไร</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">Efficiency map ช่วยให้ผู้ออกแบบ: <ol><li><strong>เลือกอัตราทดเกียร์</strong> ที่เหมาะสม เพื่อให้การขับขี่ส่วนใหญ่อยู่ในโซนประสิทธิภาพสูงสุด (sweet spot)</li><li><strong>พัฒนากลยุทธ์การควบคุม</strong> เพื่อแบ่งภาระระหว่างมอเตอร์ (ในรถ AWD) หรือระหว่างเครื่องยนต์กับมอเตอร์ (ในรถไฮบริด) ให้ได้ประสิทธิภาพโดยรวมสูงสุด</li><li><strong>ประมาณระยะทางวิ่ง (Range)</strong> ได้อย่างแม่นยำขึ้น</li></ol></div></details>
+        </div>
+        <div class="question">
+            <p>(9) Hairpin winding ช่วยเพิ่มประสิทธิภาพทางไฟฟ้าได้อย่างไร</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">Hairpin winding ใช้ตัวนำทองแดงหน้าตัดสี่เหลี่ยมแทนลวดกลม ทำให้ <strong>อัดทองแดงในร่องสเตเตอร์ได้แน่นขึ้น (Higher Slot Fill Factor)</strong> ส่งผลให้ความต้านทานไฟฟ้า (\(R\)) ลดลง จึงลดการสูญเสียพลังงานในรูปความร้อน (\(P = I^2R\)) และยังช่วยให้ระบายความร้อนได้ดีขึ้นด้วย</div></details>
+        </div>
+        <div class="question">
+            <p>(10)<span class="mandatory">*</span> อธิบายแนวคิดของการเลือกขนาดของมอเตอร์ในรถยนต์ EV</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">เป็นการหาจุดสมดุลระหว่าง <strong>สมรรถนะ, ประสิทธิภาพ, และต้นทุน</strong> โดยพิจารณาจาก: <ul><li><strong>Peak Power:</strong> กำหนดอัตราเร่ง (0-100 km/h)</li><li><strong>Peak Torque:</strong> กำหนดความสามารถในการไต่ทางชัน</li><li><strong>Efficiency Map:</strong> ต้องเลือกขนาดให้ "sweet spot" ของมอเตอร์สอดคล้องกับพฤติกรรมการใช้งานส่วนใหญ่ เพื่อประหยัดพลังงานที่สุด</li></ul></div></details>
+        </div>
+        <div class="question">
+            <p>(11) ข้อดีด้านใดของมอเตอร์เหนี่ยวนำที่ทำให้ยังถูกใช้งานร่วมกับ PMSM</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">มอเตอร์เหนี่ยวนำ (Induction Motor - IM) ถูกใช้งานร่วมกับมอเตอร์แม่เหล็กถาวร (PMSM) ในรถ EV ประสิทธิภาพสูงด้วยเหตุผลหลัก 3 ประการ:
+
+<p><strong>ไม่มีแรงหน่วงแม่เหล็ก (Zero Drag Torque):</strong> เมื่อไม่จ่ายไฟ มอเตอร์ IM จะหมุนฟรีได้โดยแทบไม่มีแรงต้าน เพราะไม่มีแม่เหล็กถาวรในโรเตอร์ ซึ่งต่างจาก PMSM ที่มีแรงหน่วงตลอดเวลา สิ่งนี้ช่วยเพิ่มประสิทธิภาพการขับขี่ทางไกล (cruising) อย่างมาก เพราะระบบสามารถตัดการทำงานของมอเตอร์ IM ที่เพลาเสริมได้เลยโดยไม่เกิดการสูญเสียพลังงาน</p>
+<p><strong>ต้นทุนต่ำและไม่ใช้แม่เหล็กหายาก:</strong> มอเตอร์ IM มีโครงสร้างที่เรียบง่ายและไม่ต้องใช้แม่เหล็กหายาก (Rare-Earth Magnets) ซึ่งมีราคาสูงและผันผวน ทำให้มีต้นทุนการผลิตที่ต่ำกว่าและมีความมั่นคงด้านซัพพลายเชนมากกว่า PMSM</p>
+<p><strong>สมรรถนะที่ดีกว่าในช่วงความเร็วสูง:</strong> ที่ความเร็วรอบสูงมาก มอเตอร์ PMSM จะมีประสิทธิภาพลดลงเนื่องจากต้องใช้พลังงานไปกับการทำฟิลด์วีคเคนนิ่ง (Field Weakening) เพื่อต้านสนามแม่เหล็กของตัวเอง ในขณะที่มอเตอร์ IM สามารถทำงานในย่านความเร็วสูงได้อย่างมีประสิทธิภาพมากกว่า จึงเหมาะที่จะทำหน้าที่เป็น "Booster" เพื่อเพิ่มสมรรถนะการเร่งแซงบนทางด่วน</p></div></details>
+        </div>
+        <div class="question">
+            <p>(12)<span class="mandatory">*</span> ข้อจำกัดด้านแรงบิดสูงสุดที่สามารถสร้างได้ เป็นผลมาจากปัจจัยใดบ้าง</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">มาจาก 2 ปัจจัยหลัก: <ol><li><strong>ข้อจำกัดทางแม่เหล็ก (Magnetic Saturation):</strong> เมื่อจ่ายกระแสสูงจนแกนเหล็กอิ่มตัวทางแม่เหล็ก การเพิ่มกระแสอีกก็ไม่ทำให้แรงบิดเพิ่มขึ้น</li><li><strong>ข้อจำกัดทางความร้อน (Thermal Limitation):</strong> การจ่ายกระแสสูงเพื่อสร้างแรงบิดสูงจะเกิดความร้อน (\(P = I^2R\)) หากระบายความร้อนไม่ทัน ฉนวนขดลวดจะเสียหาย ดังนั้น Peak Torque จึงใช้งานได้แค่ช่วงสั้นๆ</li></ol></div></details>
+        </div>
+        <div class="question">
+            <p>(13) ในแง่การสร้างแรงบิด SPM มีความแตกต่างจาก IPM อย่างไรบ้าง</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation"><ul><li><strong>SPM (Surface PM):</strong> สร้างแรงบิดจาก <strong>แรงบิดแม่เหล็ก (Magnetic Torque)</strong> เพียงอย่างเดียว</li><li><strong>IPM (Interior PM):</strong> สร้างแรงบิดจาก 2 ส่วน คือ <strong>แรงบิดแม่เหล็ก + แรงบิดรีลักแทนซ์ (Reluctance Torque)</strong> ซึ่งเกิดจากการออกแบบให้แม่เหล็กฝังในโรเตอร์ ทำให้ IPM สามารถสร้างแรงบิดได้สูงกว่าและมีช่วงการทำงานที่ความเร็วสูงกว้างกว่า</li></ul></div></details>
+        </div>
+        <div class="question">
+            <p>(14)<span class="mandatory">*</span> Axial flux motor ต่างจากมอเตอร์ทั่วไปอย่างไร</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">ต่างกันที่ <strong>ทิศทางของเส้นแรงแม่เหล็ก (Flux)</strong>:<ul><li><strong>มอเตอร์ทั่วไป (Radial Flux):</strong> เส้นแรงแม่เหล็กวิ่งในแนว <strong>รัศมี (Radial)</strong> ตั้งฉากกับแกนหมุน (ทรงกระบอก)</li><li><strong>Axial Flux Motor:</strong> เส้นแรงแม่เหล็กวิ่งในแนว <strong>แกน (Axial)</strong> ขนานกับแกนหมุน (ทรงแบนเหมือนแพนเค้ก)</li></ul>มอเตอร์แบบ Axial Flux มีความหนาแน่นของกำลังและแรงบิดสูงมาก ทำให้มีขนาดเล็กและเบากว่าที่กำลังเท่ากัน</div></details>
+        </div>
+        <div class="question">
+            <p>(15) แบตเตอรี่รถไฟฟ้าที่ใช้ระดับแรงดัน 400V กับ 800V ส่งผลแตกต่างกันอย่างไร</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">จาก \(P = V \times I\), ที่กำลังเท่ากัน ระบบ 800V จะใช้ <strong>กระแส (I) เพียงครึ่งเดียว</strong> ของระบบ 400V ส่งผลให้:<ul><li><strong>ชาร์จเร็วขึ้น:</strong> รับกำลังชาร์จได้สูงโดยกระแสไม่เกินพิกัด</li><li><strong>ประสิทธิภาพสูงขึ้น:</strong> การสูญเสียพลังงาน (\(I^2R\)) ในสายไฟลดลง 4 เท่า</li><li><strong>น้ำหนักเบาลง:</strong> สามารถใช้สายไฟขนาดเล็กและเบาลงได้</li></ul></div></details>
+        </div>
+        <div class="question">
+            <p>(16)<span class="mandatory">*</span> sensorless speed control ของ PMSM อ้างอิงถึงเซนเซอร์ตัวใดในระบบควบคุม</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">"Sensorless" หมายถึงการควบคุมโดย <strong>ไม่ใช้เซนเซอร์วัดตำแหน่งบนเพลามอเตอร์โดยตรง</strong> (เช่น Resolver) แต่จะใช้การวัดค่าทางไฟฟ้าคือ <strong>แรงดัน (Voltage) และกระแส (Current)</strong> ที่ขั้วมอเตอร์ แล้วใช้อัลกอริทึมคำนวณตำแหน่งและความเร็วจากค่า <strong>Back-EMF</strong> ที่เกิดขึ้น</div></details>
+        </div>
+    </section>
+
+    <!-- #################### PART 2 #################### -->
+    <section id="part2" class="part-section">
+        <h2>ส่วนที่ 2: การคำนวณและวาดกราฟ (LLO3)</h2>
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap; align-items: flex-start;">
+            <table> <!-- Vehicle Parameters Table --> </table>
+            <div class="canvas-container" style="max-width:400px; height:250px;"><canvas id="speedProfileChart"></canvas></div>
+        </div>
+        
+        <div class="question">
+            <h4>ขั้นตอนการคำนวณ Step-by-Step</h4>
+            
+            <h5>1. กราฟแสดงความเร่ง (\(a\))</h5>
+            <div class="calculation-step">เราจะแบ่งการเคลื่อนที่ออกเป็น 3 ช่วง:<br>
+                <b>ช่วงที่ 1 (0-20 s):</b> \(a = (16.67 \text{ m/s}) / 20 \text{ s} = \) <span class="result">0.833 m/s²</span><br>
+                <b>ช่วงที่ 2 (20-40 s):</b> ความเร็วคงที่, \(a = \) <span class="result">0 m/s²</span><br>
+                <b>ช่วงที่ 3 (40-50 s):</b> \(a = (-16.67 \text{ m/s}) / 10 \text{ s} = \) <span class="result">-1.667 m/s²</span>
+            </div>
+            <div class="canvas-container"><canvas id="accelerationChart"></canvas></div>
+            
+            <h5>2. กราฟแสดง Tractive Force (\(F_t\)) ที่ต้องการ</h5>
+            <div class="calculation-step">แรงขับเคลื่อนรวมมาจากแรงต้าน 3 ส่วน: การหมุน (\(F_r\)), อากาศ (\(F_w\)), และการเร่ง (\(F_a\))
+                $$ F_t = F_r + F_w + F_a $$
+                โดยที่: <br>
+                \( F_r = C_{rr} \cdot m \cdot g = 0.01 \cdot 2500 \cdot 9.81 = 245.25 \) N (คงที่)<br>
+                \( F_w = 0.5 \cdot \rho \cdot C_d \cdot A \cdot v^2 \) (แปรผันตามความเร็วกำลังสอง)<br>
+                \( F_a = m \cdot a \) (ขึ้นอยู่กับความเร่งในแต่ละช่วง)
+            </div>
+            <div class="canvas-container"><canvas id="tractiveForceChart"></canvas></div>
+
+            <h5>3. กราฟแสดง Torque ที่มอเตอร์ต้องผลิต (\(T_m\))</h5>
+            <div class="calculation-step">แรงบิดที่มอเตอร์ต้องสร้าง จะถูกส่งผ่านเกียร์และเพลาไปที่ล้อ:
+                $$ T_m = \frac{F_t \cdot r}{G \cdot \eta_{dt}} $$
+            </div>
+            <div class="canvas-container"><canvas id="motorTorqueChart"></canvas></div>
+             
+            <h5>4. กราฟแสดงกำลังไฟฟ้าที่แบตเตอรี่ต้องจ่าย (\(P_{batt}\)) (No Regeneration)</h5>
+            <div class="calculation-step">กำลังไฟฟ้าจากแบตเตอรี่ต้องชดเชยการสูญเสียทั้งในมอเตอร์/อินเวอร์เตอร์ และระบบส่งกำลัง:
+                $$ P_{batt} = \frac{P_{wheel}}{ \eta_{total}} = \frac{F_t \cdot v}{\eta_{dt} \cdot \eta_{m}} $$
+            </div>
+            <div class="canvas-container"><canvas id="batteryPowerChart"></canvas></div>
+
+            <h5>5. ค่าพลังงานที่ใช้จากแบตเตอรี่ และ consumption rate/100km</h5>
+            <div class="calculation-step">
+                <b>Total Energy (\(E_{total}\)):</b> <span class="result">0.1816 kWh</span>, 
+                <b>Total Distance (\(d_{total}\)):</b> <span class="result">583.45 m</span>, 
+                <b>Consumption Rate:</b> <span class="result">31.1 kWh/100km</span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- #################### PART 3 #################### -->
+    <section id="part3" class="part-section">
+        <h2>ส่วนที่ 3: การวิเคราะห์สมรรถนะ (LLO3)</h2>
+        <div class="note">ข้อมูลมอเตอร์: Max Torque = 600 Nm, Max Power = 400 kW</div>
+        <div class="question">
+            <h5>3.1 กราฟ Safe Operating Region (Torque-speed curve) ของมอเตอร์</h5>
+            <div class="calculation-step">กราฟนี้มี 2 ส่วนหลัก:
+                <ol>
+                    <li><b>Constant Torque Region:</b> ที่ความเร็วต่ำ มอเตอร์ให้แรงบิดสูงสุดคงที่ (\(T_{max}\))</li>
+                    <li><b>Constant Power Region:</b> หลังผ่านความเร็วพิกัด (Base Speed), แรงบิดจะลดลง แต่กำลัง (\(P = T \cdot \omega\)) จะคงที่ที่ค่าสูงสุด (\(P_{max}\))</li>
+                </ol>
+                 Base Speed (\(\omega_{base}\)) คำนวณได้จาก: \( \omega_{base} = P_{max} / T_{max} \)
+            </div>
+            <div class="canvas-container"><canvas id="soarChart"></canvas></div>
+        </div>
+        <div class="question">
+            <h5>3.2 กราฟ Tractive Force vs Resistant Force และการประมาณ Maximum Cruising Speed</h5>
+            <div class="calculation-step">ความเร็วสูงสุดเกิดขึ้นเมื่อแรงขับเคลื่อนสูงสุดที่รถทำได้ (Tractive Force) เท่ากับแรงต้านทานรวม (Resistant Force) พอดี
+                <ul>
+                    <li><strong>Tractive Force:</strong> คำนวณจาก SOAR ของมอเตอร์ในข้อ 3.1 แล้วแปลงเป็นแรงที่ล้อผ่านเกียร์</li>
+                    <li><strong>Resistant Force:</strong> คือ \(F_r + F_w\) ซึ่งจะเพิ่มขึ้นอย่างรวดเร็วที่ความเร็วสูง</li>
+                </ul>
+                จุดตัดของกราฟทั้งสองคือความเร็วสูงสุดของรถ
+            </div>
+            <div class="explanation">Maximum cruising speed คือจุดที่แรงขับเคลื่อนสูงสุดที่รถทำได้ (เส้นสีน้ำเงิน) เท่ากับแรงต้านรวมของรถ (เส้นสีเขียว) พอดี</div>
+            <div class="canvas-container" style="height: 350px;"><canvas id="maxSpeedChart"></canvas></div>
+            <p class="result" style="text-align:center; font-size:1.1em;">ผลการประมาณจากกราฟ: Maximum speed อยู่ที่ประมาณ 225 km/h (62.5 m/s) ณ จุดที่กราฟตัดกัน</p>
+        </div>
+    </section>
+
+    <!-- #################### PART 4 #################### -->
+    <section id="part4" class="part-section">
+        <h2>ส่วนที่ 4: การอ่านข้อมูลจากดาต้าชีท EMRAX 268</h2>
+        <div class="note">
+            คำตอบต่อไปนี้อ้างอิงจากดาต้าชีท EMRAX 268 โดยใช้รุ่น <strong>Low Voltage (LV)</strong> เป็นหลักในการคำนวณ
+        </div>
+        
+        <div class="question">
+            <p>(1) ถ้าต้องการแรงบิด 100 Nm ต้องจ่ายกระแสให้มอเตอร์เท่าใด</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">เราใช้ค่าคงที่แรงบิด (Torque Constant, \(K_T\)) จากดาต้าชีทสำหรับรุ่น Low Voltage:<br>
+            \(K_T = 0.39\) Nm/A<sub>RMS</sub><br>
+            ความสัมพันธ์คือ: \( \text{Torque} = K_T \times \text{Current} \)<br>
+            ดังนั้น: \( \text{Current} = \frac{\text{Torque}}{K_T} = \frac{100 \text{ Nm}}{0.39 \text{ Nm/A}_{\text{RMS}}} = \) <span class="result">256.4 A<sub>RMS</sub></span>
+            </div></details>
+        </div>
+        <div class="question">
+            <p>(2) เหตุใด power rating ของ AC LC CC ถึงไม่เท่ากัน</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">อักษรย่อหมายถึงวิธีการระบายความร้อน: AC (Air Cooled), LC (Liquid Cooled), CC (Combined Cooled).<br>
+            Power rating (กำลังต่อเนื่อง) ถูกจำกัดโดยความสามารถในการระบายความร้อนออกจากขดลวดมอเตอร์ การระบายความร้อนที่ดีกว่า (LC, CC) ช่วยให้มอเตอร์สามารถทนกระแสต่อเนื่องได้สูงกว่าโดยไม่ร้อนเกินไป จึงมี Power rating ที่สูงกว่า<br>
+            เช่น ในรุ่น LV: AC = 94 kW, LC = 100 kW, CC = 117 kW.
+            </div></details>
+        </div>
+        <div class="question">
+            <p>(3) ที่ช่วงความเร็วรอบ 1500-2500 rpm มอเตอร์จะมีประสิทธิภาพสูงสุดเมื่อสร้างแรงบิดเท่าใด</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">จากกราฟ "Efficiency map" ในหน้าแรกของดาต้าชีท จะเห็นว่าบริเวณที่มีประสิทธิภาพสูงสุด (เส้นประ 96%) อยู่ในช่วงความเร็ว 2000-2500 rpm<br>เมื่อดูตามแกน Torque (Nm) ในบริเวณนั้น จะพบว่าแรงบิดที่ให้ประสิทธิภาพสูงสุดจะอยู่ระหว่าง <span class="result">ประมาณ 150 Nm ถึง 220 Nm</span>.
+            </div></details>
+        </div>
+        <div class="question">
+            <p>(4) ที่ peak torque มอเตอร์รุ่น LV จะมีความสูญเสียในขดลวดเท่าใด</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">การสูญเสียในขดลวด (Copper Loss) คำนวณจาก \(P = 3 \cdot I^2 \cdot R\).<br>
+            จากดาต้าชีทสำหรับรุ่น LV:
+            <ul>
+                <li>Peak motor current (\(I\)) = 1300 A<sub>RMS</sub></li>
+                <li>Internal phase resistance (\(R\)) = 1.65 mΩ = 0.00165 Ω</li>
+            </ul>
+            \( P_{loss} = 3 \times (1300 \text{ A})^2 \times 0.00165~\Omega = 8,365.5 \text{ W} \approx \) <span class="result">8.37 kW</span><br>
+            <div class="note">นี่คือการสูญเสียหลักที่ peak torque แต่ยังมีการสูญเสียในแกนเหล็ก (iron loss) ซึ่งจะเพิ่มขึ้นตามความเร็วรอบ</div>
+            </div></details>
+        </div>
+        <div class="question">
+            <p>(5) ที่พิกัดความเร็วของมอเตอร์ 4500 rpm ต้องจ่ายแรงดันให้มอเตอร์กี่โวลต์และมีความถี่กี่ Hz</p>
+            <details><summary>คลิกเพื่อดูคำตอบ</summary><div class="explanation">อ้างอิงจากรุ่น Low Voltage (LV) ที่ 4500 RPM:
+            <ul>
+                <li><strong>แรงดัน (Voltage):</strong> ดาต้าชีทระบุ "Voltage required for peak power" (ที่ 4500 RPM) คือ <span class="result">340 Vdc</span>. นี่คือแรงดัน DC ที่จ่ายให้อินเวอร์เตอร์</li>
+                <li><strong>ความถี่ (Frequency):</strong> คำนวณจากสูตร \( f = \frac{N \cdot p}{60} \), โดยที่ \(p\) คือจำนวนคู่ขั้ว (pole pairs).<br>
+                จากดาต้าชีท: \(N = 4500\) RPM, \(p = 10\) pole pairs.<br>
+                \( f = \frac{4500 \times 10}{60} = \) <span class="result">750 Hz</span></li>
+            </ul>
+            </div></details>
+        </div>
+    </section>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Chart Data & Calculation Setup ---
+    const m = 2500, Cd = 0.25, A = 2.8, r = 0.390, Crr = 0.01;
+    const G = 10, eta_dt = 0.9, eta_m = 0.9;
+    const g = 9.81, rho = 1.225;
+    const Fr = Crr * m * g;
+    
+    function calculateDynamics(t) {
+        let v_ms, a_ms2;
+        if (t >= 0 && t <= 20) { a_ms2 = 16.67 / 20; v_ms = a_ms2 * t; } 
+        else if (t > 20 && t < 40) { a_ms2 = 0; v_ms = 16.67; } 
+        else if (t >= 40 && t <= 50) { a_ms2 = -16.67 / 10; v_ms = 16.67 + a_ms2 * (t - 40); } 
+        else { v_ms = 0; a_ms2 = 0; }
+        
+        const Fw = 0.5 * rho * Cd * A * v_ms * v_ms;
+        const Fa = m * a_ms2;
+        const Ft = Fr + Fw + Fa;
+        const Tm = (Ft * r) / (G * eta_dt);
+        const Pwheel = Ft * v_ms;
+        const Pbatt = (Pwheel > 0) ? Pwheel / (eta_dt * eta_m) : 0;
+        
+        return { t:t, Ft:Ft, Tm:Tm, Pbatt_kW: Pbatt / 1000 };
+    }
+
+    let plotData = [];
+    for (let t = 0; t <= 50; t += 0.5) { plotData.push(calculateDynamics(t)); }
+
+    // --- Chart Helper Function ---
+    function createTimeChartConfig(title, yLabel, data, color, isStepped = false) {
+        const config = {
+            type: 'line',
+            data: { datasets: [{ label: yLabel, data: data, borderColor: color, tension: 0.1, pointRadius: 0 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, title: { display: true, text: title, font: { size: 16, family: 'Sarabun' } } },
+                scales: {
+                    x: { type: 'linear', title: { display: true, text: 'Time (s)', font: { family: 'Sarabun' } } },
+                    y: { title: { display: true, text: yLabel, font: { family: 'Sarabun' } } }
+                }
+            }
+        };
+        if(isStepped) { config.data.datasets[0].stepped = true; config.data.datasets[0].tension = 0; }
+        return config;
+    }
+
+    // --- Part 2 Chart Rendering ---
+    new Chart(document.getElementById('speedProfileChart'), createTimeChartConfig('Speed Profile', 'Velocity (km/h)', [{x:0, y:0}, {x:20, y:60}, {x:40, y:60}, {x:50, y:0}], 'var(--medium-blue)'));
+    new Chart(document.getElementById('accelerationChart'), createTimeChartConfig('1. Acceleration vs. Time', 'Acceleration (m/s²)', [{x:0, y:0.833}, {x:20, y:0.833}, {x:20.01, y:0}, {x:40, y:0}, {x:40.01, y:-1.667}, {x:50, y:-1.667}], 'var(--medium-green)', true));
+    new Chart(document.getElementById('tractiveForceChart'), createTimeChartConfig('2. Tractive Force vs. Time', 'Force (N)', plotData.map(p => ({x: p.t, y: p.Ft})), 'var(--danger-red)'));
+    new Chart(document.getElementById('motorTorqueChart'), createTimeChartConfig('3. Motor Torque vs. Time', 'Torque (Nm)', plotData.map(p => ({x: p.t, y: p.Tm})), '#E67E22'));
+    new Chart(document.getElementById('batteryPowerChart'), createTimeChartConfig('4. Battery Power vs. Time (No Regen)', 'Power (kW)', plotData.map(p => ({x: p.t, y: p.Pbatt_kW})), '#3498DB'));
+    
+    // --- Part 3 Chart Rendering ---
+    const T_max = 600, P_max = 400000;
+    const omega_base = P_max / T_max;
+    const rpm_base = omega_base * 60 / (2 * Math.PI);
+    let soarData = [];
+    for(let rpm=0; rpm <= 12000; rpm+=250) {
+        if (rpm <= rpm_base) { soarData.push({x: rpm, y: T_max}); } 
+        else { const omega = rpm * 2 * Math.PI / 60; soarData.push({x: rpm, y: P_max / omega}); }
+    }
+    const soarOptions = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { title: { display: true, text: '3.1 Motor Safe Operating Region', font: { size: 16, family: 'Sarabun' } }, legend: { display: false } },
+        scales: { 
+            x: { type: 'linear', title: { display: true, text: 'Motor Speed (RPM)', font: { family: 'Sarabun' } } }, 
+            y: { title: { display: true, text: 'Torque (Nm)', font: { family: 'Sarabun' } } } 
+        }
+    };
+    new Chart(document.getElementById('soarChart'), { type: 'line', data: { datasets: [{ label: 'Motor Torque (Nm)', data: soarData, borderColor: 'var(--medium-blue)' }] }, options: soarOptions });
+    
+    let speed_ms = Array.from({length: 81}, (_, i) => i);
+    const resistantForce = speed_ms.map(v => Fr + (0.5 * rho * Cd * A * v*v));
+    const motor_rpm_to_v = (rpm) => (rpm / G) * r * (2*Math.PI/60);
+    const v_base_ms = motor_rpm_to_v(rpm_base);
+    const tractiveForce = speed_ms.map(v => (v > 0 && v <= v_base_ms) ? (T_max * G * eta_dt) / r : (v > v_base_ms ? (P_max * eta_dt) / v : null));
+    const maxSpeedOptions = {
+        responsive: true, maintainAspectRatio: false,
+        plugins:{ title: { display: true, text: '3.2 Force vs. Speed', font: { size: 16, family: 'Sarabun' }}, legend: {display: true, labels: {font: {family: 'Sarabun'}}}}, 
+        scales: { 
+            x: { type: 'linear', title: {display: true, text: 'Vehicle Speed (km/h)', font: { family: 'Sarabun' }}}, 
+            y: { title: {display: true, text: 'Force (N)', font: { family: 'Sarabun' }}}
+        }
+    };
+    new Chart(document.getElementById('maxSpeedChart'), { type: 'line', data: { labels: speed_ms.map(v => (v*3.6).toFixed(0)), datasets: [{ label: 'Max Tractive Force', data: tractiveForce, borderColor: '#007BFF', pointRadius: 0 }, { label: 'Resistant Force', data: resistantForce, borderColor: '#28A745', pointRadius: 0 }] }, options: maxSpeedOptions });
+});
+</script>
+
+</body>
+</html>
