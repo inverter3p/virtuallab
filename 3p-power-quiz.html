@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบทดสอบ: วงจรไฟฟ้าสามเฟส</title>
+    <script>
+        // --- START: MathJax Configuration ---
+        // This configuration tells MathJax to recognize $...$ for inline math 
+        // and $$...$$ for display math, which is a common and intuitive setup.
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+        // --- END: MathJax Configuration ---
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #quiz-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #4a69bd;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-body {
+            padding: 30px;
+        }
+        #progress {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        #question-text {
+            font-size: 1.2em;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .options {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .options.disabled {
+            pointer-events: none;
+        }
+        .options li {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .options li:hover {
+            background-color: #e9ecef;
+        }
+        .options li.selected {
+            background-color: #cce5ff;
+            border-color: #007bff;
+        }
+        .options li.correct {
+            background-color: #d4edda !important;
+            border-color: #c3e6cb !important;
+            color: #155724 !important;
+        }
+        .options li.incorrect {
+            background-color: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            color: #721c24 !important;
+        }
+        .footer {
+            padding: 20px 30px;
+            text-align: right;
+            border-top: 1px solid #eee;
+        }
+        #submit-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #submit-btn:hover {
+            background-color: #0056b3;
+        }
+        #results-container {
+            text-align: center;
+            padding: 40px 30px;
+        }
+        #results-container h2 {
+            font-size: 2em;
+            color: #4a69bd;
+        }
+        #score-text {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        #review-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #review-container {
+            text-align: left;
+            padding: 30px;
+            display: none;
+        }
+        .review-question {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .review-question p {
+            margin: 0 0 10px 0;
+        }
+        .user-answer.correct { color: #28a745; font-weight: bold; }
+        .user-answer.incorrect { color: #dc3545; font-weight: bold; }
+        .correct-answer { color: #1e90ff; font-weight: bold; }
+        .rationale {
+            background-color: #eef7ff;
+            border-left: 4px solid #1e90ff;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        #immediate-feedback {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="quiz-container">
+        <div class="header">
+            <h1>แบบทดสอบ: วงจรไฟฟ้าสามเฟส</h1>
+        </div>
+
+        <div class="quiz-body" id="quiz-body">
+            <div id="progress"></div>
+            <div id="question-text"></div>
+            <ul class="options" id="options-container"></ul>
+            <div id="immediate-feedback" class="rationale" style="display: none;"></div>
+        </div>
+
+        <div class="footer" id="quiz-footer">
+            <button id="submit-btn">ตรวจคำตอบ</button>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>ทำแบบทดสอบเสร็จแล้ว!</h2>
+            <p id="score-text"></p>
+            <button id="review-btn">ดูเฉลย (Review Quiz)</button>
+        </div>
+        
+        <div id="review-container">
+            <h2>เฉลยแบบทดสอบ</h2>
+        </div>
+    </div>
+
+<script>
+const quizData = [
+    {
+        question: "ในระบบไฟฟ้าสามเฟสแบบสมดุล แรงดันไฟฟ้าในแต่ละเฟสจะต่างกันกี่องศา?",
+        options: ["$90^\\circ$", "$120^\\circ$", "$180^\\circ$", "$360^\\circ$"],
+        answer: "$120^\\circ$",
+        rationale: "เพื่อให้กำลังไฟฟ้าที่ส่งออกมีค่าคงที่ แรงดันในแต่ละเฟสของระบบสามเฟสจึงถูกสร้างให้มีมุมต่างกัน $120^\\circ$"
+    },
+    {
+        question: "ข้อใดคือความสัมพันธ์ที่ถูกต้องสำหรับโหลดที่ต่อแบบสตาร์ (Y)?",
+        options: ["$V_L = V_{ph}$ และ $I_L = \\sqrt{3} I_{ph}$", "$V_L = \\sqrt{3} V_{ph}$ และ $I_L = I_{ph}$", "$V_L = V_{ph}$ และ $I_L = I_{ph}$", "$V_L = \\sqrt{3} V_{ph}$ และ $I_L = \\sqrt{3} I_{ph}$"],
+        answer: "$V_L = \\sqrt{3} V_{ph}$ และ $I_L = I_{ph}$",
+        rationale: "ในการต่อแบบสตาร์ กระแสที่ไหลผ่านสายจะเท่ากับกระแสที่ไหลผ่านเฟส และแรงดันสายจะมากกว่าแรงดันเฟสอยู่ $\\sqrt{3}$ เท่า"
+    },
+    {
+        question: "กำลังไฟฟ้ารีแอกทีฟ (Reactive Power) มีหน่วยเป็นอะไร?",
+        options: ["วัตต์ (W)", "โวลต์-แอมแปร์ (VA)", "โวลต์-แอมแปร์ รีแอกทีฟ (VAR)", "จูล (J)"],
+        answer: "โวลต์-แอมแปร์ รีแอกทีฟ (VAR)",
+        rationale: "VAR เป็นหน่วยมาตรฐานที่ใช้วัดกำลังไฟฟ้าที่เกิดจากการแลกเปลี่ยนพลังงานระหว่างแหล่งจ่ายกับส่วนประกอบที่เป็นรีแอกทีฟ (L หรือ C) ในวงจร"
+    },
+    {
+        question: "โหลดสามเฟสที่สมดุลต่อแบบเดลต้า ($\\Delta$) เชื่อมต่อกับแหล่งจ่ายแรงดันสาย 208 V และมีอิมพีแดนซ์ต่อเฟสคือ $10 \\ \\Omega$ กระแสเฟส ($I_{ph}$) ที่คำนวณได้คือ ________ A.",
+        options: ["12.0", "36.0", "20.8", "6.9"],
+        answer: "20.8",
+        rationale: "ในการต่อแบบเดลต้า แรงดันเฟสจะเท่ากับแรงดันสาย ($V_{ph} = V_L$) ดังนั้นกระแสเฟสจึงคำนวณได้จาก $I_{ph} = \\frac{V_{ph}}{Z_{ph}} = \\frac{208 \\ V}{10 \\ \\Omega} = 20.8 \\ A$"
+    },
+    {
+        question: "มอเตอร์สามเฟสตัวหนึ่งมีกำลังไฟฟ้าจริง (P) 15 kW และตัวประกอบกำลัง (PF) 0.85 lagging จงคำนวณหากำลังไฟฟ้าปรากฏ (S)",
+        options: ["$12.75 \\ kVA$", "$15 \\ kVA$", "$17.65 \\ kVA$", "$22.05 \\ kVA$"],
+        answer: "$17.65 \\ kVA$",
+        rationale: "กำลังไฟฟ้าปรากฏคำนวณได้จากการหารกำลังไฟฟ้าจริงด้วยตัวประกอบกำลัง ($S = \\frac{P}{PF} = \\frac{15 \\ kW}{0.85} \\approx 17.65 \\ kVA$)"
+    },
+    {
+        question: "สำหรับโหลดในระบบสามเฟสที่เป็นแบบตัวต้านทานอย่างเดียว (purely resistive) ตัวประกอบกำลัง (Power Factor) จะมีค่าเท่ากับ ________.",
+        options: ["0", "1", "-1", "0.5"],
+        answer: "1",
+        rationale: "สำหรับโหลดที่เป็นตัวต้านทานอย่างเดียว กระแสและแรงดันจะมีเฟสตรงกัน ทำให้มุม $\\theta$ เป็น 0 และ $\\cos(0) = 1$"
+    },
+    {
+        question: "โหลดที่ต่อแบบสตาร์ (Y) มีอิมพีแดนซ์ต่อเฟสเท่ากับ $(8 + j6) \\ \\Omega$ และเชื่อมต่อกับแหล่งจ่าย 415 V จงคำนวณหากระแสสาย ($I_L$)",
+        options: ["$51.88 \\ A$", "$23.96 \\ A$", "$41.5 \\ A$", "$29.95 \\ A$"],
+        answer: "$23.96 \\ A$",
+        rationale: "ขนาดอิมพีแดนซ์ $|Z| = \\sqrt{8^2+6^2} = 10 \\ \\Omega$<br>แรงดันเฟส $V_{ph} = \\frac{415}{\\sqrt{3}} \\approx 239.6 \\ V$<br>กระแสเฟส $I_{ph} = \\frac{V_{ph}}{|Z|} = \\frac{239.6}{10} = 23.96 \\ A$<br>ในแบบสตาร์ $I_L = I_{ph}$"
+    },
+    {
+        question: "การปรับปรุงตัวประกอบกำลัง (Power Factor Correction) ในระบบไฟฟ้าส่วนใหญ่มักทำโดยการติดตั้งอุปกรณ์ใดขนานกับโหลด?",
+        options: ["ตัวต้านทาน (Resistors)", "ตัวเก็บประจุ (Capacitors)", "ตัวเหนี่ยวนำ (Inductors)", "หม้อแปลง (Transformers)"],
+        answer: "ตัวเก็บประจุ (Capacitors)",
+        rationale: "โหลดส่วนใหญ่มักมีลักษณะเป็นตัวเหนี่ยวนำ (inductive) การเพิ่มตัวเก็บประจุซึ่งมีคุณสมบัติตรงข้ามจะช่วยชดเชยกำลังไฟฟ้ารีแอกทีฟและทำให้ตัวประกอบกำลังเข้าใกล้ 1 มากขึ้น"
+    },
+    {
+        question: "โหลดสามเฟสสมดุลชุดหนึ่งใช้กำลังไฟฟ้าจริง 50 kW และกำลังไฟฟ้ารีแอกทีฟ 30 kVAR ดังนั้น ตัวประกอบกำลัง (PF) ของโหลดนี้คือ ________.",
+        options: ["0.6 lagging", "1.67", "0.857 lagging", "0.583 lagging"],
+        answer: "0.857 lagging",
+        rationale: "กำลังไฟฟ้าปรากฏ $S = \\sqrt{P^2 + Q^2} = \\sqrt{50^2 + 30^2} \\approx 58.31 \\ kVA$<br>ดังนั้น $PF = \\frac{P}{S} = \\frac{50}{58.31} \\approx 0.857$ เนื่องจาก Q เป็นบวก จึงเป็น lagging"
+    },
+    {
+        question: "**(ระดับกลาง)** โหลดไฟฟ้าสองชุดต่อขนานกันในระบบสามเฟส โหลดชุดแรกเป็นมอเตอร์ใช้กำลังไฟฟ้า 30 kW ที่ PF 0.8 lagging และโหลดชุดที่สองเป็นฮีตเตอร์ (โหลดความต้านทาน) ใช้กำลังไฟฟ้า 15 kW จงคำนวณหาตัวประกอบกำลังรวมของระบบ",
+        options: ["0.8", "0.94 lagging", "0.98 lagging", "1.0"],
+        answer: "0.94 lagging",
+        rationale: "$P_{รวม} = 30+15=45 \\ kW$<br>$Q_{ฮีตเตอร์} = 0 \\ kVAR$<br>$Q_{มอเตอร์} = P \\times \\tan(\\arccos(0.8)) = 30 \\times 0.75=22.5 \\ kVAR$<br>$Q_{รวม} = 22.5 \\ kVAR$<br>$S_{รวม} = \\sqrt{45^2+22.5^2} \\approx 50.3 \\ kVA$<br>$PF_{รวม} = \\frac{P_{รวม}}{S_{รวม}} = \\frac{45}{50.3} \\approx 0.94$ lagging."
+    },
+    {
+        question: "**(ระดับยาก)** โหลดสามเฟสแบบสตาร์ (Y) มีอิมพีแดนซ์ $(12+j9) \\ \\Omega$ ต่อเฟส ต่ออยู่กับแหล่งจ่าย 400 V ผ่านสายส่งที่มีอิมพีแดนซ์ $(0.5+j1.0) \\ \\Omega$ ต่อเส้น จงคำนวณหากำลังไฟฟ้าจริง (P) ที่ **ตัวโหลด** ใช้ไป",
+        options: ["7.5 kW", "12.8 kW", "11.6 kW", "14.2 kW"],
+        answer: "7.5 kW",
+        rationale: "$Z_{รวม/เฟส} = (12+0.5) + j(9+1.0) = 12.5+j10 \\ \\Omega$<br>$|Z_{รวม}|=\\sqrt{12.5^2+10^2}\\approx16.0 \\ \\Omega$<br>$V_{เฟส} = \\frac{400}{\\sqrt{3}} \\approx 230.9V$<br>$I_{สาย} = \\frac{V_{เฟส}}{|Z_{รวม}|} = \\frac{230.9}{16.0} \\approx 14.43 \\ A$<br>$P_{โหลด} = 3 \\times I_{สาย}^2 \\times R_{โหลด} = 3 \\times (14.43)^2 \\times 12 \\approx 7493 \\ W$ หรือ 7.5 kW."
+    },
+    {
+        question: "**(ระดับยาก)** โหลดอุตสาหกรรมใช้กำลังไฟฟ้า 120 kW ที่ตัวประกอบกำลัง 0.7 lagging หากต้องการปรับปรุงตัวประกอบกำลังให้เป็น 0.95 lagging กำลังไฟฟ้าปรากฏ (S) ที่ดึงจากแหล่งจ่ายจะลดลงกี่ kVA?",
+        options: ["40.5 kVA", "25.1 kVA", "52.8 kVA", "45.1 kVA"],
+        answer: "45.1 kVA",
+        rationale: "$S_{เดิม} = \\frac{P}{PF_{เดิม}} = \\frac{120}{0.7} \\approx 171.4 \\ kVA$<br>$S_{ใหม่} = \\frac{P}{PF_{ใหม่}} = \\frac{120}{0.95} \\approx 126.3 \\ kVA$<br>S ที่ลดลง = $S_{เดิม} - S_{ใหม่} = 171.4 - 126.3 = 45.1 \\ kVA$."
+    },
+    {
+        question: "**(ท้าทาย)** โรงงานแห่งหนึ่งมีโหลดรวม 450 kVA ที่ตัวประกอบกำลัง 0.75 lagging โดยรับไฟฟ้าจากแหล่งจ่ายสามเฟส 400 V, 50 Hz หากต้องการปรับปรุงตัวประกอบกำลังให้เป็น 0.95 lagging โดยการติดตั้งชุดตัวเก็บประจุที่ต่อแบบเดลต้า จะต้องใช้ตัวเก็บประจุที่มีค่าความจุ (Capacitance) ต่อเฟสเท่าใด?",
+        options: ["$1.24 \\ mF$", "$0.55 \\ mF$", "$2.86 \\ mF$", "$1.65 \\ mF$"],
+        answer: "$1.24 \\ mF$",
+        rationale: "$P = S \\cdot PF = 450 \\cdot 0.75 = 337.5kW$<br>$Q_{เดิม} = \\sqrt{450^2-337.5^2} \\approx 297.4 \\ kVAR$<br>$Q_{ใหม่} = P \\cdot \\tan(\\arccos(0.95)) \\approx 337.5 \\cdot 0.328 \\approx 110.7 \\ kVAR$<br>$Q$ ที่ต้องชดเชย $Q_C = Q_{เดิม}-Q_{ใหม่} \\approx 186.7 \\ kVAR$<br>$Q_{C ต่อเฟส} = \\frac{186.7}{3} \\approx 62.23 \\ kVAR$<br>สำหรับเดลต้า $V_{เฟส}=400V$<br>$C = \\frac{Q_{C\\_เฟส}}{2\\pi f V_{เฟส}^2} = \\frac{62230}{2\\pi \\cdot 50 \\cdot 400^2} \\approx 0.001238 \\ F$ หรือ 1.24 mF."
+    }
+];
+
+const quizBody = document.getElementById('quiz-body');
+const quizFooter = document.getElementById('quiz-footer');
+const progressText = document.getElementById('progress');
+const questionText = document.getElementById('question-text');
+const optionsContainer = document.getElementById('options-container');
+const submitBtn = document.getElementById('submit-btn');
+const resultsContainer = document.getElementById('results-container');
+const scoreText = document.getElementById('score-text');
+const reviewBtn = document.getElementById('review-btn');
+const reviewContainer = document.getElementById('review-container');
+const immediateFeedback = document.getElementById('immediate-feedback');
+
+let currentQuestionIndex = 0;
+let userAnswers = new Array(quizData.length).fill(null);
+let isAnswerChecked = false;
+
+function loadQuestion() {
+    isAnswerChecked = false;
+    const currentQuestion = quizData[currentQuestionIndex];
+    
+    progressText.textContent = `คำถามข้อที่ ${currentQuestionIndex + 1} จาก ${quizData.length}`;
+    questionText.innerHTML = currentQuestion.question;
+    
+    optionsContainer.innerHTML = '';
+    optionsContainer.classList.remove('disabled');
+    immediateFeedback.style.display = 'none';
+
+    currentQuestion.options.forEach(option => {
+        const li = document.createElement('li');
+        li.innerHTML = option;
+        // Store the original, raw text value for comparison
+        li.dataset.value = option; 
+        li.addEventListener('click', () => {
+            if (!isAnswerChecked) {
+                const selected = document.querySelector('.options li.selected');
+                if (selected) {
+                    selected.classList.remove('selected');
+                }
+                li.classList.add('selected');
+            }
+        });
+        optionsContainer.appendChild(li);
+    });
+
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
+
+    submitBtn.textContent = 'ตรวจคำตอบ';
+    submitBtn.style.backgroundColor = '#007bff';
+}
+
+function checkAnswer() {
+    const selectedOptionEl = document.querySelector('.options li.selected');
+    if (!selectedOptionEl) {
+        alert('กรุณาเลือกคำตอบก่อน');
+        return;
+    }
+
+    isAnswerChecked = true;
+    optionsContainer.classList.add('disabled');
+    
+    // Use the stored data-value for comparison, not the innerHTML
+    const userAnswer = selectedOptionEl.dataset.value; 
+    const currentQuestion = quizData[currentQuestionIndex];
+    const correctAnswer = currentQuestion.answer;
+    
+    userAnswers[currentQuestionIndex] = userAnswer;
+
+    Array.from(optionsContainer.children).forEach(li => {
+        // Compare using the stored data-value
+        if (li.dataset.value === correctAnswer) {
+            li.classList.add('correct');
+        } else if (li.classList.contains('selected')) {
+            li.classList.add('incorrect');
+        }
+    });
+
+    immediateFeedback.innerHTML = `<strong>คำอธิบาย:</strong> ${currentQuestion.rationale}`;
+    immediateFeedback.style.display = 'block';
+
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
+    
+    if (currentQuestionIndex === quizData.length - 1) {
+        submitBtn.textContent = 'ดูผลลัพธ์';
+        submitBtn.style.backgroundColor = '#28a745';
+    } else {
+        submitBtn.textContent = 'ทำข้อถัดไป';
+        submitBtn.style.backgroundColor = '#28a745';
+    }
+}
+
+function showResults() {
+    quizBody.style.display = 'none';
+    quizFooter.style.display = 'none';
+    resultsContainer.style.display = 'block';
+
+    let score = 0;
+    userAnswers.forEach((answer, index) => {
+        if (answer === quizData[index].answer) {
+            score++;
+        }
+    });
+
+    scoreText.textContent = `คุณทำได้ ${score} จาก ${quizData.length} คะแนน`;
+}
+
+function generateReview() {
+    resultsContainer.style.display = 'none';
+    reviewContainer.style.display = 'block';
+    
+    reviewContainer.innerHTML = '<h2>เฉลยแบบทดสอบ</h2>'; 
+
+    quizData.forEach((questionData, index) => {
+        const reviewBlock = document.createElement('div');
+        reviewBlock.classList.add('review-question');
+
+        const userAnswer = userAnswers[index];
+        const isCorrect = userAnswer === questionData.answer;
+
+        reviewBlock.innerHTML = `
+            <p><strong>คำถามข้อที่ ${index + 1}:</strong> ${questionData.question}</p>
+            <p class="user-answer ${isCorrect ? 'correct' : 'incorrect'}">
+                คำตอบของคุณ: ${userAnswer || 'ไม่ได้ตอบ'} ${isCorrect ? ' (ถูกต้อง)' : ' (ผิด)'}
+            </p>
+            ${!isCorrect ? `<p class="correct-answer">คำตอบที่ถูกต้อง: ${questionData.answer}</p>` : ''}
+            <div class="rationale">
+                <strong>คำอธิบาย:</strong> ${questionData.rationale}
+            </div>
+        `;
+        reviewContainer.appendChild(reviewBlock);
+    });
+
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
+}
+
+submitBtn.addEventListener('click', () => {
+    if (isAnswerChecked) {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    } else {
+        checkAnswer();
+    }
+});
+
+reviewBtn.addEventListener('click', generateReview);
+
+// Initial load
+loadQuestion();
+
+</script>
+
+</body>
+</html>
+
+
