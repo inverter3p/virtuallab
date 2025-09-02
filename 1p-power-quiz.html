@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบทดสอบ: วงจรไฟฟ้า AC เฟสเดียว</title>
+    <script>
+        // --- START: MathJax Configuration ---
+        window.MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+        // --- END: MathJax Configuration ---
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #quiz-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #00796b; /* New color theme */
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        .quiz-body {
+            padding: 30px;
+        }
+        #progress {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 20px;
+        }
+        #question-text {
+            font-size: 1.2em;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .options {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .options.disabled {
+            pointer-events: none;
+        }
+        .options li {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .options li:hover {
+            background-color: #e9ecef;
+        }
+        .options li.selected {
+            background-color: #b2dfdb; /* New color theme */
+            border-color: #00796b;
+        }
+        .options li.correct {
+            background-color: #d4edda !important;
+            border-color: #c3e6cb !important;
+            color: #155724 !important;
+        }
+        .options li.incorrect {
+            background-color: #f8d7da !important;
+            border-color: #f5c6cb !important;
+            color: #721c24 !important;
+        }
+        .footer {
+            padding: 20px 30px;
+            text-align: right;
+            border-top: 1px solid #eee;
+        }
+        #submit-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #submit-btn:hover {
+            background-color: #0056b3;
+        }
+        #results-container {
+            text-align: center;
+            padding: 40px 30px;
+        }
+        #results-container h2 {
+            font-size: 2em;
+            color: #00796b;
+        }
+        #score-text {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        #review-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #review-container {
+            text-align: left;
+            padding: 30px;
+            display: none;
+        }
+        .review-question {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .review-question p {
+            margin: 0 0 10px 0;
+        }
+        .user-answer.correct { color: #28a745; font-weight: bold; }
+        .user-answer.incorrect { color: #dc3545; font-weight: bold; }
+        .correct-answer { color: #1e90ff; font-weight: bold; }
+        .rationale {
+            background-color: #e0f2f1; /* New color theme */
+            border-left: 4px solid #00796b;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        #immediate-feedback {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="quiz-container">
+        <div class="header">
+            <h1>แบบทดสอบ: วงจรไฟฟ้า AC เฟสเดียว</h1>
+        </div>
+
+        <div class="quiz-body" id="quiz-body">
+            <div id="progress"></div>
+            <div id="question-text"></div>
+            <ul class="options" id="options-container"></ul>
+            <div id="immediate-feedback" class="rationale" style="display: none;"></div>
+        </div>
+
+        <div class="footer" id="quiz-footer">
+            <button id="submit-btn">ตรวจคำตอบ</button>
+        </div>
+
+        <div id="results-container" style="display: none;">
+            <h2>ทำแบบทดสอบเสร็จแล้ว!</h2>
+            <p id="score-text"></p>
+            <button id="review-btn">ดูเฉลย (Review Quiz)</button>
+        </div>
+        
+        <div id="review-container">
+            <h2>เฉลยแบบทดสอบ</h2>
+        </div>
+    </div>
+
+<script>
+const quizData = [
+    {
+        question: "วงจร AC วงจรหนึ่งมีความต้านทาน (R) $30 \\ \\Omega$ และค่ารีแอกแตนซ์เหนี่ยวนำ ($X_L$) $40 \\ \\Omega$ จงหาค่าอิมพีแดนซ์รวม (Z) และมุมเฟส ($\\theta$)",
+        options: ["$70 \\ \\Omega \\angle 53.13^\\circ$", "$50 \\ \\Omega \\angle 36.87^\\circ$", "$50 \\ \\Omega \\angle 53.13^\\circ$", "$70 \\ \\Omega \\angle 90^\\circ$"],
+        answer: "$50 \\ \\Omega \\angle 53.13^\\circ$",
+        rationale: "ขนาดอิมพีแดนซ์ $|Z| = \\sqrt{R^2 + X_L^2} = \\sqrt{30^2 + 40^2} = 50 \\ \\Omega$<br>มุมเฟส $\\theta = \\arctan(\\dfrac{X_L}{R}) = \\arctan(\\dfrac{40}{30}) \\approx 53.13^\\circ$"
+    },
+    {
+        question: "โหลดเฟสเดียวชุดหนึ่งใช้กำลังไฟฟ้าจริง 800 W และมีกำลังไฟฟ้าปรากฏ 1000 VA ตัวประกอบกำลังของโหลดนี้มีค่าเท่าใด?",
+        options: ["0.8", "1.25", "1000", "800"],
+        answer: "0.8",
+        rationale: "ตัวประกอบกำลังคืออัตราส่วนระหว่างกำลังไฟฟ้าจริง (P) ต่อกำลังไฟฟ้าปรากฏ (S): $PF = \\dfrac{P}{S} = \\dfrac{800 \\ W}{1000 \\ VA} = 0.8$"
+    },
+    {
+        question: "ถ้าตัวประกอบกำลังของวงจรในข้อที่แล้วเป็นแบบ lagging (ล้าหลัง) กำลังไฟฟ้ารีแอกทีฟ (Q) จะมีค่าเท่ากับ ________ VAR.",
+        options: ["600", "1800", "200", "1000"],
+        answer: "600",
+        rationale: "จากสามเหลี่ยมกำลังไฟฟ้า $Q = \\sqrt{S^2 - P^2} = \\sqrt{1000^2 - 800^2} = 600 \\ VAR$"
+    },
+    {
+        question: "เราจะสามารถปรับปรุงตัวประกอบกำลังของวงจรที่มี PF แบบ lagging (โหลดเหนี่ยวนำ) ได้อย่างไร?",
+        options: ["โดยการเพิ่มตัวเหนี่ยวนำอนุกรม", "โดยการเพิ่มตัวต้านทานขนาน", "โดยการเพิ่มตัวเก็บประจุขนาน", "โดยการเพิ่มความถี่"],
+        answer: "โดยการเพิ่มตัวเก็บประจุขนาน",
+        rationale: "การเพิ่มตัวเก็บประจุแบบขนานจะช่วยจ่ายกำลังไฟฟ้ารีแอกทีฟแบบ leading ซึ่งจะไปหักล้างกับกำลังไฟฟ้ารีแอกทีฟแบบ lagging ของโหลด ทำให้ตัวประกอบกำลังดีขึ้น"
+    },
+    {
+        question: "แหล่งจ่าย AC 100 V ต่ออยู่กับวงจรที่มีอิมพีแดนซ์ $Z = (6 + j8) \\ \\Omega$ กำลังไฟฟ้าจริง (P) ที่วงจรนี้ใช้ไปมีค่าเท่าใด?",
+        options: ["$600 \\ W$", "$800 \\ W$", "$1000 \\ W$", "$1200 \\ W$"],
+        answer: "$600 \\ W$",
+        rationale: "ขนาดอิมพีแดนซ์ $|Z| = \\sqrt{6^2 + 8^2} = 10 \\ \\Omega$<br>กระแสในวงจร $I = V/|Z| = 100V / 10\\Omega = 10 A$<br>กำลังไฟฟ้าจริงจะเกิดที่ตัวต้านทานเท่านั้น: $P = I^2 R = (10A)^2 \\times 6\\Omega = 600 \\ W$"
+    },
+    {
+        question: "วงจรหนึ่งดึงกระแส 5 A จากแหล่งจ่าย 120 V, 60 Hz โดยมีตัวประกอบกำลัง 0.7 leading (นำหน้า) จงหากำลังไฟฟ้าปรากฏ (S) และกำลังไฟฟ้ารีแอกทีฟ (Q)",
+        options: ["$S=600 \\ VA, Q=-428.5 \\ VAR$", "$S=600 \\ VA, Q=428.5 \\ VAR$", "$S=420 \\ VA, Q=600 \\ VAR$", "$S=857 \\ VA, Q=600 \\ VAR$"],
+        answer: "$S=600 \\ VA, Q=-428.5 \\ VAR$",
+        rationale: "กำลังไฟฟ้าปรากฏ $S = V \\times I = 120V \\times 5A = 600 \\ VA$<br>มุม $\\theta = \\arccos(0.7)$ เนื่องจากเป็น leading, Q จึงมีค่าเป็นลบ $Q = S \\sin(-\\theta) \\approx -428.5 \\ VAR$"
+    },
+    
+    {
+        question: "แหล่งจ่ายไฟฟ้า 220 V, 50 Hz ต่อกับโหลดที่ดึงกระแส 10 A และมีตัวประกอบกำลัง 0.8 lagging จงคำนวณหากำลังไฟฟ้าจริง (P) และกำลังไฟฟ้ารีแอกทีฟ (Q)",
+        options: ["$P=1760 \\ W, Q=1320 \\ VAR$", "$P=2200 \\ W, Q=1760 \\ VAR$", "$P=1760 \\ W, Q=0 \\ VAR$", "$P=1320 \\ W, Q=1760 \\ VAR$"],
+        answer: "$P=1760 \\ W, Q=1320 \\ VAR$",
+        rationale: "กำลังไฟฟ้าปรากฏ $S = V \\times I = 220 \\times 10 = 2200 \\ VA$<br>กำลังไฟฟ้าจริง $P = S \\times PF = 2200 \\times 0.8 = 1760 \\ W$<br>กำลังไฟฟ้ารีแอกทีฟ $Q = \\sqrt{S^2 - P^2} = \\sqrt{2200^2 - 1760^2} = 1320 \\ VAR$"
+    },
+    {
+        question: "วงจรอนุกรม RC ประกอบด้วยตัวต้านทาน 50 $\\Omega$ และตัวเก็บประจุ 40 $\\mu F$ ต่ออยู่กับแหล่งจ่าย 120 V, 60 Hz จงคำนวณหากระแส (I) ที่ไหลในวงจร",
+        options: ["$2.4 \\ A$", "$1.81 \\ A$", "$1.03 \\ A$", "$1.44 \\ A$"],
+        answer: "$1.44 \\ A$",
+        rationale: "คำนวณรีแอกแตนซ์ประจุ $X_C = \\dfrac{1}{2\\pi f C} = \\dfrac{1}{2\\pi(60)(40 \\times 10^{-6})} \\approx 66.3 \\ \\Omega$<br>คำนวณอิมพีแดนซ์รวม $|Z| = \\sqrt{R^2 + X_C^2} = \\sqrt{50^2 + 66.3^2} \\approx 83.0 \\ \\Omega$<br>กระแสในวงจร $I = \\dfrac{V}{|Z|} = \\dfrac{120}{83.0} \\approx 1.44 \\ A$"
+    },
+    {
+        question: "**(ท้าทาย)** โหลดสองชุดต่อขนานกัน ชุดแรกเป็นโหลดความต้านทาน 1.2 kW ชุดที่สองเป็นโหลดเหนี่ยวนำใช้กำลังไฟฟ้าจริง 800 W ที่ตัวประกอบกำลัง 0.6 lagging จงหาตัวประกอบกำลังรวมของวงจร",
+        options: ["0.7", "0.882 lagging", "0.923 lagging", "1.0"],
+        answer: "0.882 lagging",
+        rationale: "หา P และ Q ของแต่ละโหลดแล้วนำมารวมกัน:<br>$P_{รวม} = P_1 + P_2 = 1200 + 800 = 2000 \\ W$<br>$Q_1=0$. หา $Q_2$: $S_2 = \\dfrac{800}{0.6} \\approx 1333.3 \\ VA$, $Q_2 = \\sqrt{1333.3^2 - 800^2} \\approx 1066.7 \\ VAR$<br>$Q_{รวม} = 1066.7 \\ VAR$<br>หา $S_{รวม} = \\sqrt{P_{รวม}^2+Q_{รวม}^2} = \\sqrt{2000^2+1066.7^2} \\approx 2266.7 \\ VA$<br>ดังนั้น $PF_{รวม} = \\dfrac{P_{รวม}}{S_{รวม}} = \\dfrac{2000}{2266.7} \\approx 0.882$ lagging."
+    },{
+        question: "**(ท้าทาย)** โหลดไฟฟ้ามีกำลังไฟฟ้าจริง 2 kW และมีตัวประกอบกำลัง 0.8 lagging ต่ออยู่กับแหล่งจ่าย 240 V, 50 Hz จะต้องใช้ตัวเก็บประจุค่าเท่าใดมาต่อขนานเพื่อปรับปรุงตัวประกอบกำลังให้เป็น 1.0?",
+        options: ["$125 \\ \\mu F$", "$82.9 \\ \\mu F$", "$55.3 \\ \\mu F$", "$20.1 \\ \\mu F$"],
+        answer: "$82.9 \\ \\mu F$",
+        rationale: "หา Q เดิม: $S = \\dfrac{2000}{0.8} = 2500 \\ VA$, $Q = \\sqrt{2500^2 - 2000^2} = 1500 \\ VAR$<br>ตัวเก็บประจุต้องจ่าย $Q_C = 1500 \\ VAR$ ดังนั้น $C = \\dfrac{Q_C}{2\\pi f V^2} = \\dfrac{1500}{2\\pi(50)(240)^2} \\approx 82.9 \\ \\mu F$"
+    }
+];
+
+const quizBody = document.getElementById('quiz-body');
+const quizFooter = document.getElementById('quiz-footer');
+const progressText = document.getElementById('progress');
+const questionText = document.getElementById('question-text');
+const optionsContainer = document.getElementById('options-container');
+const submitBtn = document.getElementById('submit-btn');
+const resultsContainer = document.getElementById('results-container');
+const scoreText = document.getElementById('score-text');
+const reviewBtn = document.getElementById('review-btn');
+const reviewContainer = document.getElementById('review-container');
+const immediateFeedback = document.getElementById('immediate-feedback');
+
+let currentQuestionIndex = 0;
+let userAnswers = new Array(quizData.length).fill(null);
+let isAnswerChecked = false;
+
+function loadQuestion() {
+    isAnswerChecked = false;
+    const currentQuestion = quizData[currentQuestionIndex];
+    
+    progressText.textContent = `คำถามข้อที่ ${currentQuestionIndex + 1} จาก ${quizData.length}`;
+    questionText.innerHTML = currentQuestion.question;
+    
+    optionsContainer.innerHTML = '';
+    optionsContainer.classList.remove('disabled');
+    immediateFeedback.style.display = 'none';
+
+    currentQuestion.options.forEach(option => {
+        const li = document.createElement('li');
+        li.innerHTML = option;
+        // Store the original, raw text value for comparison
+        li.dataset.value = option; 
+        li.addEventListener('click', () => {
+            if (!isAnswerChecked) {
+                const selected = document.querySelector('.options li.selected');
+                if (selected) {
+                    selected.classList.remove('selected');
+                }
+                li.classList.add('selected');
+            }
+        });
+        optionsContainer.appendChild(li);
+    });
+
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
+
+    submitBtn.textContent = 'ตรวจคำตอบ';
+    submitBtn.style.backgroundColor = '#007bff';
+}
+
+function checkAnswer() {
+    const selectedOptionEl = document.querySelector('.options li.selected');
+    if (!selectedOptionEl) {
+        alert('กรุณาเลือกคำตอบก่อน');
+        return;
+    }
+
+    isAnswerChecked = true;
+    optionsContainer.classList.add('disabled');
+    
+    // Use the stored data-value for comparison, not the innerHTML
+    const userAnswer = selectedOptionEl.dataset.value; 
+    const currentQuestion = quizData[currentQuestionIndex];
+    const correctAnswer = currentQuestion.answer;
+    
+    userAnswers[currentQuestionIndex] = userAnswer;
+
+    Array.from(optionsContainer.children).forEach(li => {
+        // Compare using the stored data-value
+        if (li.dataset.value === correctAnswer) {
+            li.classList.add('correct');
+        } else if (li.classList.contains('selected')) {
+            li.classList.add('incorrect');
+        }
+    });
+
+    immediateFeedback.innerHTML = `<strong>คำอธิบาย:</strong> ${currentQuestion.rationale}`;
+    immediateFeedback.style.display = 'block';
+
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
+    
+    if (currentQuestionIndex === quizData.length - 1) {
+        submitBtn.textContent = 'ดูผลลัพธ์';
+        submitBtn.style.backgroundColor = '#28a745';
+    } else {
+        submitBtn.textContent = 'ทำข้อถัดไป';
+        submitBtn.style.backgroundColor = '#28a745';
+    }
+}
+
+function showResults() {
+    quizBody.style.display = 'none';
+    quizFooter.style.display = 'none';
+    resultsContainer.style.display = 'block';
+
+    let score = 0;
+    userAnswers.forEach((answer, index) => {
+        if (answer === quizData[index].answer) {
+            score++;
+        }
+    });
+
+    scoreText.textContent = `คุณทำได้ ${score} จาก ${quizData.length} คะแนน`;
+}
+
+function generateReview() {
+    resultsContainer.style.display = 'none';
+    reviewContainer.style.display = 'block';
+    
+    reviewContainer.innerHTML = '<h2>เฉลยแบบทดสอบ</h2>'; 
+
+    quizData.forEach((questionData, index) => {
+        const reviewBlock = document.createElement('div');
+        reviewBlock.classList.add('review-question');
+
+        const userAnswer = userAnswers[index];
+        const isCorrect = userAnswer === questionData.answer;
+
+        reviewBlock.innerHTML = `
+            <p><strong>คำถามข้อที่ ${index + 1}:</strong> ${questionData.question}</p>
+            <p class="user-answer ${isCorrect ? 'correct' : 'incorrect'}">
+                คำตอบของคุณ: ${userAnswer || 'ไม่ได้ตอบ'} ${isCorrect ? ' (ถูกต้อง)' : ' (ผิด)'}
+            </p>
+            ${!isCorrect ? `<p class="correct-answer">คำตอบที่ถูกต้อง: ${questionData.answer}</p>` : ''}
+            <div class="rationale">
+                <strong>คำอธิบาย:</strong> ${questionData.rationale}
+            </div>
+        `;
+        reviewContainer.appendChild(reviewBlock);
+    });
+
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
+}
+
+submitBtn.addEventListener('click', () => {
+    if (isAnswerChecked) {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    } else {
+        checkAnswer();
+    }
+});
+
+reviewBtn.addEventListener('click', generateReview);
+
+// Initial load
+loadQuestion();
+
+</script>
+
+</body>
+</html>
+
