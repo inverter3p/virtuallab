@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMM Circuit Analysis Worksheet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+        /* Custom style for editable cells to provide better feedback */
+        td[contenteditable="true"]:focus {
+            outline: 2px solid #3b82f6; /* Tailwind's blue-500 */
+            background-color: #eff6ff; /* Tailwind's blue-50 */
+        }
+        
+        .resistor-bar {
+            display: flex;
+            height: 2rem; /* h-8 */
+            width: 10rem; /* w-40 */
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #fef3c7; /* amber-200 */
+            border-radius: 0.375rem; /* rounded-md */
+            align-items: center;
+            padding-left: 0.5rem; /* px-2 */
+            padding-right: 0.5rem; /* px-2 */
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05); /* shadow-inner */
+            border: 1px solid #fde68a; /* border-amber-300 */
+        }
+        .resistor-bar .band {
+            height: 100%;
+            width: 0.75rem; /* w-3 */
+        }
+        .resistor-bar .band-1 { margin-left: 0.75rem; /* ml-3 */ }
+        .resistor-bar .band-2 { margin-left: 0.25rem; /* ml-1 */ }
+        .resistor-bar .band-3 { margin-left: 0.25rem; /* ml-1 */ }
+        .resistor-bar .band-4 { margin-left: 1.5rem; /* ml-6 */ }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="max-w-4xl mx-auto my-10 p-6 sm:p-10 bg-white rounded-2xl shadow-xl">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Using the Digital Multimeter in Simulation</h1>
+            <p class="text-lg text-gray-600 mt-2">Nodal Voltage Analysis Circuit - จำลองวงจรไฟฟ้าออนไลน์ | DCACLab</p>
+        </header>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Objective</h2>
+            <p>To accurately measure Resistance (R), Voltage (V), and Current (I) in the provided simulated circuit using a Digital Multimeter (DMM), and to understand the correct procedures for each type of measurement.</p>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Materials</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <img id="dmm-img" src="https://placehold.co/400x300/e2e8f0/64748b?text=DMM+Image+Here" alt="A placeholder for a QR" class="max-w-full h-auto rounded-lg shadow-md">
+                </div>
+                <div>
+                    <h3>DCACLab</h3>
+                    <ol>
+                        <li>Access to the circuit simulation environment (as depicted in the image)</li>
+                        <li><strong>Go to:</strong> https://dcaclab.com/he/experiments/48883-nodal-voltage-analysis-circuit</li>
+                      
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Part 1 & 2 -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Part 1 & 2: DMM Familiarization and Guidelines</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <img id="dmm-img" src="https://placehold.co/400x300/e2e8f0/64748b?text=DMM+Image+Here" alt="A placeholder for a Digital Multimeter image." class="max-w-full h-auto rounded-lg shadow-md">
+                </div>
+                <div>
+                    <h3>Simulated DMM Components</h3>
+                    <ul>
+                        <li><strong>Display:</strong> Where measurement results appear.</li>
+                        <li><strong>Rotary Switch:</strong> Selects the measurement type and range.</li>
+                        <li><strong>Input Jacks:</strong>
+                            <ul class="list-['-_'] list-inside ml-4 mt-2">
+                                <li><strong>COM (Black):</strong> For the black test lead.</li>
+                                <li><strong>VΩmA (Red):</strong> For Voltage, Resistance, and small currents.</li>
+                                <li><strong>10A (Red):</strong> For large currents.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <h3>General Guidelines</h3>
+                    <ol>
+                        <li><strong>Connecting Leads:</strong> Drag probes to circuit points.</li>
+                        <li><strong>Changing Function:</strong> Click the rotary switch.</li>
+                        <li><strong>Power:</strong> Assume the circuit is "live" unless specified.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+        
+        <!-- Part 3: Resistance -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Part 3: Measuring Resistance (R)</h2>
+            <p class="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg"><strong>Key Principle:</strong> Resistance is measured across a component. The component <strong>MUST BE ISOLATED</strong> from any power source.</p>
+            
+            <div class="flex justify-center items-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 my-6">
+                 <img src="https://placehold.co/500x250/e2e8f0/64748b?text=Image:+Measuring+Resistance" alt="Placeholder showing how to measure resistance." class="max-w-full h-auto rounded">
+            </div>
+
+            <h3>Your Steps for Measuring Resistance:</h3>
+            <p>Explain the general steps you followed to measure resistance in the simulation:</p>
+            <textarea id="resistance_steps" class="w-full min-h-[100px] mt-2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1. Disconnect the component..."></textarea>
+            
+            <h3 class="mt-6">Resistance Measurement Table</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-center border-collapse">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="p-3 font-semibold border border-gray-300">Component</th>
+                            <th class="p-3 font-semibold border border-gray-300">Resistor Color Code (Hint)</th>
+                            <th class="p-3 font-semibold border border-gray-300">Theoretical Resistance</th>
+                            <th class="p-3 font-semibold border border-gray-300">Measured Resistance (Simulation)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resistance_table_body">
+                        <tr>
+                            <td class="p-2 border border-gray-300 align-middle">R1</td>
+                            <td class="p-2 border border-gray-300 align-middle">
+                                <div class="resistor-bar">
+                                    <div class="band band-1" style="background-color: #000000;"></div>
+                                    <div class="band band-2" style="background-color: #964B00;"></div>
+                                    <div class="band band-3" style="background-color: #964B00;"></div>
+                                    <div class="band band-4" style="background-color: #a0a0a0;"></div>
+                                </div>
+                            </td>
+                            <td class="p-2 border border-gray-300 align-middle">10 Ω</td>
+                            <td contenteditable="true" class="p-2 border border-gray-300 bg-yellow-100 cursor-text align-middle"></td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 border border-gray-300 align-middle">R2</td>
+                            <td class="p-2 border border-gray-300 align-middle">
+                                <div class="resistor-bar">
+                                    <div class="band band-1" style="background-color: #000000;"></div>
+                                    <div class="band band-2" style="background-color: #FFFF00;"></div>
+                                    <div class="band band-3" style="background-color: #964B00;"></div>
+                                    <div class="band band-4" style="background-color: #a0a0a0;"></div>
+                                </div>
+                            </td>
+                            <td class="p-2 border border-gray-300 align-middle">40 Ω</td>
+                            <td contenteditable="true" class="p-2 border border-gray-300 bg-yellow-100 cursor-text align-middle"></td>
+                        </tr>
+                        <tr>
+                            <td class="p-2 border border-gray-300 align-middle">R3</td>
+                            <td class="p-2 border border-gray-300 align-middle">
+                                <div class="resistor-bar">
+                                    <div class="band band-1" style="background-color: #000000;"></div>
+                                    <div class="band band-2" style="background-color: #FF0000;"></div>
+                                    <div class="band band-3" style="background-color: #964B00;"></div>
+                                    <div class="band band-4" style="background-color: #a0a0a0;"></div>
+                                </div>
+                            </td>
+                            <td class="p-2 border border-gray-300 align-middle">20 Ω</td>
+                            <td contenteditable="true" class="p-2 border border-gray-300 bg-yellow-100 cursor-text align-middle"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Part 4: Voltage -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Part 4: Measuring Voltage (V)</h2>
+            <p class="mb-4 bg-green-50 border-l-4 border-green-400 p-4 rounded-r-lg"><strong>Key Principle:</strong> Voltage is measured in <strong>parallel</strong> with a component. The circuit <strong>MUST BE POWERED ON</strong>.</p>
+
+            <div class="flex justify-center items-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 my-6">
+                 <img src="https://placehold.co/500x250/e2e8f0/64748b?text=Image:+Measuring+Voltage" alt="Placeholder showing how to measure voltage." class="max-w-full h-auto rounded">
+            </div>
+            
+            <h3><strong>Calculating Expected Voltages (KVL/KCL)</strong></h3>
+            <p>Before measuring, use Kirchhoff's Voltage Law (KVL) and Kirchhoff's Current Law (KCL) to calculate the theoretical voltage values for each point in the table. Show your work in the space below. This will help you verify your simulation measurements.</p>
+            <textarea id="kvl_kcl_steps" class="w-full min-h-[120px] mt-2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Show your KVL/KCL loop and node equations here..."></textarea>
+
+            <h3><strong>Your Steps for Measuring Voltage:</strong></h3>
+            <p>Explain the general steps you followed to measure voltage in the simulation:</p>
+            <textarea id="voltage_steps" class="w-full min-h-[100px] mt-2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1. Set DMM to DC Voltage..."></textarea>
+
+            <h3 class="mt-6"><strong>Voltage Measurement Table</strong></h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-center border-collapse">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="p-3 font-semibold border border-gray-300">Measurement Point</th>
+                            <th class="p-3 font-semibold border border-gray-300">Expected Value (Calculated)</th>
+                            <th class="p-3 font-semibold border border-gray-300">Measured Voltage (Simulation)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="voltage_table_body">
+                        <tr><td class="p-2 border" contenteditable="true">Across 10V Battery</td><td class="p-2 border bg-yellow-100 cursor-text" contenteditable="true"></td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border" contenteditable="true">Across R1</td><td class="p-2 border bg-yellow-100 cursor-text" contenteditable="true"></td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border" contenteditable="true">At Node Va (relative to V0)</td><td class="p-2 border bg-yellow-100 cursor-text" contenteditable="true"></td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border" contenteditable="true">At Node Vb (relative to V0)</td><td class="p-2 border bg-yellow-100 cursor-text" contenteditable="true"></td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border" contenteditable="true">Across R2</td><td class="p-2 border bg-yellow-100 cursor-text" contenteditable="true"></td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border" contenteditable="true">At Node Vc (relative to V0)</td><td class="p-2 border bg-yellow-100 cursor-text" contenteditable="true"></td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border" contenteditable="true">Across R3</td><td class="p-2 border bg-yellow-100 cursor-text" contenteditable="true"></td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border" contenteditable="true">Across 20V Battery</td><td class="p-2 border bg-yellow-100 cursor-text" contenteditable="true"></td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Part 5: Current -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Part 5: Measuring Current (I)</h2>
+            <p class="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg"><strong>Key Principle:</strong> Current is measured in <strong>series</strong> with the circuit. You must <strong>BREAK THE CIRCUIT</strong> to insert the DMM. The circuit <strong>MUST BE POWERED ON</strong>.</p>
+            
+            <div class="flex justify-center items-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 my-6">
+                 <img src="https://placehold.co/500x250/e2e8f0/64748b?text=Image:+Measuring+Current" alt="Placeholder showing how to measure current." class="max-w-full h-auto rounded">
+            </div>
+
+            <h3><strong>Your Steps for Measuring Current:</strong></h3>
+            <p>Explain the general steps you followed to measure current in the simulation:</p>
+            <textarea id="current_steps" class="w-full min-h-[100px] mt-2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1. Break the circuit path..."></textarea>
+            
+            <h3 class="mt-6"><strong>Current Measurement Table</strong></h3>
+            <div class="overflow-x-auto">
+                 <table class="w-full text-center border-collapse">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="p-3 font-semibold border border-gray-300">Current Path</th>
+                            <th class="p-3 font-semibold border border-gray-300">Expected Value</th>
+                            <th class="p-3 font-semibold border border-gray-300">Measured Current (Simulation)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="current_table_body">
+                        <tr><td class="p-2 border">I1</td><td class="p-2 border">142.9 mA</td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border">I2</td><td class="p-2 border">428.6 mA</td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                        <tr><td class="p-2 border">I3</td><td class="p-2 border">285.7 mA</td><td class="p-2 border bg-yellow-100" contenteditable="true"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Part 6: Reflection -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Part 6: Reflection Questions</h2>
+            <div class="space-y-6">
+                <div>
+                    <label for="q1" class="font-semibold block mb-2">1. Describe a situation where a negative voltage reading is obtained. What does it mean?</label>
+                    <textarea id="q1" class="w-full min-h-[80px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Type your answer here..."></textarea>
+                </div>
+                <div>
+                    <label for="q2" class="font-semibold block mb-2">2. Why is it crucial to disconnect power before measuring resistance?</label>
+                    <textarea id="q2" class="w-full min-h-[80px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Type your answer here..."></textarea>
+                </div>
+                <div>
+                    <label for="q3" class="font-semibold block mb-2">3. What could happen if you tried to measure a current using the red probe from VΩmA (Red) input?</label>
+                    <textarea id="q3" class="w-full min-h-[80px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Type your answer here..."></textarea>
+                </div>
+                <div>
+                    <label for="q4" class="font-semibold block mb-2">4. Compare your measured values to the expected/theoretical values. Were there any discrepancies?</label>
+                    <textarea id="q4" class="w-full min-h-[80px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Type your answer here..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider"></div>
+
+        <!-- Part 7: Cleanup -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Part 7: DMM Reset and Cleanup</h2>
+            <ol>
+                <li>Once all measurements are complete, turn off the DMM (set the rotary switch to OFF).</li>
+                <li>Remove the test leads from the circuit and return the red lead to the VΩmA jack.</li>
+            </ol>
+        </section>
+
+        <div class="flex flex-col sm:flex-row gap-3 items-center mt-8 pt-6 border-t">
+            <div class="flex-grow"></div>
+            <button id="btn-save" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">Save Data</button>
+            <button id="btn-load" class="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">Load Data</button>
+            <input type="file" id="file-input" accept=".json" class="hidden">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const saveBtn = document.getElementById('btn-save');
+            const loadBtn = document.getElementById('btn-load');
+            const fileInput = document.getElementById('file-input');
+
+            // Helper function to get table data, preserving contenteditable attributes
+            const getTableData = (tbodyId) => {
+                const tableBody = document.getElementById(tbodyId);
+                const data = [];
+                for (const row of tableBody.rows) {
+                    const rowData = [];
+                    for (const cell of row.cells) {
+                        rowData.push({
+                            html: cell.innerHTML,
+                            isEditable: cell.isContentEditable,
+                            className: cell.className
+                        });
+                    }
+                    data.push(rowData);
+                }
+                return data;
+            };
+
+            // Helper function to set table data
+            const setTableData = (tbodyId, data) => {
+                const tableBody = document.getElementById(tbodyId);
+                tableBody.innerHTML = ''; // Clear existing
+                if (data && Array.isArray(data)) {
+                    data.forEach(rowData => {
+                        const newRow = tableBody.insertRow();
+                        rowData.forEach(cellData => {
+                            const newCell = newRow.insertCell();
+                            newCell.innerHTML = cellData.html;
+                            newCell.className = cellData.className;
+                            if (cellData.isEditable) {
+                                newCell.setAttribute('contenteditable', 'true');
+                            }
+                        });
+                    });
+                }
+            };
+
+            // --- Save Data functionality ---
+            saveBtn.addEventListener('click', () => {
+                const dataToSave = {
+                    textareas: {
+                        resistance_steps: document.getElementById('resistance_steps').value,
+                        kvl_kcl_steps: document.getElementById('kvl_kcl_steps').value,
+                        voltage_steps: document.getElementById('voltage_steps').value,
+                        current_steps: document.getElementById('current_steps').value,
+                        q1: document.getElementById('q1').value,
+                        q2: document.getElementById('q2').value,
+                        q3: document.getElementById('q3').value,
+                        q4: document.getElementById('q4').value,
+                    },
+                    tables: {
+                        resistance: getTableData('resistance_table_body'),
+                        voltage: getTableData('voltage_table_body'),
+                        current: getTableData('current_table_body'),
+                    }
+                };
+
+                try {
+                    const jsonString = JSON.stringify(dataToSave, null, 2);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'dmm-worksheet-data.json';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error("Error saving data:", error);
+                }
+            });
+
+            // Trigger hidden file input when Load button is clicked
+            loadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // --- Load Data functionality ---
+            fileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const loadedData = JSON.parse(e.target.result);
+
+                        // Populate textareas
+                        if (loadedData.textareas) {
+                            for (const [id, value] of Object.entries(loadedData.textareas)) {
+                                const el = document.getElementById(id);
+                                if (el) el.value = value;
+                            }
+                        }
+
+                        // Populate tables
+                        if (loadedData.tables) {
+                           for (const [id, data] of Object.entries(loadedData.tables)) {
+                                const tbodyId = `${id}_table_body`;
+                                setTableData(tbodyId, data);
+                            }
+                        }
+                        
+                    } catch (error) {
+                        console.error("Error parsing JSON:", error);
+                        alert('Error: Could not parse the JSON file. Please select a valid file.');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = ''; // Reset file input
+            });
+        });
+    </script>
+</body>
+</html>
+
