@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบทดสอบ: การวัดค่าทางไฟฟ้าและเครื่องมือวัด</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for Thai characters -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Set the default font for the entire page */
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        /* Custom styles for quiz options to provide better visual feedback */
+        .option-label {
+            display: block;
+            padding: 1rem;
+            border: 2px solid #e2e8f0; /* gray-200 */
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+        }
+        .option-label:hover {
+            background-color: #f7fafc; /* gray-100 */
+            border-color: #60a5fa; /* blue-400 */
+        }
+
+        /* Style for the selected option */
+        input[type="radio"]:checked + .option-label {
+            background-color: #dbeafe; /* blue-100 */
+            border-color: #3b82f6; /* blue-500 */
+            color: #1e40af; /* blue-800 */
+            font-weight: 700;
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Styles for showing results after submission */
+        .correct-answer {
+            background-color: #d1fae5 !important; /* green-100 */
+            border-color: #10b981 !important; /* green-500 */
+        }
+        .wrong-answer {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #ef4444 !important; /* red-500 */
+        }
+
+        /* Hide the default radio button */
+        input[type="radio"] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-100">
+
+    <div id="quiz-container" class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <!-- Quiz Header -->
+        <div class="text-center mb-10 p-6 bg-white/50 backdrop-blur-sm rounded-xl shadow-lg">
+            <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">แบบทดสอบ: การวัดค่าทางไฟฟ้า</h1>
+            <p class="text-gray-700 mt-2 font-medium">เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว</p>
+        </div>
+
+        <!-- This is where the questions will be dynamically inserted -->
+        <div id="questions-wrapper" class="space-y-8"></div>
+
+        <!-- Submit Button -->
+        <div class="text-center mt-10">
+            <button id="submit-btn" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-12 rounded-lg hover:from-indigo-700 hover://to-purple-700 transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed disabled:transform-none">
+                ส่งคำตอบ
+            </button>
+        </div>
+        
+        <!-- Results Display Area -->
+        <div id="result-container" class="hidden mt-8 text-center p-8 bg-white/70 backdrop-blur-sm rounded-xl shadow-xl border border-gray-200">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">ผลการทดสอบ</h2>
+            <p id="score" class="text-4xl font-bold text-blue-600"></p>
+            <p id="feedback" class="text-lg mt-2 text-gray-600"></p>
+            <div id="verification-code-container" class="mt-6 p-4 bg-gray-100 rounded-md border border-gray-300 hidden">
+                <p class="text-base text-gray-700 font-semibold mb-2">ชุดรหัสยืนยันการทำแบบทดสอบ:</p>
+                <p id="verification-code" class="text-xl font-mono break-all bg-gray-200 p-3 rounded-md text-gray-900"></p>
+                <p class="text-sm text-gray-500 mt-2">โปรดคัดลอกชุดรหัสนี้เพื่อส่งให้ผู้สอน</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // All quiz questions and answers data
+        const quizData = [
+            {
+                question: "1. ความสำคัญหลักของการวัดค่าทางไฟฟ้าคืออะไร?",
+                options: ["เพื่อให้ซื้อเครื่องมือวัดราคาถูก", "เพื่อความแม่นยำในการวิเคราะห์ปัญหาและความปลอดภัยในการทำงาน", "เพื่อให้ออกแบบวงจรซับซ้อนได้", "เพื่อลดการใช้พลังงานในบ้าน"],
+                answer: 1
+            },
+            {
+                question: "2. ในการวัดแรงดันไฟฟ้าด้วยโวลต์มิเตอร์ ควรต่อมิเตอร์เข้ากับจุดที่ต้องการวัดอย่างไร?",
+                options: ["ต่ออนุกรมในวงจร", "ต่อขนานคร่อมจุดวัด", "ต่อสายแดงเข้าขั้วบวก, สายดำเข้ากราวด์เสมอ", "ต่อโดยไม่ต้องมีแหล่งจ่ายไฟ"],
+                answer: 1
+            },
+            {
+                question: "3. ข้อควรระวังที่สำคัญที่สุดในการใช้โอห์มมิเตอร์ (Ohmmeter) คืออะไร?",
+                options: ["ต้องสวมถุงมือกันไฟฟ้า", "ต้องต่อสายดำเข้าขั้วบวก, สายแดงเข้าขั้วลบ", "ต้องตัดไฟออกจากวงจรที่วัดเสมอ", "ต้องเลือกย่านวัดที่ต่ำที่สุดก่อน"],
+                answer: 2
+            },
+            {
+                question: "4. เครื่องมือวัดกระแสไฟฟ้าชนิดใดที่ช่วยให้เราวัดกระแสได้โดยไม่ต้องตัดต่อสายไฟ?",
+                options: ["แอมมิเตอร์แบบ Panel Meter", "มัลติมิเตอร์แบบดิจิทัล", "แคลมป์มิเตอร์ (Clamp Meter)", "เครื่องทดสอบค่าความเป็นฉนวน (Insulation Tester)"],
+                answer: 2
+            },
+            {
+                question: "5. ค่าใดที่เปรียบเหมือน 'คะแนนประสิทธิภาพ' ของระบบไฟฟ้ากระแสสลับ ยิ่งใกล้ 1 ยิ่งดี?",
+                options: ["กำลังไฟฟ้า (Power)", "ความถี่ (Frequency)", "พลังงานไฟฟ้า (Energy)", "ตัวประกอบกำลัง (Power Factor)"],
+                answer: 3
+            },
+            {
+                question: "6. ความแตกต่างหลักระหว่าง 'วัตต์มิเตอร์' (Wattmeter) และ 'กิโลวัตต์-ชั่วโมงมิเตอร์' (Kilowatt-hour meter) คืออะไร?",
+                options: ["วัตต์มิเตอร์วัดไฟ AC, กิโลวัตต์-ชั่วโมงมิเตอร์วัดไฟ DC", "วัตต์มิเตอร์วัดกำลังไฟฟ้าขณะนั้น, กิโลวัตต์-ชั่วโมงมิเตอร์วัดและสะสมพลังงานทั้งหมด", "วัตต์มิเตอร์ติดตั้งในโรงงาน, กิโลวัตต์-ชั่วโมงมิเตอร์ติดตั้งตามบ้านเท่านั้น", "วัตต์มิเตอร์ต่ออนุกรม, กิโลวัตต์-ชั่วโมงมิเตอร์ต่อขนาน"],
+                answer: 1
+            },
+            {
+                question: "7. มิเตอร์วัดค่าทางไฟฟ้าแบบใดที่ 'เหมาะมากกับงานที่ต้องปรับค่าไปเรื่อยๆ แล้วดูแนวโน้ม หรือสังเกตการเปลี่ยนแปลง' แม้แม่นยำน้อยกว่าแบบดิจิทัล?",
+                options: ["แบบพกพา (Handheld Type)", "แบบตั้งโต๊ะ (Bench Type)", "แบบเข็ม (Analog Type)", "แบบดิจิทัล (Digital Type)"],
+                answer: 2
+            },
+            {
+                question: "8. มาตรฐาน CAT (Category) บนดิจิตอลมัลติมิเตอร์ใช้อ้างอิงถึงอะไร?",
+                options: ["แรงดันไฟฟ้าสูงสุดที่มิเตอร์วัดได้", "ความแม่นยำของมิเตอร์", "ความทนทานต่อแรงดันเกินชั่วขณะ (Transient Overvoltage) และความปลอดภัย", "ประเภทการแสดงผล (เช่น ตัวเลขหรือกราฟ)"],
+                answer: 2
+            },
+            {
+                question: "9. หากต้องการวัดแรงดันไฟฟ้าที่ตู้เบรกเกอร์ (Circuit Breaker Panel) ควรเลือกใช้มิเตอร์ที่มี CAT Rating ขั้นต่ำเท่าใดเพื่อความปลอดภัย?",
+                options: ["CAT I", "CAT II", "CAT III", "CAT IV"],
+                answer: 2
+            },
+            {
+                question: "10. หากมัลติมิเตอร์มี CAT Rating เป็น CAT III แต่สายวัด (Test Probes) มี CAT Rating เป็น CAT II คุณควรยึดถือระดับ CAT Rating ใดเพื่อความปลอดภัย?",
+                options: ["CAT I", "CAT II", "CAT III", "CAT IV"],
+                answer: 1
+            },
+            {
+                question: "11. สัญลักษณ์ใดบนหน้าปัดมัลติมิเตอร์ที่ใช้สำหรับวัดแรงดันไฟฟ้ากระแสสลับ (AC Voltage)?",
+                options: ["V---", "A~", "V~", "Ω"],
+                answer: 2
+            },
+            {
+                question: "12. เหตุใดการใช้มัลติมิเตอร์แบบ True RMS จึงมีความสำคัญมากขึ้นในปัจจุบันเมื่อทำงานกับระบบไฟฟ้า?",
+                options: ["เพื่อบันทึกค่าและเชื่อมต่อกับคอมพิวเตอร์ได้", "เพื่อวัดกระแสโดยไม่ต้องตัดต่อสายไฟ", "เพื่อวัดแรงดันและกระแสของรูปคลื่นบิดเบี้ยวจากอุปกรณ์ Non-linear loads ได้แม่นยำ", "เพื่อทำงานได้รวดเร็วและสังเกตแนวโน้มการเปลี่ยนแปลงได้ดีขึ้น"],
+                answer: 2
+            },
+            {
+                question: "13. หากต้องการวัดกระแสไฟฟ้า (Current) ด้วยดิจิตอลมัลติมิเตอร์ (DMM) คุณควรต่อแอมมิเตอร์เข้ากับวงจรไฟฟ้าอย่างไร?",
+                options: ["ต่อขนานคร่อมแหล่งจ่าย", "ตัดวงจรแล้วต่อแอมมิเตอร์อนุกรมเข้าไป", "ต่อสายแดงเข้ากราวด์ของระบบ", "ต่อโดยไม่ต้องเสียบสายดำ (COM)"],
+                answer: 1
+            },
+            {
+                question: "14. เมื่อใช้แคลมป์มิเตอร์ (Clamp Meter) วัดกระแสไฟฟ้าใช้งานปกติ ควรคล้องสายไฟอย่างไรเพื่อให้อ่านค่าได้อย่างถูกต้อง?",
+                options: ["คล้องสาย Line และ Neutral พร้อมกัน", "คล้องสายกราวด์ (Ground Wire) เส้นเดียว", "คล้องสายไฟเพียงเส้นเดียว (Line หรือ Neutral)", "คล้องสายไฟสามเส้นพร้อมกันในระบบ 3 เฟส"],
+                answer: 2
+            },
+            {
+                question: "15. ในระบบไฟฟ้า 3 เฟส เหตุใดจึงสำคัญมากที่จะต้องตรวจสอบลำดับเฟส (Phase Detection) ก่อนจ่ายไฟเข้ามอเตอร์หรือขนานแหล่งจ่ายไฟ?",
+                options: ["เพื่อป้องกันมิเตอร์ไฟฟ้าหน้าบ้านหมุนผิด", "เพื่อป้องกันแรงดันลอย (Floating Voltage) ในระบบ", "เพื่อป้องกันมอเตอร์หมุนกลับทิศทาง หรือลัดวงจรจากการขนานแหล่งจ่ายไฟผิดเฟส", "เพื่อปรับช่วงวัด (Range) ของแคลมป์มิเตอร์ให้แม่นยำขึ้น"],
+                answer: 2
+            },
+            {
+                question: "16. เมื่อวัดความต้านทานด้วยโอห์มมิเตอร์ ไม่ควรให้นิ้วสัมผัสปลายโลหะของสายวัดหรือขาตัวต้านทานพร้อมกัน เหตุผลหลักคืออะไร?",
+                options: ["เพื่อป้องกันไฟฟ้าช็อตจากมิเตอร์", "เพื่อป้องกันความต้านทานร่างกายขนานกับตัวต้านทาน ทำให้ค่าที่วัดเพี้ยน", "เพื่อป้องกันความร้อนจากตัวต้านทาน", "เพื่ออ่านค่าบนหน้าจอได้ง่ายขึ้น"],
+                answer: 1
+            },
+            {
+                question: "17. เมื่อใช้มัลติมิเตอร์แบบ Manual Ranging วัดแรงดัน ควรเริ่มจากย่านวัด (Range) ที่ ____ ก่อนเสมอ เพื่อความปลอดภัยและลดข้อผิดพลาด",
+                options: ["ต่ำที่สุด", "สูงที่สุด", "ตรงกลาง", "ย่านที่มีสัญลักษณ์เป็นสีเหลือง"],
+                answer: 1
+            },
+            {
+                question: "18. เมื่อวัดกระแสไฟฟ้าด้วยดิจิตอลมัลติมิเตอร์ (DMM) การเสียบสายวัดสีแดงในโหมดวัดกระแส ข้อใดถูกต้อง?",
+                options: ["สายแดงเสียบช่อง VΩmA สำหรับกระแสสูง, ช่อง 10A สำหรับกระแสต่ำ", "สายแดงเสียบช่อง 10A สำหรับกระแสสูง, ช่อง VΩmA สำหรับกระแสต่ำ", "สายแดงเสียบช่อง COM สำหรับกระแสทุกประเภท", "สายแดงเสียบช่อง Hz สำหรับวัดกระแส AC เท่านั้น"],
+                answer: 1
+            },
+            {
+                question: "19. ข้อควรระวังสำคัญเมื่อใช้ Benchtop DMM คือขั้ว COM ส่วนใหญ่เชื่อมต่อกับกราวด์ของปลั๊กไฟโดยตรง เหตุใดจึงสำคัญ?",
+                options: ["ทำให้มิเตอร์วัดแรงดันลอย (Floating Voltage) ไม่ได้", "เพิ่มเสี่ยง Ground Loop ทำให้ค่าที่วัดมีสัญญาณรบกวน", "หากสาย COM สัมผัสขั้วบวกแหล่งจ่ายไฟ อาจลัดวงจรอย่างรุนแรง", "ถูกทุกข้อ"],
+                answer: 3
+            },
+            {
+                question: "20. หากเผลอนำดิจิตอลมัลติมิเตอร์ในโหมดวัดกระแส (แอมมิเตอร์) ไปต่อคร่อมแหล่งจ่ายแรงดันโดยตรง จะเกิดเหตุการณ์ใดเป็นอันดับแรก (ในกรณีที่ดีที่สุด)?",
+                options: ["มิเตอร์จะแสดงค่าแรงดันผิดเพี้ยน", "ฟิวส์ป้องกันกระแสเกินภายในมัลติมิเตอร์จะขาด", "หน้าจอจะแสดงสัญลักษณ์ OL (Overload)", "มิเตอร์จะระเบิดพร้อมประกายไฟ (Arc Flash)"],
+                answer: 1
+            }
+        ];
+
+        // Get references to HTML elements
+        const questionsWrapper = document.getElementById('questions-wrapper');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultContainer = document.getElementById('result-container');
+        const scoreEl = document.getElementById('score');
+        const feedbackEl = document.getElementById('feedback');
+        const verificationCodeContainer = document.getElementById('verification-code-container');
+        const verificationCodeEl = document.getElementById('verification-code');
+        
+        // --- Custom Hash Function (FNV-1a 64-bit truncated to 12 hex digits) ---
+        // ใช้ BigInt เพื่อจัดการตัวเลข 64-bit ใน JavaScript
+        function generateQuizHash(str) {
+            const FNV_PRIME_64 = 0x100000001b3n; // 64-bit FNV prime
+            let hash = 0xcbf29ce484222325n;   // 64-bit FNV offset basis
+
+            for (let i = 0; i < str.length; i++) {
+                hash ^= BigInt(str.charCodeAt(i));
+                hash = hash * FNV_PRIME_64;
+            }
+
+            // Convert to hex string, pad to ensure at least 16 characters,
+            // then take the last 12 characters (which represent the lower 48 bits)
+            return hash.toString(16).padStart(16, '0').slice(-12);
+        }
+
+        // --- Function to render the quiz on the page ---
+        function renderQuiz() {
+            let quizHtml = '';
+            // Loop through each question in the data
+            quizData.forEach((item, index) => {
+                // Generate HTML for the options
+                const optionsHtml = item.options.map((option, optionIndex) => `
+                    <div>
+                        <input type="radio" name="question-${index}" id="q${index}o${optionIndex}" value="${optionIndex}">
+                        <label for="q${index}o${optionIndex}" class="option-label">
+                           ${String.fromCharCode(65 + optionIndex)}. ${option}
+                        </label>
+                    </div>
+                `).join('');
+
+                // Generate HTML for the question card
+                quizHtml += `
+                    <div class="bg-white/70 backdrop-blur-sm p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+                        <p class="text-lg font-bold text-gray-800 mb-4">${item.question}</p>
+                        <div class="space-y-3">${optionsHtml}</div>
+                    </div>
+                `;
+            });
+            // Insert the generated HTML into the wrapper
+            questionsWrapper.innerHTML = quizHtml;
+        }
+
+        // --- Function to calculate and show the results ---
+        function showResults() {
+            let score = 0;
+            const userChoices = []; // To store user's selected options
+            const completionTime = Date.now(); // Get timestamp when quiz is submitted
+
+            // Disable all radio buttons to prevent changes after submission
+            const allRadios = document.querySelectorAll('input[type="radio"]');
+            allRadios.forEach(radio => radio.disabled = true);
+
+            // Loop through each question to check the answer
+            quizData.forEach((item, index) => {
+                const correctAnswerIndex = item.answer;
+                const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
+                
+                // Find the label for the correct answer and highlight it green
+                const correctLabel = document.querySelector(`label[for="q${index}o${correctAnswerIndex}"]`);
+                correctLabel.classList.add('correct-answer');
+
+                // Check if an option was selected
+                if (selectedOption) {
+                    const selectedAnswerIndex = parseInt(selectedOption.value);
+                    userChoices.push(selectedAnswerIndex); // Store the selected option index
+                    if (selectedAnswerIndex === correctAnswerIndex) {
+                        // If correct, increment score
+                        score++;
+                    } else {
+                        // If incorrect, find the user's wrong choice and highlight it red
+                        const wrongLabel = document.querySelector(`label[for="q${index}o${selectedAnswerIndex}"]`);
+                        wrongLabel.classList.add('wrong-answer');
+                    }
+                } else {
+                    userChoices.push('U'); // 'U' for Unanswered
+                }
+            });
+
+            // Display the final score
+            scoreEl.textContent = `คุณได้ ${score} จาก ${quizData.length} คะแนน`;
+            
+            // Provide feedback based on the score
+            let feedbackText = '';
+            const percentage = (score / quizData.length) * 100;
+            if (percentage >= 80) {
+                feedbackText = 'ยอดเยี่ยมมาก! คุณมีความเข้าใจในเรื่องนี้เป็นอย่างดี';
+            } else if (percentage >= 50) {
+                feedbackText = 'ทำได้ดี! ลองทบทวนอีกนิดเพื่อความแม่นยำยิ่งขึ้น';
+            } else {
+                feedbackText = 'ไม่เป็นไรนะ ลองทบทวนเนื้อหาและกลับมาทดสอบอีกครั้ง!';
+            }
+            feedbackEl.textContent = feedbackText;
+
+            // --- Generate and Encode Verification String ---
+            // Example format: "S:<score>|C:<q0-choice>;<q1-choice>;...|T:<timestamp>"
+            const choicesString = userChoices.map((choice, i) => `q${i}-${choice}`).join(';');
+            const rawDataString = `S:${score}|C:${choicesString}|T:${completionTime}`;
+            
+            // Generate the hexadecimal hash (now truncated to 12 chars)
+            const verificationHash = generateQuizHash(rawDataString);
+
+            // Display the verification code
+            verificationCodeEl.textContent = verificationHash;
+            verificationCodeContainer.classList.remove('hidden');
+
+            // Show the result container and hide the submit button
+            resultContainer.classList.remove('hidden');
+            submitBtn.style.display = 'none';
+
+            // Scroll to the results
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // --- Event Listeners ---
+        // Add click event listener to the submit button
+        submitBtn.addEventListener('click', showResults);
+        
+        // --- Initial call ---
+        // Render the quiz when the page loads
+        renderQuiz();
+
+    </script>
+</body>
+</html>
