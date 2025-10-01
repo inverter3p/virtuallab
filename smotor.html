@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wound Field Synchronous Motor Simulator</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- MathJax for rendering equations -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .param-slider {
+            -webkit-appearance: none; appearance: none; width: 100%; height: 8px;
+            background: #d1d5db; border-radius: 9999px; outline: none; transition: background 0.2s;
+        }
+        .param-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 20px; height: 20px;
+            background: #3b82f6; border-radius: 50%; cursor: pointer;
+            border: 3px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+        }
+        .param-slider::-moz-range-thumb {
+            width: 20px; height: 20px; background: #3b82f6; border-radius: 50%;
+            cursor: pointer; border: 3px solid #fff;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+</head>
+<body class="bg-slate-900">
+    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 sm:p-6">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
+                Wound Field Synchronous Motor Simulator
+            </h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Left Column -->
+                <div class="flex flex-col gap-6">
+                    <!-- Motor & Phasor Visualization -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h2 class="text-xl font-semibold mb-2 text-gray-800">Motor Visualization</h2>
+                                <div class="flex justify-center items-center h-48 bg-gray-50 rounded-lg relative overflow-hidden border">
+                                    <div class="absolute w-40 h-40 border-8 border-gray-700 rounded-full"></div>
+                                    <div id="rotor" class="absolute w-28 h-28 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full shadow-lg">
+                                        <div class="absolute w-1.5 h-14 bg-red-500 left-1/2 top-0 -translate-x-1/2"></div>
+                                        <div class="absolute w-14 h-1.5 bg-red-500 top-1/2 left-0 -translate-y-1/2"></div>
+                                    </div>
+                                    <div class="absolute w-6 h-6 bg-gray-800 rounded-full z-10"></div>
+                                </div>
+                                <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                                    <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 text-center">
+                                        <div class="font-semibold text-gray-700 text-xs">Sync Speed</div>
+                                        <div id="sync-speed" class="text-xl font-bold text-blue-600">1500 RPM</div>
+                                    </div>
+                                    <div class="bg-green-50 p-2 rounded-lg border border-green-200 text-center">
+                                        <div class="font-semibold text-gray-700 text-xs">Status</div>
+                                        <div id="motor-status" class="text-xl font-bold text-gray-400">Stopped</div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button id="start-stop-btn" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-colors bg-green-500 hover:bg-green-600 text-white">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                        <span id="start-stop-label">Start</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-semibold mb-2 text-gray-800">Phasor Diagram</h2>
+                                <canvas id="phasorCanvas" width="250" height="250" class="bg-gray-50 rounded-lg border"></canvas>
+                                <div class="text-xs text-gray-600 mt-2 space-y-1">
+                                    <div><span class="font-bold text-red-600">\( \mathbf{V_t} \)</span>: Terminal Voltage</div>
+                                    <div><span class="font-bold text-blue-600">\( \mathbf{E_f} \)</span>: Excitation EMF</div>
+                                    <div><span class="font-bold text-purple-600">\( \mathbf{I_a Z_s} \)</span>: Impedance Drop</div>
+                                    <div><span class="font-bold text-green-600">\( \mathbf{I_a} \)</span>: Armature Current</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Equation Values -->
+                    <div id="equation-container" class="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 class="text-xl font-semibold text-gray-800">Live Equation Values</h2>
+                            <button id="eq-help-btn" class="p-1 rounded-full text-gray-500 hover:bg-blue-100 hover:text-blue-600 transition-colors" title="Show calculations">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">The core equation \( \mathbf{V_t} = \mathbf{E_f} + \mathbf{I_a} \cdot Z_s \) visualized as a vector sum.</p>
+                        <div class="text-sm bg-gray-50 p-3 rounded-lg border space-y-2">
+                            <p id="eq-vt-line" class="text-red-600 font-semibold">\( \mathbf{V_t} = ... \)</p>
+                            <p id="eq-ef-line" class="text-blue-600 font-semibold">\( \mathbf{E_f} = ... \)</p>
+                            <p id="eq-ia-line" class="text-green-600 font-semibold">\( \mathbf{I_a} = ... \)</p>
+                            <p id="eq-zs-line" class="text-cyan-600 font-semibold">\( Z_s = ... \)</p>
+                            <p id="eq-iazs-line" class="text-purple-600 font-semibold">\( \mathbf{I_a Z_s} = ... \)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="flex flex-col gap-6">
+                    <!-- Controls and Current Parameters -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Control Panel</h2>
+                        <div class="mb-6">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Field Current (\(I_f\)): <span id="field-current-label" class="font-bold text-blue-600">4.000</span> A</label>
+                            <input id="field-current-slider" type="range" min="1" max="8" step="0.1" value="4" class="param-slider">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><div class="text-xs font-semibold text-gray-600 mb-1">Armature Current (\(I_a\))</div><div id="armature-current" class="text-2xl font-bold text-blue-600">...</div></div>
+                            <div><div class="text-xs font-semibold text-gray-600 mb-1">Power Factor</div><div id="power-factor" class="text-2xl font-bold text-green-600">...</div><div id="pf-type" class="text-xs font-semibold capitalize">...</div></div>
+                            <div><div class="text-xs font-semibold text-gray-600 mb-1">EMF (\(E_f\))</div><div id="emf" class="text-2xl font-bold text-purple-600">...</div></div>
+                            <div><div class="text-xs font-semibold text-gray-600 mb-1">Power Angle (\(\delta\))</div><div id="power-angle" class="text-2xl font-bold text-orange-600">...</div></div>
+                            <div><div class="text-xs font-semibold text-gray-600 mb-1">Motor Speed</div><div id="motor-speed" class="text-2xl font-bold text-teal-600">...</div></div>
+                        </div>
+                        
+                        <div class="mt-6 flex gap-2">
+                            <button id="record-btn" class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors text-sm">Record Data</button>
+                            <button id="clear-btn" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors text-sm">Clear Data</button>
+                        </div>
+                        <div class="mt-3 text-sm text-gray-600 bg-gray-50 p-2 rounded-lg border">
+                            <strong>Recorded Points:</strong> <span id="record-count">0</span>
+                            <button id="export-btn" class="ml-2 text-blue-600 hover:text-blue-700 font-semibold inline-flex items-center gap-1 hidden text-xs">Export CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- Motor Parameters -->
+                    <div class="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Adjustable Motor Parameters</h2>
+                        <div class="space-y-4 text-sm">
+                            <div>
+                                <label class="block font-semibold text-gray-700">Terminal Voltage (\(V_L\)): <span id="voltage-label" class="font-bold text-blue-600">440</span> V</label>
+                                <input id="voltage-slider" type="range" min="200" max="800" step="10" value="440" class="param-slider">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-gray-700">Output Power (\(P_{out}\)): <span id="power-label" class="font-bold text-blue-600">50</span> kW</label>
+                                <input id="power-slider" type="range" min="10" max="150" step="1" value="50" class="param-slider">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-gray-700">Sync. Reactance (\(X_s\)): <span id="xs-label" class="font-bold text-blue-600">8.000</span> &Omega;</label>
+                                <input id="xs-slider" type="range" min="1" max="20" step="0.1" value="8" class="param-slider">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-gray-700">Armature Resistance (\(R_a\)): <span id="ra-label" class="font-bold text-blue-600">0.500</span> &Omega;</label>
+                                <input id="ra-slider" type="range" min="0.1" max="5" step="0.1" value="0.5" class="param-slider">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explanation Panel -->
+            <div id="insights-panel" class="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6 mb-6">
+                 <h2 class="text-xl font-semibold mb-4 text-gray-800">Simulation Insights</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 text-gray-700 text-sm">
+                     <div>
+                         <h3 class="font-bold mb-2">Excitation & EMF</h3>
+                         <p>The internal voltage \(E_f\) is generated by the rotor's magnetic field, controlled by the field current \(I_f\). This simulator uses a linear relationship: \( E_f = k \cdot I_f \), where \(k\) is a motor constant. Increasing \(I_f\) directly increases \(E_f\).</p>
+                     </div>
+                     <div>
+                         <h3 class="font-bold mb-2">Armature Current</h3>
+                         <p>The armature current is determined by the vector difference between the terminal voltage \(V_t\) and the internal EMF \(E_f\), divided by the motor's impedance: \( \mathbf{I_a} = (\mathbf{V_t} - \mathbf{E_f}) / Z_s \). The angle of this resulting current vector determines the power factor.</p>
+                     </div>
+                     <div>
+                         <h3 class="font-bold mb-2">Power & Stability</h3>
+                         <p>The power angle \(\delta\) acts like a magnetic 'spring' between the rotor and stator fields. As load increases, this spring stretches to deliver more torque, governed by \( P_{out} \approx (3 V_t E_f / X_s) \sin(\delta) \). If the load demands \(\sin(\delta) > 1\), the magnetic spring "breaks," the motor loses sync, and becomes <strong class="text-red-600">unstable</strong>.</p>
+                     </div>
+                 </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6"><h2 class="text-xl font-semibold mb-4 text-gray-800">V-Curve</h2><canvas id="vCurveChart"></canvas></div>
+                <div class="bg-white/90 backdrop-blur-sm rounded-lg shadow-xl p-6"><h2 class="text-xl font-semibold mb-4 text-gray-800">Power Factor Curve</h2><canvas id="pfCurveChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculation Help Modal -->
+    <div id="calc-help-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gray-50 p-4 border-b flex justify-between items-center z-10">
+                <h3 class="text-2xl font-bold text-gray-800">Calculation Derivations</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-red-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div id="modal-content" class="p-6 md:p-8 space-y-6 text-gray-700 text-base">
+                <p>The simulator derives the key electrical phasors (\(\mathbf{Z_s}\), \(\mathbf{E_f}\), and \(\mathbf{I_a}\)) from the motor's operating parameters. The governing equation is:</p>
+                $$ \mathbf{V_t} = \mathbf{E_f} + \mathbf{I_a} \mathbf{Z_s} $$
+                <p>All calculations are performed on a per-phase basis using the currently set parameters.</p>
+                
+                <div>
+                    <h4 class="text-lg font-semibold border-b pb-2 mb-3">Step 1: Phase Voltage (\(\mathbf{V_t}\)) and Synchronous Impedance (\(\mathbf{Z_s}\))</h4>
+                    <p class="mb-2">First, we establish the reference voltage and the motor's impedance.</p>
+                    <p class="mb-2"><strong>a) Per-Phase Terminal Voltage, \(\mathbf{V_t}\)</strong></p>
+                    <p class="mb-4">The line voltage \(V_L\) is converted to phase voltage and set as the reference phasor at \(0^\circ\).</p>
+                    $$ V_t = \frac{V_L}{\sqrt{3}} $$
+                    <p class="mb-2"><strong>b) Synchronous Impedance, \(\mathbf{Z_s}\)</strong></p>
+                    <p class="mb-4">The impedance is the complex sum of resistance and reactance, shown here in polar form.</p>
+                    $$ |\mathbf{Z_s}| = \sqrt{R_a^2 + X_s^2} \quad \quad \theta_Z = \arctan\left(\frac{X_s}{R_a}\right) $$
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold border-b pb-2 mb-3">Step 2: Excitation EMF (\(\mathbf{E_f}\))</h4>
+                    <p class="mb-2">The excitation EMF's magnitude comes from the field current, and its angle comes from the power requirement.</p>
+                    <p class="mb-2"><strong>a) Magnitude of \(\mathbf{E_f}\)</strong></p>
+                    <p class="mb-4">A linear motor constant, \(k\), relates field current to EMF.</p>
+                    $$ |\mathbf{E_f}| = k \cdot I_f $$
+                    <p class="mb-2"><strong>b) Power Angle, \(\delta\)</strong></p>
+                    <p class="mb-4">The power angle \(\delta\) is found by rearranging the output power formula. For a motor, the angle is negative (\(\mathbf{E_f}\) lags \(\mathbf{V_t}\)).</p>
+                    $$ \sin(\delta) = \frac{P_{out} \cdot X_s}{3 \cdot V_t \cdot |\mathbf{E_f}|} \quad \implies \quad \mathbf{E_f} = |\mathbf{E_f}| \angle -\delta $$
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold border-b pb-2 mb-3">Step 3: Armature Current (\(\mathbf{I_a}\))</h4>
+                    <p class="mb-2">Finally, we calculate the armature current by rearranging the governing equation.</p>
+                    $$ \mathbf{I_a} = \frac{\mathbf{V_t} - \mathbf{E_f}}{\mathbf{Z_s}} $$
+                    <p class="mb-4">The subtraction is done in rectangular coordinates, and the final division is done in polar coordinates to find the magnitude and angle of the armature current.</p>
+                    $$ |\mathbf{I_a}| = \frac{|\mathbf{V_t} - \mathbf{E_f}|}{|\mathbf{Z_s}|} \quad \quad \angle\mathbf{I_a} = \angle(\mathbf{V_t} - \mathbf{E_f}) - \angle\mathbf{Z_s} $$
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- STATE MANAGEMENT ---
+    let isRunning = false, rotation = 0, unstableRotation = 0, unstableDirection = 1, recordings = [], animationFrameId;
+    const simState = {
+        fieldCurrent: 4.0, voltage: 440, power: 50,
+        syncReactance: 8.0, armatureRes: 0.5,
+        frequency: 50, poles: 4
+    };
+    
+    // --- DOM ELEMENT REFERENCES ---
+    const DOMElements = {
+        rotor: document.getElementById('rotor'), syncSpeedEl: document.getElementById('sync-speed'), motorStatusEl: document.getElementById('motor-status'),
+        startStopBtn: document.getElementById('start-stop-btn'), startStopLabel: document.getElementById('start-stop-label'),
+        fieldCurrentSlider: document.getElementById('field-current-slider'), fieldCurrentLabel: document.getElementById('field-current-label'),
+        voltageSlider: document.getElementById('voltage-slider'), voltageLabel: document.getElementById('voltage-label'),
+        powerSlider: document.getElementById('power-slider'), powerLabel: document.getElementById('power-label'),
+        xsSlider: document.getElementById('xs-slider'), xsLabel: document.getElementById('xs-label'),
+        raSlider: document.getElementById('ra-slider'), raLabel: document.getElementById('ra-label'),
+        armatureCurrentEl: document.getElementById('armature-current'), powerFactorEl: document.getElementById('power-factor'), pfTypeEl: document.getElementById('pf-type'),
+        emfEl: document.getElementById('emf'), powerAngleEl: document.getElementById('power-angle'),
+        motorSpeedEl: document.getElementById('motor-speed'),
+        recordBtn: document.getElementById('record-btn'), clearBtn: document.getElementById('clear-btn'),
+        exportBtn: document.getElementById('export-btn'), recordCountEl: document.getElementById('record-count'),
+        phasorCanvas: document.getElementById('phasorCanvas'),
+        eqVtLine: document.getElementById('eq-vt-line'),
+        eqEfLine: document.getElementById('eq-ef-line'),
+        eqIazsLine: document.getElementById('eq-iazs-line'),
+        eqIaLine: document.getElementById('eq-ia-line'),
+        eqZsLine: document.getElementById('eq-zs-line'),
+        equationContainer: document.getElementById('equation-container'),
+        insightsPanel: document.getElementById('insights-panel'),
+        // Modal elements
+        eqHelpBtn: document.getElementById('eq-help-btn'),
+        calcHelpModal: document.getElementById('calc-help-modal'),
+        closeModalBtn: document.getElementById('close-modal-btn'),
+        modalContent: document.getElementById('modal-content'),
+    };
+    const phasorCtx = DOMElements.phasorCanvas.getContext('2d');
+
+    // --- ANIMATION ---
+    const animate = () => {
+        if (!isRunning) return; // Safety check before continuing the loop
+
+        const values = calculateMotorValues(simState);
+
+        // Choose animation type based on stability
+        if (values.pfType === 'Unstable') {
+            // Unstable: Oscillate the rotor
+            const oscillationLimit = 45; // Total swing of 90 degrees
+            const speed = 2;
+            unstableRotation += unstableDirection * speed;
+            if (unstableRotation > oscillationLimit || unstableRotation < -oscillationLimit) {
+                unstableDirection *= -1; // Reverse direction
+            }
+            DOMElements.rotor.style.transform = `rotate(${unstableRotation}deg)`;
+        } else {
+            // Stable: Normal continuous rotation
+            rotation = (rotation + 2) % 360; 
+            DOMElements.rotor.style.transform = `rotate(${rotation}deg)`;
+        }
+        
+        animationFrameId = requestAnimationFrame(animate);
+    };
+
+    // --- CORE CALCULATION LOGIC ---
+    const calculateMotorValues = (state) => {
+        const { voltage, power, syncReactance, armatureRes, fieldCurrent } = state;
+        const V_phase = voltage / Math.sqrt(3); const P_out = power * 1000;
+        const Ef = fieldCurrent * 55; const sin_delta = (P_out * syncReactance) / (3 * V_phase * Ef);
+        
+        const Vt_phasor = { real: V_phase, imag: 0 };
+        const Zs_phasor = { real: armatureRes, imag: syncReactance };
+        let result = {
+            armatureCurrent: NaN, powerFactor: NaN, pfType: 'Unstable', emf: Ef, powerAngle: NaN,
+            phasors: { Vt: Vt_phasor, Ef: {real:NaN, imag:NaN}, Ia: {real:NaN, imag:NaN}, IaZs: {real:NaN, imag:NaN} }
+        };
+
+        if (Math.abs(sin_delta) <= 1) {
+            const delta_rad = Math.asin(sin_delta);
+            const Ef_phasor = { real: Ef * Math.cos(delta_rad), imag: -Ef * Math.sin(delta_rad) };
+            const num = { real: Vt_phasor.real - Ef_phasor.real, imag: Vt_phasor.imag - Ef_phasor.imag };
+            const den_mag_sq = Zs_phasor.real**2 + Zs_phasor.imag**2;
+            const Ia_phasor = {
+                real: (num.real * Zs_phasor.real + num.imag * Zs_phasor.imag) / den_mag_sq,
+                imag: (num.imag * Zs_phasor.real - num.real * Zs_phasor.imag) / den_mag_sq
+            };
+            const IaZs_phasor = {
+                real: Ia_phasor.real * Zs_phasor.real - Ia_phasor.imag * Zs_phasor.imag,
+                imag: Ia_phasor.real * Zs_phasor.imag + Ia_phasor.imag * Zs_phasor.real
+            };
+            const Ia_mag = Math.sqrt(Ia_phasor.real**2 + Ia_phasor.imag**2);
+            const pf = Math.cos(-Math.atan2(Ia_phasor.imag, Ia_phasor.real));
+            let pfType = Ia_phasor.imag > 0.01 ? 'leading' : (Ia_phasor.imag < -0.01 ? 'lagging' : 'unity');
+            
+            result = {
+                armatureCurrent: Ia_mag, powerFactor: Math.abs(pf), pfType, emf: Ef, powerAngle: delta_rad * (180 / Math.PI),
+                phasors: { Vt: Vt_phasor, Ef: Ef_phasor, Ia: Ia_phasor, IaZs: IaZs_phasor }
+            };
+        }
+        return result;
+    };
+    
+    // --- UI UPDATE FUNCTIONS ---
+    const updateUI = () => {
+        const fallback = "...";
+        const displayPrecision = 3;
+
+        if (isRunning) {
+            const values = calculateMotorValues(simState);
+            const formatNum = (val, prec) => isNaN(val) ? "---" : val.toFixed(prec);
+            const syncSpeed = (120 * simState.frequency) / simState.poles;
+
+            DOMElements.armatureCurrentEl.textContent = formatNum(values.armatureCurrent, displayPrecision);
+            DOMElements.powerFactorEl.textContent = formatNum(values.powerFactor, displayPrecision);
+            DOMElements.pfTypeEl.textContent = values.pfType;
+            DOMElements.emfEl.textContent = formatNum(values.emf, displayPrecision);
+            DOMElements.powerAngleEl.textContent = formatNum(values.powerAngle, displayPrecision) + '°';
+            DOMElements.motorSpeedEl.textContent = `${syncSpeed} RPM`;
+            DOMElements.pfTypeEl.classList.toggle('text-red-600', values.pfType === 'Unstable');
+            DOMElements.pfTypeEl.classList.toggle('text-gray-500', values.pfType !== 'Unstable');
+            
+            const updateEqLine = (el, p, label, unit) => {
+                if (isNaN(p.real)) {
+                    el.textContent = `\\( ${label} = --- \\)`;
+                    return;
+                }
+                const mag = Math.sqrt(p.real**2 + p.imag**2).toFixed(displayPrecision);
+                const ang = (Math.atan2(p.imag, p.real) * (180 / Math.PI)).toFixed(displayPrecision);
+                el.textContent = `\\( ${label} = ${mag} \\angle ${ang}^\\circ \\: ${unit} \\)`;
+            };
+
+            updateEqLine(DOMElements.eqVtLine, values.phasors.Vt, '\\mathbf{V_t}', '\\text{V}');
+            updateEqLine(DOMElements.eqEfLine, values.phasors.Ef, '\\mathbf{E_f}', '\\text{V}');
+            updateEqLine(DOMElements.eqIazsLine, values.phasors.IaZs, '\\mathbf{I_a Z_s}', '\\text{V}');
+            updateEqLine(DOMElements.eqIaLine, values.phasors.Ia, '\\mathbf{I_a}', '\\text{A}');
+            const Zs = { real: simState.armatureRes, imag: simState.syncReactance };
+            updateEqLine(DOMElements.eqZsLine, Zs, 'Z_s', '\\Omega');
+            
+            drawPhasorDiagram(values.phasors);
+        } else {
+            DOMElements.armatureCurrentEl.textContent = fallback;
+            DOMElements.powerFactorEl.textContent = fallback;
+            DOMElements.pfTypeEl.textContent = fallback;
+            DOMElements.emfEl.textContent = fallback;
+            DOMElements.powerAngleEl.textContent = fallback;
+            DOMElements.motorSpeedEl.textContent = "0 RPM";
+            
+            DOMElements.eqVtLine.textContent = `\\( \\mathbf{V_t} = ${fallback} \\)`;
+            DOMElements.eqEfLine.textContent = `\\( \\mathbf{E_f} = ${fallback} \\)`;
+            DOMElements.eqIazsLine.textContent = `\\( \\mathbf{I_a Z_s} = ${fallback} \\)`;
+            DOMElements.eqIaLine.textContent = `\\( \\mathbf{I_a} = ${fallback} \\)`;
+            DOMElements.eqZsLine.textContent = `\\( Z_s = ${fallback} \\)`;
+
+            const w = DOMElements.phasorCanvas.width, h = DOMElements.phasorCanvas.height;
+            phasorCtx.clearRect(0, 0, w, h);
+        }
+
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise([DOMElements.equationContainer, DOMElements.insightsPanel])
+                .catch(err => console.error("MathJax Error:", err));
+        }
+    };
+    
+    // --- PHASOR DIAGRAM ---
+    const drawPhasorDiagram = (phasors) => {
+        const { Vt, Ef, Ia } = phasors;
+        const w = DOMElements.phasorCanvas.width, h = DOMElements.phasorCanvas.height;
+        phasorCtx.clearRect(0, 0, w, h);
+
+        if (isNaN(Ef.real)) {
+            phasorCtx.fillStyle = '#dc2626'; phasorCtx.font = 'bold 16px sans-serif';
+            phasorCtx.textAlign = 'center'; phasorCtx.fillText('UNSTABLE', w / 2, h / 2 - 10);
+            return;
+        }
+
+        const V_phase_mag = Math.sqrt(Vt.real**2 + Vt.imag**2);
+        const Ia_mag = Math.sqrt(Ia.real**2 + Ia.imag**2);
+        let Ia_display_phasor = {real: 0, imag: 0};
+        if (Ia_mag > 1e-6) {
+            const currentDisplayFactor = (V_phase_mag * 0.6) / Ia_mag;
+            Ia_display_phasor = { real: Ia.real * currentDisplayFactor, imag: Ia.imag * currentDisplayFactor };
+        }
+
+        const points = [
+            {x:0, y:0}, {x:Ef.real, y:-Ef.imag}, {x:Vt.real, y:-Vt.imag},
+            {x:Ia_display_phasor.real, y:-Ia_display_phasor.imag}
+        ];
+        const minX = Math.min(...points.map(p => p.x)), maxX = Math.max(...points.map(p => p.x));
+        const minY = Math.min(...points.map(p => p.y)), maxY = Math.max(...points.map(p => p.y));
+        
+        let dataW = maxX - minX || 1e-6; let dataH = maxY - minY || 1e-6;
+        
+        const scale = Math.min((w * 0.8) / dataW, (h * 0.8) / dataH);
+        const originX = -minX * scale + (w - dataW * scale) / 2;
+        const originY = -minY * scale + (h - dataH * scale) / 2;
+
+        const transform = p => ({ x: originX + p.real * scale, y: originY - p.imag * scale });
+        const p0 = transform({real:0, imag:0});
+        const pEf = transform(Ef);
+        const pVt = transform(Vt);
+        const pIa = transform(Ia_display_phasor);
+
+        const drawArrow = (p1, p2, color) => {
+            phasorCtx.beginPath(); phasorCtx.moveTo(p1.x, p1.y); phasorCtx.lineTo(p2.x, p2.y);
+            phasorCtx.strokeStyle = color; phasorCtx.lineWidth = 2.5; phasorCtx.stroke();
+            const headlen = 8, angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+            phasorCtx.lineTo(p2.x - headlen * Math.cos(angle - Math.PI / 6), p2.y - headlen * Math.sin(angle - Math.PI / 6));
+            phasorCtx.moveTo(p2.x, p2.y);
+            phasorCtx.lineTo(p2.x - headlen * Math.cos(angle + Math.PI / 6), p2.y - headlen * Math.sin(angle + Math.PI / 6));
+            phasorCtx.stroke();
+        };
+
+        drawArrow(p0, pVt, '#dc2626');
+        drawArrow(p0, pEf, '#2563eb');
+        drawArrow(pEf, pVt, '#9333ea');
+        drawArrow(p0, pIa, '#10b981');
+    };
+
+    // --- CHARTING & DATA HANDLING ---
+    let vCurveChart, pfCurveChart;
+    const createCharts = () => {
+        const commonOpts = (yLbl) => ({
+            scales: {
+                x: { type: 'linear', title: { display: true, text: 'Field Current (If) [A]' } },
+                y: { title: { display: true, text: yLbl } }
+            },
+            plugins: { legend: { display: false } }, spanGaps: true, tension: 0.3
+        });
+        const vCurveOptions = commonOpts('Armature Current (Ia) [A]');
+        vCurveOptions.scales.y.beginAtZero = true;
+        const pfCurveOptions = commonOpts('Power Factor');
+        pfCurveOptions.scales.y.min = 0; pfCurveOptions.scales.y.max = 1;
+        vCurveChart = new Chart(document.getElementById('vCurveChart'), { type: 'line', data: { datasets: [{ data: [], borderColor: '#3b82f6' }] }, options: vCurveOptions });
+        pfCurveChart = new Chart(document.getElementById('pfCurveChart'), { type: 'line', data: { datasets: [{ data: [], borderColor: '#10b981' }] }, options: pfCurveOptions });
+    };
+    const updateCharts = () => {
+        recordings.sort((a, b) => a.fieldCurrent - b.fieldCurrent);
+        const vCurveData = recordings.map(r => ({ x: r.fieldCurrent, y: r.armatureCurrent }));
+        const pfCurveData = recordings.map(r => ({ x: r.fieldCurrent, y: r.powerFactor }));
+        vCurveChart.data.datasets[0].data = vCurveData;
+        pfCurveChart.data.datasets[0].data = pfCurveData;
+        vCurveChart.update(); pfCurveChart.update();
+    };
+    const recordData = () => {
+        if (!isRunning) return;
+        recordings.push({ ...simState, ...calculateMotorValues(simState) });
+        DOMElements.recordCountEl.textContent = recordings.length;
+        DOMElements.exportBtn.classList.remove('hidden'); updateCharts();
+    };
+    const clearRecordings = () => {
+        recordings = []; DOMElements.recordCountEl.textContent = 0;
+        DOMElements.exportBtn.classList.add('hidden'); updateCharts();
+    };
+    const exportData = () => {
+        const prec = 3;
+        const formatCSV = (val, p) => isNaN(val) ? "N/A" : val.toFixed(p);
+        const headers = ['Field Current (A)', 'Armature Current (A)', 'Power Factor', 'PF Type', 'EMF (V)', 'Power Angle (deg)'];
+        const rows = recordings.map(r => [ 
+            formatCSV(r.fieldCurrent, prec), formatCSV(r.armatureCurrent, prec), 
+            formatCSV(r.powerFactor, prec), r.pfType, 
+            formatCSV(r.emf, prec), formatCSV(r.powerAngle, prec) 
+        ]);
+        const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob);
+        link.download = 'synchronous_motor_data.csv'; document.body.appendChild(link);
+        link.click(); document.body.removeChild(link);
+    };
+
+    // --- EVENT LISTENERS & INITIALIZATION ---
+    const setupEventListeners = () => {
+        DOMElements.startStopBtn.addEventListener('click', () => {
+            isRunning = !isRunning;
+            const btn = DOMElements.startStopBtn;
+            const label = DOMElements.startStopLabel;
+            const status = DOMElements.motorStatusEl;
+            const icon = btn.querySelector('svg');
+
+            if (isRunning) {
+                label.textContent = 'Stop';
+                btn.classList.replace('bg-green-500', 'bg-red-500');
+                btn.classList.replace('hover:bg-green-600', 'hover:bg-red-600');
+                icon.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>';
+                status.textContent = 'Running';
+                status.classList.replace('text-gray-400', 'text-green-600');
+                DOMElements.recordBtn.disabled = false;
+                animate();
+            } else {
+                label.textContent = 'Start';
+                btn.classList.replace('bg-red-500', 'bg-green-500');
+                btn.classList.replace('hover:bg-red-600', 'hover:bg-green-600');
+                icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+                status.textContent = 'Stopped';
+                status.classList.replace('text-green-600', 'text-gray-400');
+                DOMElements.recordBtn.disabled = true;
+                cancelAnimationFrame(animationFrameId);
+                rotation = 0; unstableRotation = 0; unstableDirection = 1;
+                DOMElements.rotor.style.transform = `rotate(0deg)`;
+            }
+            updateUI();
+        });
+
+        const sliderConfigs = [
+            { slider: DOMElements.fieldCurrentSlider, label: DOMElements.fieldCurrentLabel, key: 'fieldCurrent', prec: 3 },
+            { slider: DOMElements.voltageSlider, label: DOMElements.voltageLabel, key: 'voltage', prec: 0 },
+            { slider: DOMElements.powerSlider, label: DOMElements.powerLabel, key: 'power', prec: 0 },
+            { slider: DOMElements.xsSlider, label: DOMElements.xsLabel, key: 'syncReactance', prec: 3 },
+            { slider: DOMElements.raSlider, label: DOMElements.raLabel, key: 'armatureRes', prec: 3 }
+        ];
+        sliderConfigs.forEach(c => c.slider.addEventListener('input', e => {
+            const val = parseFloat(e.target.value);
+            simState[c.key] = val; c.label.textContent = val.toFixed(c.prec);
+            if(isRunning) { updateUI(); }
+        }));
+
+        DOMElements.recordBtn.addEventListener('click', recordData);
+        DOMElements.clearBtn.addEventListener('click', clearRecordings);
+        DOMElements.exportBtn.addEventListener('click', exportData);
+
+        // --- Modal Event Listeners ---
+        DOMElements.eqHelpBtn.addEventListener('click', () => {
+            DOMElements.calcHelpModal.classList.remove('hidden');
+            // Re-render MathJax for the newly visible content
+            if (window.MathJax && MathJax.typesetPromise) {
+                MathJax.typesetPromise([DOMElements.modalContent])
+                    .catch(err => console.error("MathJax Error in Modal:", err));
+            }
+        });
+        const closeModal = () => {
+            DOMElements.calcHelpModal.classList.add('hidden');
+        };
+        DOMElements.closeModalBtn.addEventListener('click', closeModal);
+        DOMElements.calcHelpModal.addEventListener('click', (event) => {
+            if (event.target === DOMElements.calcHelpModal) { closeModal(); }
+        });
+    };
+
+    const init = () => {
+        DOMElements.syncSpeedEl.textContent = `${(120 * simState.frequency) / simState.poles} RPM`;
+        DOMElements.recordBtn.disabled = true;
+        DOMElements.fieldCurrentLabel.textContent = parseFloat(DOMElements.fieldCurrentSlider.value).toFixed(3);
+        DOMElements.xsLabel.textContent = parseFloat(DOMElements.xsSlider.value).toFixed(3);
+        DOMElements.raLabel.textContent = parseFloat(DOMElements.raSlider.value).toFixed(3);
+        createCharts(); 
+        setupEventListeners(); 
+        updateUI(); 
+    };
+    init();
+});
+</script>
+</body>
+</html>
