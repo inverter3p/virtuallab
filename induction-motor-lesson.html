@@ -308,7 +308,10 @@
             <h3 style="margin-top: 2em;">Deriving the Curve from the Circuit Model</h3>
             <p>Now that we understand what the curve represents, let's see how it's derived mathematically from the equivalent circuit model.</p>
             <img src="https://ik.imagekit.io/Nithiphat/images/im_equivalent_Vth.png?updatedAt=1759388601485" alt="Thevenin Equivalent Circuit">
-            
+            <p>The Thevenin Voltage (\(V_{th}\)) is:</p>
+                $$ V_{th} \approx V_1 \left( \frac{jX_m}{R_1 + j(X_1 + X_m)} \right) $$
+                <p>The Thevenin Impedance (\(Z_{th} = R_{th} + jX_{th}\)) is:</p>
+                $$ Z_{th} \approx \frac{jX_m (R_1 + jX_1)}{R_1 + j(X_1 + X_m)} $$
             <h4>Step 3a & 3b: Find the Rotor Current (\(|I_2'|\))</h4>
             <p>Using the Thevenin equivalent circuit, we first find the magnitude of the rotor current, \(|I_2'|\), as a function of slip, \(s\).</p>
             $$ |I_2'| = \frac{V_{th}}{\sqrt{\left(R_{th} + \frac{R_2'}{s}\right)^2 + (X_{th} + X_2')^2}} $$
