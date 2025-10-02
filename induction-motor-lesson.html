@@ -281,7 +281,7 @@
                         <li>The rest is converted into mechanical power. This is the <strong>Converted Power (\(P_{conv}\))</strong>.</li>
                     </ul>
                 </li>
-                <li>This converted power is what's represented by the fictional resistor \(\boldsymbol{R_2' \frac{1-s}{s}}\). The power dissipated in this component *is* the mechanical power developed by the motor: \(P_{conv} = P_{ag} - P_{RCL}\).</li>
+                <li>This converted power is what's represented by the fictional resistor \(\boldsymbol{R_2' \dfrac{1-s}{s}}\). The power dissipated in this component *is* the mechanical power developed by the motor: \(P_{conv} = P_{ag} - P_{RCL}\).</li>
                 <li>Finally, after subtracting mechanical losses (friction and windage), you get the useful shaft output power (\(P_{out}\)).</li>
             </ol>
         </div>
@@ -309,28 +309,28 @@
             <p>Now that we understand what the curve represents, let's see how it's derived mathematically from the equivalent circuit model.</p>
             <img src="https://ik.imagekit.io/Nithiphat/images/im_equivalent_Vth.png?updatedAt=1759388601485" alt="Thevenin Equivalent Circuit">
             <p>The Thevenin Voltage (\(V_{th}\)) is:</p>
-                $$ V_{th} \approx V_1 \left( \frac{jX_m}{R_1 + j(X_1 + X_m)} \right) $$
+                $$ V_{th} \approx V_1 \left( \dfrac{jX_m}{R_1 + j(X_1 + X_m)} \right) $$
                 <p>The Thevenin Impedance (\(Z_{th} = R_{th} + jX_{th}\)) is:</p>
-                $$ Z_{th} \approx \frac{jX_m (R_1 + jX_1)}{R_1 + j(X_1 + X_m)} $$
+                $$ Z_{th} \approx \dfrac{jX_m (R_1 + jX_1)}{R_1 + j(X_1 + X_m)} $$
             <h4>Step 3a & 3b: Find the Rotor Current (\(|I_2'|\))</h4>
             <p>Using the Thevenin equivalent circuit, we first find the magnitude of the rotor current, \(|I_2'|\), as a function of slip, \(s\).</p>
-            $$ |I_2'| = \frac{V_{th}}{\sqrt{\left(R_{th} + \frac{R_2'}{s}\right)^2 + (X_{th} + X_2')^2}} $$
+            $$ |I_2'| = \dfrac{V_{th}}{\sqrt{\left(R_{th} + \dfrac{R_2'}{s}\right)^2 + (X_{th} + X_2')^2}} $$
 
             <h4>Step 3c: Find the Converted Mechanical Power (\(P_{conv}\))</h4>
-            <p>As we saw in the previous tab, the power converted from electrical to mechanical form is the power dissipated in the fictional resistor \(R_2' \frac{1-s}{s}\).</p>
-            $$ P_{conv} = 3 \cdot |I_2'|^2 \cdot R_2' \frac{1-s}{s} $$
+            <p>As we saw in the previous tab, the power converted from electrical to mechanical form is the power dissipated in the fictional resistor \(R_2' \dfrac{1-s}{s}\).</p>
+            $$ P_{conv} = 3 \cdot |I_2'|^2 \cdot R_2' \dfrac{1-s}{s} $$
 
             <h4>Step 3d: Relating Power to Torque (The Intuitive Way)</h4>
             <p>The fundamental definition of torque (\(T_e\)) is the mechanical power (\(P_{conv}\)) divided by the mechanical speed of the rotor (\(\omega_r\)).</p>
-            $$ T_e = \frac{P_{conv}}{\omega_r} $$
+            $$ T_e = \dfrac{P_{conv}}{\omega_r} $$
             <p>We know two key relationships: \(P_{conv} = P_{ag}(1-s)\) and the rotor speed is \(\omega_r = \omega_s(1-s)\). Substituting these into the equation above:</p>
-            $$ T_e = \frac{P_{ag}(1-s)}{\omega_s(1-s)} $$
+            $$ T_e = \dfrac{P_{ag}(1-s)}{\omega_s(1-s)} $$
             <p>The \((1-s)\) terms cancel out, revealing a powerful and simpler relationship:</p>
-            $$ T_e = \frac{P_{ag}}{\omega_s} $$
+            $$ T_e = \dfrac{P_{ag}}{\omega_s} $$
 
             <h4>Step 3e: The Final Torque Equation (The Calculation Way)</h4>
-            <p>This result is extremely useful. It shows that we can calculate the motor's torque directly from the <strong>Air-Gap Power</strong> (\(P_{ag}\)) and the <strong>constant synchronous speed</strong> (\(\omega_s\)). We know that \(P_{ag} = 3 \cdot |I_2'|^2 \cdot \frac{R_2'}{s}\). Substituting this into our simplified torque formula gives the final, famous torque-speed equation:</p>
-            $$ T_e = \frac{3 \cdot |I_2'|^2 \frac{R_2'}{s}}{\omega_s} = \frac{3}{\omega_s} \frac{V_{th}^2 \frac{R_2'}{s}}{\left(R_{th} + \frac{R_2'}{s}\right)^2 + (X_{th} + X_2')^2} $$
+            <p>This result is extremely useful. It shows that we can calculate the motor's torque directly from the <strong>Air-Gap Power</strong> (\(P_{ag}\)) and the <strong>constant synchronous speed</strong> (\(\omega_s\)). We know that \(P_{ag} = 3 \cdot |I_2'|^2 \cdot \dfrac{R_2'}{s}\). Substituting this into our simplified torque formula gives the final, famous torque-speed equation:</p>
+            $$ T_e = \dfrac{3 \cdot |I_2'|^2 \dfrac{R_2'}{s}}{\omega_s} = \dfrac{3}{\omega_s} \dfrac{V_{th}^2 \dfrac{R_2'}{s}}{\left(R_{th} + \dfrac{R_2'}{s}\right)^2 + (X_{th} + X_2')^2} $$
             <div class="tool-link-container">
                 <a href="tw_plot.html" class="tool-link">Explore the Torque-Speed Curve Interactively</a>
             </div>
@@ -348,12 +348,12 @@
             <ol>
                 <li><strong>Point A (t=0, Standstill):</strong> The motor is at zero speed. It looks at its torque-speed curve and produces its <strong>Starting Torque</strong>. This is much higher than the load torque, so there is a large <strong>accelerating torque</strong> (\(T_e - T_{load}\)). This net torque begins to accelerate the motor and its connected inertia.</li>
                 <li><strong>Point B (Accelerating):</strong> As the motor gains speed, its operating point moves up and along the torque-speed curve. At every instant, the torque it produces is determined by its current speed. Since the motor torque is still greater than the load torque, it continues to accelerate rapidly.</li>
-                <li><strong>Point C (Steady State):</strong> The motor continues to accelerate until its operating point on the curve intersects the load torque line. At this exact point, <strong>Motor Torque = Load Torque</strong>. The net torque is now zero, so acceleration (\(\frac{d\omega}{dt}\)) stops. The motor now runs at a constant, steady-state speed, continuously producing just enough torque to overcome the load.</li>
+                <li><strong>Point C (Steady State):</strong> The motor continues to accelerate until its operating point on the curve intersects the load torque line. At this exact point, <strong>Motor Torque = Load Torque</strong>. The net torque is now zero, so acceleration (\(\dfrac{d\omega}{dt}\)) stops. The motor now runs at a constant, steady-state speed, continuously producing just enough torque to overcome the load.</li>
             </ol>
 
             <h4>How a Computer Simulates This Process</h4>
             <p>The dynamic equation is solved numerically, step-by-step in time:</p>
-             $$ T_e(\omega) - T_{load}(\omega) = J \frac{d\omega}{dt} $$
+             $$ T_e(\omega) - T_{load}(\omega) = J \dfrac{d\omega}{dt} $$
             <ol>
                 <li><strong>Start at t=0:</strong> The motor is at rest (\(\omega = 0\)).</li>
                 <li><strong>Find Motor Torque:</strong> Use the torque-speed equation to find the starting torque \(T_e\) at the current speed.</li>
