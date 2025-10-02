@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Induction Motor Startup Simulation (Plotly)</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- MathJax for rendering equations -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 { color: #2c3e50; }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 5px; font-size: 1.2em; margin-top: 20px; }
+        h3 { font-size: 1.1em; margin-top: 20px; }
+        h1 { text-align: center; margin-bottom: 10px; }
+        p.intro { text-align: center; color: #7f8c8d; margin-bottom: 30px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        
+        .explanation-section, .code-section {
+            background-color: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        
+        .main-layout { display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
+        .controls { padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #fafafa; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.9em; }
+        .input-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .button-group { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        button { padding: 10px; border: none; border-radius: 5px; color: #fff; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        #runButton { background-color: #3498db; } #runButton:hover { background-color: #2980b9; }
+        #resetButton { background-color: #e74c3c; } #resetButton:hover { background-color: #c0392b; }
+        
+        .plot-area { display: flex; flex-direction: column; gap: 20px; }
+        .plot-container { border-radius: 8px; padding: 20px; border: 1px solid #e0e0e0; min-height: 400px; }
+        
+        #results { margin-top: 20px; padding: 15px; border-radius: 5px; font-weight: bold; text-align: center; }
+        .results-info { background-color: #e8f5e9; color: #2e7d32; }
+        .results-warn { background-color: #fff8e1; color: #f57f17; }
+        .results-error { background-color: #ffebee; color: #c62828; }
+
+        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Induction Motor Startup Simulation</h1>
+        <p class="intro">
+            Simulate motor startup dynamics. Hover over the bottom chart to see the corresponding operating point on the top Torque-Speed curve.
+        </p>
+
+        <div class="explanation-section">
+            <h3>Governing Equation & Assumptions</h3>
+            <p>The simulation solves the fundamental equation of motion for a rotating system, where the net torque accelerates the system's inertia:</p>
+            <!-- MathJax Equation -->
+            <p>$$ T_e(\omega) - T_L = J \frac{d\omega}{dt} + B\omega $$</p>
+            <p>Where:</p>
+            <ul>
+                <li>\(T_e(\omega)\) is the motor's speed-dependent electrical torque.</li>
+                <li>\(T_L\) is the constant load torque.</li>
+                <li>\(J\) is the total system inertia (motor + load).</li>
+                <li>\(\omega\) is the rotational speed in radians per second.</li>
+                <li>\(B\) is the viscous friction coefficient (torque proportional to speed).</li>
+                <li>\(\frac{d\omega}{dt}\) is the angular acceleration.</li>
+            </ul>
+            <p><b>Parameters used in last simulation:</b> J = <span id="param-j">...</span> kg·m², B = <span id="param-b">...</span> Nm/(rad/s)</p>
+        </div>
+
+        <div class="main-layout">
+            <div class="controls">
+                <h2>Motor Parameters</h2>
+                <div class="input-group">
+                    <label for="syncSpeed">Synchronous Speed (RPM)</label>
+                    <input type="number" id="syncSpeed" value="1800">
+                </div>
+                <div class="input-group">
+                    <label for="pulloutTorque">Pull-out (Max) Torque (Nm)</label>
+                    <input type="number" id="pulloutTorque" value="150">
+                </div>
+                <div class="input-group">
+                    <label for="startingTorque">Starting (Locked Rotor) Torque (Nm)</label>
+                    <input type="number" id="startingTorque" value="80">
+                </div>
+                
+                <h2>Load Parameters</h2>
+                <div class="input-group">
+                    <label for="inertia">Total Inertia (J) (kg·m²)</label>
+                    <input type="number" id="inertia" value="1.5">
+                </div>
+                <div class="input-group">
+                    <label for="loadTorque">Constant Load Torque (T<sub>L</sub>) (Nm)</label>
+                    <input type="number" id="loadTorque" value="40">
+                </div>
+                <div class="input-group">
+                    <label for="frictionCoefficient">Friction Coefficient (B) (Nm/(rad/s))</label>
+                    <input type="number" id="frictionCoefficient" value="0.05" step="0.01">
+                </div>
+
+                <h2>Simulation Control</h2>
+                <div class="input-group">
+                    <label for="simulationDuration">Simulation Duration (s)</label>
+                    <input type="number" id="simulationDuration" value="10">
+                </div>
+                <div class="input-group">
+                    <label for="timeStep">Time Step (s)</label>
+                    <input type="number" id="timeStep" value="0.01" step="0.001">
+                </div>
+                <div class="button-group">
+                    <button id="runButton">Run Simulation</button>
+                    <button id="resetButton">Reset</button>
+                </div>
+            </div>
+
+            <div class="plot-area">
+                <div class="plot-container">
+                    <div id="torqueSpeedChart" style="width:100%;height:100%;"></div>
+                </div>
+                <div class="plot-container">
+                    <div id="timeDomainChart" style="width:100%;height:100%;"></div>
+                </div>
+                 <div id="results">Enter parameters and run the simulation.</div>
+            </div>
+        </div>
+
+        <div class="code-section">
+            <h3>Numerical Calculation Method</h3>
+            <p>The differential equation is solved numerically using the Euler method. At each time step (\(\Delta t\)), the change in speed is calculated as follows:</p>
+            <pre><code class="language-javascript">
+// Inside the simulation loop for each time step:
+
+// 1. Convert current speed from RPM to rad/s
+const omega = currentSpeedRpm * (2 * Math.PI / 60);
+
+// 2. Calculate speed-dependent frictional torque
+const frictionalTorque = B * omega;
+
+// 3. Calculate the net torque available for acceleration
+const netTorque = motorTorque - loadTorque - frictionalTorque;
+
+// 4. Calculate angular acceleration (alpha = Torque / Inertia)
+const angularAcceleration = netTorque / J;
+
+// 5. Calculate the change in speed (RPM) over the time step
+const speedChangeRpm = angularAcceleration * (60 / (2 * Math.PI)) * timeStep;
+
+// 6. Update the speed for the next iteration
+currentSpeedRpm += speedChangeRpm;
+            </code></pre>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            Prism.highlightAll();
+        });
+
+        document.getElementById('runButton').addEventListener('click', runSimulation);
+        document.getElementById('resetButton').addEventListener('click', resetSimulation);
+        
+        let lastSimulationData = null;
+
+        function runSimulation() {
+            const params = getInputs();
+            if (!params) return;
+
+            updateDisplayParameters(params);
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.className = '';
+            resultsDiv.textContent = 'Running simulation...';
+
+            plotTorqueSpeedCurve(params);
+
+            setTimeout(() => {
+                lastSimulationData = calculateStartup(params);
+                displayResults(lastSimulationData, params);
+                plotTimeDomainCurves(lastSimulationData, params);
+                setupHoverListeners();
+            }, 10);
+        }
+        
+        function resetSimulation() {
+            Plotly.purge('torqueSpeedChart');
+            Plotly.purge('timeDomainChart');
+            lastSimulationData = null;
+            document.getElementById('param-j').textContent = '...';
+            document.getElementById('param-b').textContent = '...';
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.className = '';
+            resultsDiv.textContent = 'Enter parameters and run the simulation.';
+        }
+
+        function updateDisplayParameters(params) {
+            document.getElementById('param-j').textContent = params.inertia.toFixed(3);
+            document.getElementById('param-b').textContent = params.frictionCoefficient.toFixed(3);
+        }
+
+        function getInputs() {
+            const params = {
+                syncSpeed: parseFloat(document.getElementById('syncSpeed').value),
+                pulloutTorque: parseFloat(document.getElementById('pulloutTorque').value),
+                startingTorque: parseFloat(document.getElementById('startingTorque').value),
+                inertia: parseFloat(document.getElementById('inertia').value),
+                loadTorque: parseFloat(document.getElementById('loadTorque').value),
+                frictionCoefficient: parseFloat(document.getElementById('frictionCoefficient').value),
+                simulationDuration: parseFloat(document.getElementById('simulationDuration').value),
+                timeStep: parseFloat(document.getElementById('timeStep').value)
+            };
+            for (const key in params) { if (isNaN(params[key])) { alert(`Error: Input for "${key}" must be a valid number.`); return null; }}
+            if (params.syncSpeed <= 0 || params.pulloutTorque <= 0 || params.inertia <= 0 || params.timeStep <= 0 || params.simulationDuration <= 0 || params.frictionCoefficient < 0) { alert("Error: Speeds, torques, inertia, duration, and time step must be positive. Friction cannot be negative."); return null; }
+            if (params.loadTorque >= params.startingTorque) {
+                 const resultsDiv = document.getElementById('results');
+                 resultsDiv.className = 'results-error';
+                 resultsDiv.textContent = `Error: Load Torque (${params.loadTorque} Nm) is >= Starting Torque (${params.startingTorque} Nm). The motor will stall.`;
+                 Plotly.purge('torqueSpeedChart'); Plotly.purge('timeDomainChart');
+                 return null;
+            }
+            return params;
+        }
+
+        function getMotorTorque(currentSpeedRpm, params, s_m) {
+            if (currentSpeedRpm >= params.syncSpeed) return 0;
+            const slip = (params.syncSpeed - currentSpeedRpm) / params.syncSpeed;
+            if (slip <= 0) return 0;
+            return (2 * params.pulloutTorque) / (slip / s_m + s_m / slip);
+        }
+        
+        function calculateStartup(params) {
+            const timeData = [0], speedData = [0], torqueData = [];
+            let currentTime = 0, currentSpeedRpm = 0, steadyStateReached = false, steadyStateTime = -1;
+            const a = params.startingTorque / params.pulloutTorque;
+            const s_m = (2 - Math.sqrt(4 - 4 * a * a)) / (2 * a);
+
+            torqueData.push(getMotorTorque(0, params, s_m));
+
+            while (currentTime < params.simulationDuration) {
+                let motorTorque;
+                if (!steadyStateReached) {
+                    motorTorque = getMotorTorque(currentSpeedRpm, params, s_m);
+                    
+                    const omega = currentSpeedRpm * (2 * Math.PI / 60);
+                    const frictionalTorque = params.frictionCoefficient * omega;
+                    const netTorque = motorTorque - params.loadTorque - frictionalTorque;
+                    
+                    if (Math.abs(netTorque) < 0.1 || currentSpeedRpm >= params.syncSpeed) {
+                        steadyStateReached = true;
+                        steadyStateTime = currentTime;
+                        currentSpeedRpm = Math.min(currentSpeedRpm, params.syncSpeed);
+                    } else {
+                        const angularAcceleration = netTorque / params.inertia;
+                        const speedChangeRpm = angularAcceleration * (60 / (2 * Math.PI)) * params.timeStep;
+                        currentSpeedRpm += speedChangeRpm;
+                    }
+                }
+                motorTorque = getMotorTorque(currentSpeedRpm, params, s_m);
+                currentTime += params.timeStep;
+                timeData.push(currentTime);
+                speedData.push(currentSpeedRpm);
+                torqueData.push(motorTorque);
+            }
+
+            return { timeData, speedData, torqueData, steadyStateReached, steadyStateTime };
+        }
+
+        function displayResults(simulationData, params) {
+            const resultsDiv = document.getElementById('results');
+            const finalSpeed = simulationData.speedData[simulationData.speedData.length - 1];
+            if (simulationData.steadyStateReached) {
+                resultsDiv.className = 'results-info';
+                resultsDiv.textContent = `Motor reached steady state at ${simulationData.steadyStateTime.toFixed(2)}s. Final speed: ${finalSpeed.toFixed(1)} RPM.`;
+            } else {
+                resultsDiv.className = 'results-warn';
+                resultsDiv.textContent = `Motor still accelerating. Final speed at ${params.simulationDuration.toFixed(1)}s: ${finalSpeed.toFixed(1)} RPM.`;
+            }
+        }
+
+        function plotTorqueSpeedCurve(params) {
+            const speedPoints = [], torquePoints = [];
+            const a = params.startingTorque / params.pulloutTorque;
+            const s_m = (2 - Math.sqrt(4 - 4 * a * a)) / (2 * a);
+            for(let i = 0; i <= 100; i++) {
+                const speed = (i/100) * params.syncSpeed;
+                speedPoints.push(speed);
+                torquePoints.push(getMotorTorque(speed, params, s_m));
+            }
+            const motorTrace = { x: speedPoints, y: torquePoints, mode: 'lines', name: 'Motor Torque', line: { color: '#3498db', width: 2 } };
+            const loadTrace = { x: [0, params.syncSpeed], y: [params.loadTorque, params.loadTorque], mode: 'lines', name: 'Constant Load (T<sub>L</sub>)', line: { color: '#e74c3c', dash: 'dash' } };
+            const operatingPointTrace = { x: [0], y: [0], mode: 'markers', name: 'Operating Point', marker: { color: '#f39c12', size: 12, symbol: 'circle-open', line: {width: 3}}, visible: false };
+            
+            const layout = {
+                title: 'Torque vs. Speed Characteristic',
+                xaxis: { title: 'Speed (RPM)', range: [0, params.syncSpeed * 1.1] },
+                yaxis: { title: 'Torque (Nm)', range: [0, params.pulloutTorque * 1.2] },
+                legend: {
+                    y: -0.2,
+                    yanchor: 'top',
+                    x: 0.5,
+                    xanchor: 'center',
+                    orientation: 'h'
+                },
+                margin: { l: 60, r: 30, b: 80, t: 50 }
+            };
+            Plotly.newPlot('torqueSpeedChart', [motorTrace, loadTrace, operatingPointTrace], layout, {responsive: true});
+        }
+
+        function plotTimeDomainCurves(simulationData, params) {
+            const speedTrace = { x: simulationData.timeData, y: simulationData.speedData, name: 'Speed (RPM)', type: 'scatter', mode: 'lines', line: { color: '#3498db' } };
+            const torqueTrace = { x: simulationData.timeData, y: simulationData.torqueData, name: 'Torque (Nm)', type: 'scatter', mode: 'lines', yaxis: 'y2', line: { color: '#2ecc71' } };
+            const layout = {
+                title: 'Speed and Torque vs. Time',
+                xaxis: { title: 'Time (s)', range: [0, params.simulationDuration] },
+                yaxis: { title: 'Speed (RPM)', titlefont: { color: '#3498db' }, tickfont: { color: '#3498db' }, range: [0, params.syncSpeed * 1.1] },
+                yaxis2: { title: 'Torque (Nm)', titlefont: { color: '#2ecc71' }, tickfont: { color: '#2ecc71' }, overlaying: 'y', side: 'right', range: [0, params.pulloutTorque * 1.2] },
+                legend: { y: -0.2, yanchor: 'top', x: 0.5, xanchor: 'center', orientation: 'h' },
+                margin: { l: 60, r: 60, b: 80, t: 50 }
+            };
+            Plotly.newPlot('timeDomainChart', [speedTrace, torqueTrace], layout, {responsive: true});
+        }
+
+        function setupHoverListeners() {
+            const timeChart = document.getElementById('timeDomainChart');
+            timeChart.on('plotly_hover', function(data) {
+                if (!lastSimulationData) return;
+                const pointIndex = data.points[0].pointNumber;
+                const currentSpeed = lastSimulationData.speedData[pointIndex];
+                const currentTorque = lastSimulationData.torqueData[pointIndex];
+                Plotly.restyle('torqueSpeedChart', { x: [[currentSpeed]], y: [[currentTorque]], visible: true }, [2]);
+            });
+            timeChart.on('plotly_unhover', function(data) {
+                Plotly.restyle('torqueSpeedChart', { visible: false }, [2]);
+            });
+        }
+    </script>
+</body>
+</html>
