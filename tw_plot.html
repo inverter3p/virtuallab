@@ -11,9 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
-    <!-- Chart.js Library from CDN -->
+    <!-- Chart.js & MathJax Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
         /* --- General & Root Styles --- */
@@ -29,11 +29,7 @@
             --shadow: 0 3px 6px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.15);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Roboto', sans-serif;
@@ -43,31 +39,22 @@
         }
 
         .container {
-            max-width: 1600px; /* Increased max-width for new layout */
+            max-width: 1600px;
             margin: 20px auto;
             padding: 0 20px;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { font-weight: 400; color: var(--primary-color); }
 
-        header h1 {
-            font-weight: 400;
-            color: var(--primary-color);
-        }
-
-        /* --- NEW LAYOUT STYLES --- */
-        .top-row {
-            margin-bottom: 25px;
-        }
+        /* --- Layout Styles --- */
+        .top-row, .explanation-card { margin-bottom: 25px; }
 
         .content-grid {
             display: grid;
-            grid-template-columns: 450px 1fr; /* Fixed column for controls, rest for plot */
+            grid-template-columns: 450px 1fr;
             gap: 25px;
-            align-items: start; /* Align items to the top of their grid cell */
+            align-items: start;
         }
 
         /* --- Card Styling --- */
@@ -86,7 +73,6 @@
             margin-bottom: 20px;
         }
         
-        /* --- Specific Card Content --- */
         .info-card .image-container {
             display: flex;
             justify-content: space-around;
@@ -96,198 +82,68 @@
         }
 
         .info-card img {
-            max-width: 500px; /* Set a max-width for images in top row */
+            max-width: 500px;
             height: auto;
             border-radius: 4px;
             border: 1px solid var(--border-color);
         }
         
-        /* --- Controls & Forms --- */
-        .param-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .param-group label {
-            flex-basis: 45%; /* Give label a fixed basis */
+        /* New explanation card styles */
+        .explanation-card h3 {
             font-weight: 500;
-            color: var(--text-light);
-            margin-right: 15px;
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 10px;
         }
-
-        .param-group input[type="text"], .param-group input[type="number"], .param-group select {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid var(--border-color);
+        .explanation-card ol {
+            padding-left: 25px;
+        }
+        .explanation-card code {
+            background-color: #ecf0f1;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 1rem;
+            font-family: "Courier New", Courier, monospace;
+            font-weight: bold;
         }
 
-        .param-group input:focus, .param-group select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px var(--primary-light);
-        }
-
-        .help-icon {
-            margin-left: 10px;
-            color: var(--text-light);
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .help-icon:hover {
-            color: var(--primary-light);
-        }
+        /* --- Controls & Forms --- */
+        .param-group { display: flex; align-items: center; margin-bottom: 15px; }
+        .param-group label { flex-basis: 45%; font-weight: 500; color: var(--text-light); margin-right: 15px; }
+        .param-group input, .param-group select { flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; }
+        .param-group input:focus, .param-group select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-light); }
+        .help-icon { margin-left: 10px; color: var(--text-light); cursor: pointer; transition: color 0.2s; }
+        .help-icon:hover { color: var(--primary-light); }
 
         #plotButton, #showDataButton {
-            width: 100%;
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 1.1rem;
-            cursor: pointer;
+            width: 100%; padding: 12px; border-radius: 4px; font-size: 1.1rem; cursor: pointer;
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-            margin-top: 10px;
+            margin-top: 10px; background-color: var(--primary-color); color: white; border: none;
         }
-        
-        #plotButton {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-        }
+        #plotButton:hover { background-color: var(--primary-light); }
+        #showDataButton { margin-top: 15px; }
+        #showDataButton:hover { background-color: var(--primary-light); }
 
-        #plotButton:hover {
-            background-color: var(--primary-light);
-        }
-        
-        #showDataButton {
-             background-color: var(--primary-color);
-            color: white;
-            border: none;
-             margin-top: 15px;
-        }
-
-        #showDataButton:hover {
-             background-color: var(--primary-light);
-        }
-
-        /* Results Display (within plot card) */
-        .plot-results {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-        .multi-result-set {
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary-light);
-        }
-        .multi-result-set:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        .multi-result-set h4 {
-            font-weight: 500;
-            color: var(--text-color);
-            margin-bottom: 8px;
-        }
-        .result-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 4px 5px;
-        }
-        .result-label {
-            color: var(--text-light);
-        }
-        .result-value {
-            font-weight: 500;
-            color: var(--primary-color);
-            text-align: right;
-        }
-
-        /* --- Modal Styling --- */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.6);
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 20px 30px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 700px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            position: relative;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        #copyDataButton {
-            padding: 8px 12px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #copyDataButton:hover {
-            background-color: #d84315;
-        }
-
-        #dataTableContainer {
-            height: 40vh;
-            overflow-y: auto;
-            background-color: #fafafa;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 10px;
-        }
-        
-        #dataTableContent {
-            white-space: pre;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9rem;
-        }
-
-        .close-button {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-left: 20px;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-        }
+        /* --- Results & Modal Styling (largely unchanged) --- */
+        .plot-results { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+        .multi-result-set { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--primary-light); }
+        .multi-result-set:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .multi-result-set h4 { font-weight: 500; color: var(--text-color); margin-bottom: 8px; }
+        .result-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 5px; }
+        .result-label { color: var(--text-light); }
+        .result-value { font-weight: 500; color: var(--primary-color); text-align: right; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px 30px; border: 1px solid #888; width: 90%; max-width: 700px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        #copyDataButton { padding: 8px 12px; background-color: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+        #copyDataButton:hover { background-color: #d84315; }
+        #dataTableContainer { height: 40vh; overflow-y: auto; background-color: #fafafa; border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; }
+        #dataTableContent { white-space: pre; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; }
+        .close-button { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; margin-left: 20px; }
+        .close-button:hover, .close-button:focus { color: black; }
 
         /* --- RESPONSIVE STYLES --- */
         @media (max-width: 1024px) {
-            .content-grid {
-                grid-template-columns: 1fr; /* Stack the columns */
-            }
+            .content-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -300,7 +156,6 @@
 
         <main>
             <div class="top-row">
-                <!-- Motor Info Card -->
                 <div class="card info-card">
                     <h2>Motor & Equivalent Circuit</h2>
                     <div class="image-container">
@@ -310,6 +165,9 @@
                 </div>
             </div>
 
+            <!-- NEW EXPLANATION CARD -->
+            
+
             <div class="content-grid">
                 <!-- Controls Card -->
                 <div class="card controls-card">
@@ -317,12 +175,14 @@
                     <form id="paramForm">
                         <div class="param-group">
                             <label for="v_ll">Line Voltage (V L-L)</label>
-                            <input type="text" id="v_ll" value="400, 300, 200">
+                            <!-- UPDATED: Default values demonstrate V/f control -->
+                            <input type="text" id="v_ll" value="400, 200">
                             <i class="material-icons help-icon" data-param="v_ll">help_outline</i>
                         </div>
                         <div class="param-group">
                             <label for="freq">Frequency (Hz)</label>
-                            <input type="text" id="freq" value="50, 37.5, 25">
+                             <!-- UPDATED: Default values demonstrate V/f control -->
+                            <input type="text" id="freq" value="50, 25">
                             <i class="material-icons help-icon" data-param="freq">help_outline</i>
                         </div>
                         <div class="param-group">
@@ -380,11 +240,35 @@
                         <button type="button" id="showDataButton">Show Data Table</button>
                     </div>
                 </div>
+
+                
+            </div>
+            <div class="card explanation-card">
+                <h2>Understanding V/f Speed Control</h2>
+                <p>
+                    A Variable Frequency Drive (VFD) controls an induction motor's speed by changing the supply frequency (\(f\)), which in turn changes the synchronous speed (\(N_s \propto f\)). However, we can't just change the frequency alone. The motor's magnetic flux (\(\Phi\)), which is essential for producing torque, is proportional to the ratio of voltage to frequency.
+                </p>
+                $$ \Phi \approx \frac{V}{f} $$
+                <p>
+                    To maintain the motor's ability to produce torque, this flux must be kept constant. Therefore, as we change the frequency, we must also change the voltage to keep the <strong>Volts-per-Hertz (V/f)</strong> ratio constant.
+                </p>
+                <ul>
+                    <li><strong>If frequency decreases and voltage stays high:</strong> The flux increases dramatically (\(V/f \rightarrow \infty\)), saturating the motor's iron core. This leads to excessive current draw, overheating, and poor performance.</li>
+                    <li><strong>If frequency increases and voltage stays low:</strong> The flux weakens (\(V/f \rightarrow 0\)), drastically reducing the motor's torque capability.</li>
+                </ul>
+                <h3>Task: Explore V/f Control in Action</h3>
+                <p>Use the plotter below to see this principle. The controls are pre-set for this example.</p>
+                <ol>
+                    <li><strong>Observe the Baseline (50 Hz):</strong> The first curve shows the motor's performance at its base speed (400V, 50Hz). Note the maximum torque value in the results below the plot.</li>
+                    <li><strong>Observe the V/f Controlled Curve (25 Hz):</strong> The second curve shows the motor running at half frequency (25 Hz). To maintain the V/f ratio (400V/50Hz = 8 V/Hz), the voltage has been correctly reduced to 200V (200V/25Hz = 8 V/Hz).</li>
+                    <li><strong>Compare the Results:</strong> Notice how the maximum torque for the 25 Hz curve is almost identical to the 50 Hz curve! We have successfully halved the motor's speed without sacrificing its torque capability. This is the essence of V/f control.</li>
+                    <li><strong>Experiment:</strong> Try plotting a "wrong" case. Set the voltages to <code>400, 400</code> and frequencies to <code>50, 25</code>. The 25Hz curve will show an unrealistically high torque, simulating what happens during core saturation.</li>
+                </ol>
             </div>
         </main>
     </div>
 
-    <!-- Help Modal -->
+    <!-- Modals -->
     <div id="helpModal" class="modal">
         <div class="modal-content">
              <div class="modal-header">
@@ -395,7 +279,6 @@
         </div>
     </div>
     
-    <!-- Data Table Modal -->
     <div id="dataModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -413,6 +296,7 @@
 
 
     <script>
+        // --- SCRIPT IS UNCHANGED FROM PREVIOUS VERSION ---
         document.addEventListener('DOMContentLoaded', () => {
             let torqueSpeedChart = null;
             let fullDataTable = { headers: [], rows: [] };
@@ -428,12 +312,6 @@
                 lm: { title: 'Magnetizing Inductance (Lm)', text: 'The per-phase inductance representing the magnetizing current required to establish the main magnetic flux. Used to calculate magnetizing reactance (Xm).' }
             };
 
-            /**
-             * Converts a hex color string to a hex string with an alpha channel.
-             * @param {string} hex The hex color string (e.g., '#RRGGBB').
-             * @param {number} alpha The alpha value from 0 to 1.
-             * @returns {string} The hex color string with alpha (e.g., '#RRGGBBXX').
-             */
             function addAlphaToHex(hex, alpha) {
                 const alphaValue = Math.round(alpha * 255);
                 const alphaHex = (alphaValue < 16 ? '0' : '') + alphaValue.toString(16);
@@ -527,7 +405,6 @@
                     allPlotPoints.push(data.plotPoints);
                     fullDataTable.headers.push(`Torque (${label})`);
 
-                    // Main torque curve line
                     chartDatasets.push({
                         label: label,
                         data: data.plotPoints,
@@ -540,7 +417,6 @@
                         order: 1 
                     });
 
-                    // Key points markers
                     chartDatasets.push({
                         type: 'scatter',
                         label: `Key Points for ${label}`,
@@ -646,15 +522,12 @@
                 document.getElementById('dataTableContent').textContent = tableString;
             }
 
-            // --- Event Listeners Setup ---
             document.getElementById('plotButton').addEventListener('click', drawPlot);
             document.getElementById('xAxisSelect').addEventListener('change', drawPlot);
-            
             document.getElementById('showDataButton').addEventListener('click', () => {
                 populateDataTable();
                 document.getElementById('dataModal').style.display = 'block';
             });
-            
             document.getElementById('copyDataButton').addEventListener('click', () => {
                 const copyButton = document.getElementById('copyDataButton');
                 navigator.clipboard.writeText(document.getElementById('dataTableContent').textContent).then(() => {
@@ -662,7 +535,6 @@
                     setTimeout(() => { copyButton.textContent = "Copy to Clipboard"; }, 2000);
                 });
             });
-            
             document.querySelectorAll('.help-icon').forEach(icon => {
                 icon.addEventListener('click', (e) => {
                     const info = paramExplanations[e.target.dataset.param];
@@ -673,20 +545,17 @@
                     }
                 });
             });
-
             document.querySelectorAll('.close-button').forEach(button => {
                 button.addEventListener('click', (e) => {
                     document.getElementById(e.target.dataset.modalId).style.display = 'none';
                 });
             });
-            
             window.addEventListener('click', (e) => {
                 if (e.target.classList.contains('modal')) {
                     e.target.style.display = 'none';
                 }
             });
 
-            // Initial plot on page load
             drawPlot();
         });
     </script>
