@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Induction Motor Theory: From Circuit to Startup</title>
+    
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Chart.js for the interactive plot -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- MathJax for rendering equations -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #0077b6; /* A richer blue */
+            --secondary-color: #00b4d8;
+            --dark-bg: #222831;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-dark: #343a40;
+            --text-light: #f8f9fa;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- HERO HEADER --- */
+        .hero-header {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .hero-header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .hero-header p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px auto;
+            opacity: 0.9;
+        }
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .hero-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .hero-button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+        .hero-button .material-icons {
+            font-size: 24px;
+        }
+
+        /* --- Main Content Container --- */
+        .content-container {
+            max-width: 900px;
+            margin: -40px auto 40px auto; /* Overlap the hero section slightly */
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+            padding: 30px 40px;
+        }
+
+        h2, h3, h4 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-dark);
+        }
+        h4 {
+            margin-top: 1.5em;
+            color: #555;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+        p { margin-bottom: 1.2em; }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 25px auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        /* Chart Container Style */
+        .chart-container {
+            position: relative;
+            min-height: 400px;
+            width: 100%;
+            margin: 25px 0;
+        }
+        code {
+            background-color: #e9ecef;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+        ul, ol { padding-left: 20px; }
+        a { color: var(--primary-color); text-decoration: none; font-weight: 700; }
+        a:hover { text-decoration: underline; }
+
+        /* --- Tab Styles --- */
+        .tab-buttons {
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+        .tab-button {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 15px 10px;
+            cursor: pointer;
+            color: #888;
+            border-bottom: 4px solid transparent;
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .tab-button:hover { color: var(--text-dark); }
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        .tab-button-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .tab-button-content .material-icons { font-size: 28px; }
+        .tab-button-content span { font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 1rem; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- In-Content Tool Link --- */
+        .tool-link-container { text-align: center; margin: 40px 0; }
+        .tool-link {
+            display: inline-block; padding: 12px 25px; background-color: var(--primary-color);
+            color: #fff; text-decoration: none; font-weight: bold; border-radius: 5px;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .tool-link:hover { background-color: var(--secondary-color); transform: translateY(-2px); text-decoration: none; }
+
+    </style>
+</head>
+<body>
+
+    <header class="hero-header">
+        <h1>Unlocking the Induction Motor</h1>
+        <p>Go from fundamental theory to hands-on simulation. Explore the circuit, understand the physics, and see it all come to life with our interactive tools.</p>
+        <div class="hero-buttons">
+            <a href="tw_plot.html" class="hero-button">
+                <span class="material-icons">show_chart</span>
+                Torque-Speed Plotter
+            </a>
+            <a href="induction-motor-start.html" class="hero-button">
+                <span class="material-icons">rocket_launch</span>
+                Startup Simulator
+            </a>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <!-- Tab Buttons -->
+        <div class="tab-buttons">
+            <button class="tab-button active" data-tab="tab1">
+                <div class="tab-button-content">
+                    <i class="material-icons">engineering</i>
+                    <span>Introduction</span>
+                </div>
+            </button>
+            <button class="tab-button" data-tab="tab2">
+                <div class="tab-button-content">
+                    <i class="material-icons">circuit_board</i>
+                    <span>Equivalent Circuit</span>
+                </div>
+            </button>
+            <button class="tab-button" data-tab="tab3">
+                <div class="tab-button-content">
+                    <i class="material-icons">insights</i>
+                    <span>Torque-Speed Curve</span>
+                </div>
+            </button>
+            <button class="tab-button" data-tab="tab4">
+                <div class="tab-button-content">
+                    <i class="material-icons">timer</i>
+                    <span>Startup Simulation</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab1" class="tab-content active">
+            <h2>The Workhorse of Industry</h2>
+            <p>
+                The three-phase induction motor is the most widely used electric motor in the world. Its popularity comes from its simple, robust construction, high reliability, and low manufacturing cost. Unlike other motor types, it has no brushes or permanent magnets on the rotor, making it virtually maintenance-free.
+            </p>
+            <img src="https://ik.imagekit.io/Nithiphat/images/induction-motor-structure.png?updatedAt=1759388193213" alt="Cross-section of an Induction Motor">
+            <p>
+                The motor works on the principle of electromagnetic induction. A <a href="rmf.html" title="Explore the RMF Demo">rotating magnetic field</a> (RMF) created by the stator windings induces a current in the rotor's conductive bars. The interaction between the stator's field and the rotor's induced field generates torque, causing the rotor to turn. To understand its performance, we use a powerful abstraction: the <strong>equivalent circuit</strong>.
+            </p>
+        </div>
+
+        <div id="tab2" class="tab-content">
+            <h2>The Equivalent Circuit Model</h2>
+            <img src="https://ik.imagekit.io/Nithiphat/images/im_equivalent.png?updatedAt=1759388601411" alt="Per-phase Equivalent Circuit of an Induction Motor">
+            
+            <h4>The Concept: A Rotating Transformer</h4>
+            <p>
+                The best way to understand the equivalent circuit is to think of the induction motor as a <strong>rotating transformer</strong>. The stator acts as the primary winding, and the rotor acts as the secondary winding. The key difference is that the secondary (the rotor) is free to rotate. The mechanical load on the motor's shaft is reflected back into the electrical circuit as a variable resistance that depends entirely on the motor's speed (or slip, \(s\)).
+            </p>
+
+            <h4>Breaking Down the Circuit Components</h4>
+            <ul>
+                <li><strong>Stator Side (Primary):</strong>
+                    <ul>
+                        <li>\(R_1\): Stator Winding Resistance. Represents the physical resistance of the copper wires in the stator. Power lost here is stator copper loss (\(P_{SCL}\)), which generates heat.</li>
+                        <li>\(X_1\): Stator Leakage Reactance. Represents the magnetic flux created by the stator that does not link with the rotor. It's an "inefficiency" in the magnetic coupling.</li>
+                    </ul>
+                </li>
+                <li><strong>Magnetizing Branch (The Air Gap):</strong>
+                    <ul>
+                        <li>\(X_m\): Magnetizing Reactance. This is a crucial component representing the current required to create the main magnetic field in the motor's air gap. This field is what links the stator and rotor.</li>
+                    </ul>
+                </li>
+                 <li><strong>Rotor Side (Secondary):</strong>
+                    <ul>
+                        <li>\(R_2'\): Rotor Resistance (Referred to Stator). Represents the resistance of the rotor bars. Power lost here is rotor copper loss (\(P_{RCL}\)), another source of heat.</li>
+                        <li>\(X_2'\): Rotor Leakage Reactance (Referred to Stator). Represents the rotor's leakage flux.</li>
+                        <li>\(s\): Slip. The normalized speed difference between the magnetic field and the rotor. It varies from 1 (at standstill) to nearly 0 (at no-load speed).</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>The Flow of Power</h4>
+            <p>The circuit brilliantly models how power flows through the motor:</p>
+            <ol>
+                <li><strong>Input Power (\(P_{in}\)):</strong> Total electrical power drawn from the supply.</li>
+                <li>Power is lost as heat in the stator coils (\(P_{SCL} = 3 I_1^2 R_1\)).</li>
+                <li>The remaining power crosses the air gap to the rotor. This is the <strong>Air-Gap Power (\(P_{ag}\))</strong>.</li>
+                <li>Once in the rotor, \(P_{ag}\) splits into two paths:
+                    <ul>
+                        <li>Some is lost as heat in the rotor bars (\(P_{RCL} = 3 I_2'^2 R_2'\)).</li>
+                        <li>The rest is converted into mechanical power. This is the <strong>Converted Power (\(P_{conv}\))</strong>.</li>
+                    </ul>
+                </li>
+                <li>This converted power is what's represented by the fictional resistor \(\boldsymbol{R_2' \frac{1-s}{s}}\). The power dissipated in this component *is* the mechanical power developed by the motor: \(P_{conv} = P_{ag} - P_{RCL}\).</li>
+                <li>Finally, after subtracting mechanical losses (friction and windage), you get the useful shaft output power (\(P_{out}\)).</li>
+            </ol>
+        </div>
+            
+        <div id="tab3" class="tab-content">
+            <h2>The Torque-Speed Curve: A Motor's Fingerprint</h2>
+            <p>
+                The most important characteristic for understanding and selecting an induction motor is its torque-speed curve. This plot is like a fingerprint, showing the torque the motor can produce at every speed from standstill to its synchronous speed. Explore the interactive chart below by hovering over the curve.
+            </p>
+            <!-- Interactive Chart Container -->
+            <div class="chart-container">
+                <canvas id="introTorqueSpeedChart"></canvas>
+            </div>
+            
+            <h4>Key Characteristics for Motor Selection</h4>
+            <p>When matching a motor to an application, engineers focus on several key points on this curve:</p>
+            <ul>
+                <li><strong>Starting Torque (Locked Rotor Torque):</strong> This is the torque produced at zero speed (\(s=1\)). The critical question is: <em>"Is this enough torque to overcome the load's static friction and begin moving?"</em></li>
+                <li><strong>Pull-up Torque:</strong> The minimum torque produced by the motor as it accelerates from zero to the speed of maximum torque. The motor must always produce more torque than the load requires, so this "dip" must be higher than the load torque.</li>
+                <li><strong>Pull-out Torque (Breakdown Torque):</strong> This is the absolute maximum torque the motor can produce. The critical question is: <em>"Can the motor handle a sudden, short-term overload without stalling?"</em> Operation beyond this point is unstable.</li>
+                <li><strong>Full-Load Torque & Rated Speed:</strong> This is the motor's designed continuous operating point, where it runs most efficiently. This point determines the motor's nameplate power rating.</li>
+            </ul>
+
+            <h3 style="margin-top: 2em;">Deriving the Curve from the Circuit Model</h3>
+            <p>Now that we understand what the curve represents, let's see how it's derived mathematically from the equivalent circuit model.</p>
+            <img src="https://ik.imagekit.io/Nithiphat/images/im_equivalent_Vth.png?updatedAt=1759388601485" alt="Thevenin Equivalent Circuit">
+            
+            <h4>Step 3a & 3b: Find the Rotor Current (\(|I_2'|\))</h4>
+            <p>Using the Thevenin equivalent circuit, we first find the magnitude of the rotor current, \(|I_2'|\), as a function of slip, \(s\).</p>
+            $$ |I_2'| = \frac{V_{th}}{\sqrt{\left(R_{th} + \frac{R_2'}{s}\right)^2 + (X_{th} + X_2')^2}} $$
+
+            <h4>Step 3c: Find the Converted Mechanical Power (\(P_{conv}\))</h4>
+            <p>As we saw in the previous tab, the power converted from electrical to mechanical form is the power dissipated in the fictional resistor \(R_2' \frac{1-s}{s}\).</p>
+            $$ P_{conv} = 3 \cdot |I_2'|^2 \cdot R_2' \frac{1-s}{s} $$
+
+            <h4>Step 3d: Relating Power to Torque (The Intuitive Way)</h4>
+            <p>The fundamental definition of torque (\(T_e\)) is the mechanical power (\(P_{conv}\)) divided by the mechanical speed of the rotor (\(\omega_r\)).</p>
+            $$ T_e = \frac{P_{conv}}{\omega_r} $$
+            <p>We know two key relationships: \(P_{conv} = P_{ag}(1-s)\) and the rotor speed is \(\omega_r = \omega_s(1-s)\). Substituting these into the equation above:</p>
+            $$ T_e = \frac{P_{ag}(1-s)}{\omega_s(1-s)} $$
+            <p>The \((1-s)\) terms cancel out, revealing a powerful and simpler relationship:</p>
+            $$ T_e = \frac{P_{ag}}{\omega_s} $$
+
+            <h4>Step 3e: The Final Torque Equation (The Calculation Way)</h4>
+            <p>This result is extremely useful. It shows that we can calculate the motor's torque directly from the <strong>Air-Gap Power</strong> (\(P_{ag}\)) and the <strong>constant synchronous speed</strong> (\(\omega_s\)). We know that \(P_{ag} = 3 \cdot |I_2'|^2 \cdot \frac{R_2'}{s}\). Substituting this into our simplified torque formula gives the final, famous torque-speed equation:</p>
+            $$ T_e = \frac{3 \cdot |I_2'|^2 \frac{R_2'}{s}}{\omega_s} = \frac{3}{\omega_s} \frac{V_{th}^2 \frac{R_2'}{s}}{\left(R_{th} + \frac{R_2'}{s}\right)^2 + (X_{th} + X_2')^2} $$
+            <div class="tool-link-container">
+                <a href="tw_plot.html" class="tool-link">Explore the Torque-Speed Curve Interactively</a>
+            </div>
+        </div>
+            
+        <div id="tab4" class="tab-content">
+            <h2>Simulating Motor Startup</h2>
+            <p>
+                The torque-speed curve is a "menu" of available torques at every speed. The dynamic equation of motion is the "engine" that determines how quickly the motor's speed changes, based on the difference between the motor's available torque and the load's demand.
+            </p>
+            <img src="https://ik.imagekit.io/Nithiphat/images/im-startup.png?updatedAt=1759392878303" alt="Visualizing the startup process on the Torque-Speed curve">
+            
+            <h4>The Startup Journey: A Step-by-Step Example</h4>
+            <p>The image above perfectly illustrates the startup process. Let's break it down:</p>
+            <ol>
+                <li><strong>Point A (t=0, Standstill):</strong> The motor is at zero speed. It looks at its torque-speed curve and produces its <strong>Starting Torque</strong>. This is much higher than the load torque, so there is a large <strong>accelerating torque</strong> (\(T_e - T_{load}\)). This net torque begins to accelerate the motor and its connected inertia.</li>
+                <li><strong>Point B (Accelerating):</strong> As the motor gains speed, its operating point moves up and along the torque-speed curve. At every instant, the torque it produces is determined by its current speed. Since the motor torque is still greater than the load torque, it continues to accelerate rapidly.</li>
+                <li><strong>Point C (Steady State):</strong> The motor continues to accelerate until its operating point on the curve intersects the load torque line. At this exact point, <strong>Motor Torque = Load Torque</strong>. The net torque is now zero, so acceleration (\(\frac{d\omega}{dt}\)) stops. The motor now runs at a constant, steady-state speed, continuously producing just enough torque to overcome the load.</li>
+            </ol>
+
+            <h4>How a Computer Simulates This Process</h4>
+            <p>The dynamic equation is solved numerically, step-by-step in time:</p>
+             $$ T_e(\omega) - T_{load}(\omega) = J \frac{d\omega}{dt} $$
+            <ol>
+                <li><strong>Start at t=0:</strong> The motor is at rest (\(\omega = 0\)).</li>
+                <li><strong>Find Motor Torque:</strong> Use the torque-speed equation to find the starting torque \(T_e\) at the current speed.</li>
+                <li><strong>Calculate Net Torque:</strong> Subtract the load torque to get the net accelerating torque, \(T_{net}\).</li>
+                <li><strong>Calculate Acceleration:</strong> The angular acceleration is \(\alpha = T_{net} / J\).</li>
+                <li><strong>Update Speed:</strong> After a small time step (\(\Delta t\)), the new speed is \(\omega_{new} = \omega_{old} + \alpha \cdot \Delta t\).</li>
+                <li><strong>Repeat:</strong> Go back to step 2 with the new speed and continue the loop.</li>
+            </ol>
+            <div class="tool-link-container">
+                <a href="induction-motor-start.html" class="tool-link">Simulate an Induction Motor Startup</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Tab Switching Logic ---
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    button.classList.add('active');
+                    document.getElementById(targetTab).classList.add('active');
+                });
+            });
+
+            // --- Interactive Chart Rendering Logic ---
+            function renderIntroChart() {
+                const speedData = [1500.00, 1466.25, 1432.50, 1398.75, 1365.00, 1331.25, 1297.50, 1263.75, 1230.00, 1196.25, 1162.50, 1128.75, 1095.00, 1061.25, 1027.50, 993.75, 960.00, 926.25, 892.50, 858.75, 825.00, 791.25, 757.50, 723.75, 690.00, 656.25, 622.50, 588.75, 555.00, 521.25, 487.50, 453.75, 420.00, 386.25, 352.50, 318.75, 285.00, 251.25, 217.50, 183.75, 150.00, 116.25, 82.50, 48.75, 15.00];
+                const torqueData = [0.000, 58.160, 105.028, 140.951, 167.233, 185.551, 197.578, 204.786, 208.390, 209.350, 208.402, 206.104, 202.869, 199.006, 194.738, 190.232, 185.606, 180.947, 176.316, 171.756, 167.297, 162.959, 158.755, 154.691, 150.771, 146.995, 143.362, 139.870, 136.514, 133.289, 130.192, 127.216, 124.357, 121.609, 118.968, 116.428, 113.985, 111.634, 109.370, 107.190, 105.089, 103.064, 101.110, 99.225, 97.406];
+
+                const chartDataPoints = speedData.map((speed, index) => ({
+                    x: speed,
+                    y: torqueData[index]
+                })).reverse(); // Reverse to plot from 0 to 1500 rpm
+
+                // Add the zero speed point for a complete curve
+                chartDataPoints.unshift({x: 0, y: 96.5}); // Approximate starting torque based on data trend
+
+                const ctx = document.getElementById('introTorqueSpeedChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: 'Characteristic Torque',
+                            data: chartDataPoints,
+                            borderColor: 'hsl(205, 100%, 45%)',
+                            backgroundColor: 'hsla(205, 100%, 45%, 0.1)',
+                            borderWidth: 2.5,
+                            pointRadius: 0,
+                            tension: 0.1,
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: { display: true, text: 'Rotor Speed (rpm)', font: { size: 14, family: "'Montserrat', sans-serif" } },
+                                min: 0,
+                                max: 1500
+                            },
+                            y: {
+                                type: 'linear',
+                                title: { display: true, text: 'Torque (Nm)', font: { size: 14, family: "'Montserrat', sans-serif" } },
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    title: (tooltipItems) => `Speed: ${tooltipItems[0].parsed.x.toFixed(0)} rpm`,
+                                    label: (tooltipItem) => `Torque: ${tooltipItem.parsed.y.toFixed(2)} Nm`
+                                }
+                            }
+                        },
+                        interaction: {
+                            mode: 'nearest',
+                            axis: 'x',
+                            intersect: false
+                        }
+                    }
+                });
+            }
+
+            // Render the chart as soon as the page loads
+            renderIntroChart();
+        });
+    </script>
+
+</body>
+</html>
