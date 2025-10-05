@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVSE-EV AC Level 2 Charging Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .step-content {
+            display: none;
+        }
+        .step-content.active {
+            display: block;
+        }
+        .equipment-line {
+            transition: all 0.3s ease-in-out;
+            stroke-dasharray: 10;
+            animation: dash 1s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 20;
+            }
+        }
+        .equipment-label {
+            font-size: 10px;
+            font-weight: 500;
+            fill: #4b5563;
+        }
+        .plot-line {
+            stroke-width: 2;
+            transition: d 0.5s ease-in-out;
+        }
+        /* J1772 Pin Styles */
+        .pin-circle {
+            transition: all 0.3s ease-in-out;
+            stroke-width: 2px;
+            stroke: #9ca3af;
+        }
+        .pin-circle.active {
+            fill: #facc15; /* yellow */
+            stroke: #ca8a04;
+        }
+        .pin-circle.power-active {
+            fill: #ef4444; /* red */
+            stroke: #b91c1c;
+        }
+        .pin-label {
+            font-size: 8px;
+            font-weight: 600;
+            fill: white;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+        #contactor-switch {
+            transform-origin: 15px 0px;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .connector-line {
+            transition: x2 0.5s ease-in-out;
+        }
+        /* Styling for custom radio buttons */
+        .radio-label {
+            cursor: pointer;
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .radio-label:hover {
+            border-color: #60a5fa;
+        }
+        input[type="radio"]:checked + .radio-label {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+            font-weight: 600;
+        }
+        input[type="radio"] {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">EVSE-EV AC Level 2 Charging Simulator</h1>
+            <p class="mt-2 text-lg text-gray-600">An interactive guide to the SAE J1772 charging protocol.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Panel: Visualizations -->
+            <div class="lg:col-span-1 space-y-8">
+                <!-- Equipment Diagram -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-3 text-center">System Components</h3>
+                    <svg id="equipment-diagram" viewBox="0 0 300 200" class="w-full">
+                        <!-- EVSE -->
+                        <rect x="10" y="50" width="80" height="100" rx="5" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2"/>
+                        <text x="50" y="40" text-anchor="middle" class="equipment-label">EVSE</text>
+                        <!-- Contactor -->
+                        <g id="contactor" transform="translate(25, 85)">
+                            <text x="25" y="-5" text-anchor="middle" class="equipment-label">Contactor</text>
+                            <line x1="0" y1="0" x2="15" y2="0" stroke="#374151" stroke-width="1.5"/>
+                            <circle cx="15" cy="0" r="1.5" fill="none" stroke="#374151"/>
+                            <line x1="35" y1="0" x2="50" y2="0" stroke="#374151" stroke-width="1.5"/>
+                            <circle cx="35" cy="0" r="1.5" fill="none" stroke="#374151"/>
+                            <line id="contactor-switch" x1="15" y1="0" x2="35" y2="0" stroke="#374151" stroke-width="2"/>
+                        </g>
+                        
+                        <!-- J1772 Connector -->
+                        <circle id="j1772-evse" cx="90" cy="100" r="10" fill="white" stroke="black" stroke-width="1"/>
+                        <circle id="j1772-ev" cx="150" cy="100" r="10" fill="white" stroke="black" stroke-width="1"/>
+                        <line class="connector-line" id="connector-line-1" x1="100" y1="95" x2="100" y2="95" stroke="black" stroke-width="1.5"/>
+                        <line class="connector-line" id="connector-line-2" x1="100" y1="105" x2="100" y2="105" stroke="black" stroke-width="1.5"/>
+
+                        <!-- EV -->
+                        <rect x="170" y="50" width="120" height="100" rx="5" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+                        <text x="230" y="40" text-anchor="middle" class="equipment-label">Electric Vehicle (EV)</text>
+                        <rect x="180" y="65" width="100" height="40" rx="3" fill="#d1fae5"/>
+                        <text x="230" y="88" text-anchor="middle" class="equipment-label">On-Board Charger</text>
+                        <path d="M 200 125 h 60 v 10 h -60 z" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+                        <text x="230" y="145" text-anchor="middle" class="equipment-label">Battery</text>
+                        
+                        <!-- Connections -->
+                        <path id="power-line" d="M 150 95 C 160 95, 170 80, 180 80" stroke="#f87171" stroke-width="2" fill="none" class="equipment-line" style="display:none;"/>
+                        <path id="pilot-line" d="M 150 105 C 160 105, 170 120, 180 120" stroke="#60a5fa" stroke-width="2" fill="none" class="equipment-line" style="display:none;"/>
+                    </svg>
+                    <div class="mt-4 text-center text-sm text-gray-500">
+                        <p id="diagram-status">Plug is disconnected.</p>
+                    </div>
+                </div>
+
+                <!-- J1772 Pin Diagram -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-3 text-center">J1772 Connector Pins</h3>
+                    <svg id="j1772-diagram" viewBox="0 0 100 100" class="w-full max-w-[200px] mx-auto">
+                        <circle cx="50" cy="50" r="48" fill="#374151" stroke="#1f2937" stroke-width="3"/>
+                        <g>
+                            <circle id="pin-l1" class="pin-circle" cx="30" cy="35" r="8"/>
+                            <text class="pin-label" x="30" y="37">L1</text>
+                        </g>
+                        <g>
+                            <circle id="pin-l2" class="pin-circle" cx="70" cy="35" r="8"/>
+                            <text class="pin-label" x="70" y="37">L2/N</text>
+                        </g>
+                         <g>
+                            <circle id="pin-pe" class="pin-circle" cx="50" cy="78" r="9"/>
+                            <text class="pin-label" x="50" y="80">PE</text>
+                        </g>
+                        <g>
+                           <circle id="pin-cp" class="pin-circle" cx="30" cy="65" r="6"/>
+                           <text class="pin-label" x="30" y="67">CP</text>
+                        </g>
+                        <g>
+                            <circle id="pin-pp" class="pin-circle" cx="70" cy="65" r="6"/>
+                            <text class="pin-label" x="70" y="67">PP</text>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Pilot Signal Plot -->
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-3 text-center">Control Pilot (CP) Signal</h3>
+                    <svg id="pilot-plot" viewBox="0 0 300 150" class="w-full">
+                        <!-- Axes -->
+                        <line x1="25" y1="130" x2="280" y2="130" stroke="black" stroke-width="1"/>
+                        <line x1="25" y1="10" x2="25" y2="130" stroke="black" stroke-width="1"/>
+                        <!-- Y-axis labels -->
+                        <text x="20" y="15" text-anchor="end" class="text-[10px]">+12V</text>
+                        <text x="20" y="43" text-anchor="end" class="text-[10px]">+9V</text>
+                        <text x="20" y="57" text-anchor="end" class="text-[10px]">+6V</text>
+                        <text x="20" y="75" text-anchor="end" class="text-[10px]">0V</text>
+                        <text x="20" y="135" text-anchor="end" class="text-[10px]">-12V</text>
+                        <!-- X-axis label -->
+                        <text x="150" y="145" text-anchor="middle" class="text-[10px]">Time</text>
+                        <!-- Plot line -->
+                        <path id="plot-path" d="M 25 15 H 280" stroke="#3b82f6" stroke-width="2" fill="none" class="plot-line"/>
+                    </svg>
+                    <div class="mt-2 text-center">
+                         <p id="plot-status" class="text-sm font-medium text-gray-700">State: A</p>
+                         <p id="plot-details" class="text-xs text-gray-500">EVSE ready. No vehicle detected.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Explanation and Controls -->
+            <div class="lg:col-span-2 bg-white p-6 sm:p-8 rounded-lg shadow-md">
+                <div id="steps-container">
+                    <!-- Step 0: Introduction -->
+                    <div id="step-0" class="step-content active">
+                        <h2 class="text-2xl font-bold mb-4">Welcome! Let's Learn about EV Charging.</h2>
+                        <p class="mb-4">This simulator demonstrates the communication between an EVSE and an EV for AC Level 2 charging, following the <strong>SAE J1772 standard</strong>.</p>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-semibold text-gray-800">J1772 Pin Functions:</h4>
+                                <button id="show-connector-modal-btn" class="text-sm font-medium text-blue-600 hover:underline focus:outline-none">Compare Connectors</button>
+                            </div>
+                            <ul class="space-y-2 text-sm text-gray-700">
+                                <li><strong>L1 (Line 1):</strong> AC Power Line 1.</li>
+                                <li><strong>L2/N (Line 2 / Neutral):</strong> AC Power Line 2 (for split-phase 240V) or Neutral (for single-phase 120V/208V).</li>
+                                <li><strong>PE (Protective Earth):</strong> The safety ground connection. It's the first pin to connect and the last to disconnect.</li>
+                                <li><strong>CP (Control Pilot):</strong> The primary communication signal. This is a PWM signal used to determine charging states and the maximum current the EV can draw.</li>
+                                <li><strong>PP (Proximity Pilot):</strong> Also known as Proximity Detection or Plug Present. It tells the EV that a plug is inserted and prevents the vehicle from being driven while connected. It also informs the EVSE of the cable's current rating.</li>
+                            </ul>
+                        </div>
+                        
+                        <h4 class="font-semibold text-gray-800 mt-6 mb-2">SAE J1772 States Overview:</h4>
+                        <div class="overflow-x-auto rounded-lg border">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CP Voltage</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200 text-sm">
+                                    <tr><td class="px-4 py-2 font-medium">State A</td><td class="px-4 py-2 font-mono">+12V DC</td><td class="px-4 py-2">Ready (Not connected)</td></tr>
+                                    <tr><td class="px-4 py-2 font-medium">State B</td><td class="px-4 py-2 font-mono">Square Wave (+9V Peak)</td><td class="px-4 py-2">Vehicle Connected</td></tr>
+                                    <tr><td class="px-4 py-2 font-medium">State C</td><td class="px-4 py-2 font-mono">Square Wave (+6V Peak)</td><td class="px-4 py-2">Ready to Charge</td></tr>
+                                    <tr><td class="px-4 py-2 font-medium">State D</td><td class="px-4 py-2 font-mono">Square Wave (+3V Peak)</td><td class="px-4 py-2">Ventilation Required</td></tr>
+                                    <tr><td class="px-4 py-2 font-medium">State E</td><td class="px-4 py-2 font-mono">0V</td><td class="px-4 py-2">No Power (EVSE Shutoff) / Error</td></tr>
+                                    <tr><td class="px-4 py-2 font-medium">State F</td><td class="px-4 py-2 font-mono">-12V DC</td><td class="px-4 py-2">EVSE Error</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Step 1: CP Circuit Diagram -->
+                    <div id="step-1" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Step 1: The Control Pilot Circuit</h2>
+                        <p class="mb-4">At the heart of J1772 communication is the Control Pilot (CP) circuit. The EVSE and EV use simple resistors and switches to change the voltage on this line, signaling their status to each other.</p>
+                        <div class="my-4 p-2 border rounded-lg bg-gray-50">
+                            <img src="https://www.allaboutcircuits.com/uploads/articles/learn-about-the-four-ev-charging-modes-specified-in-the-iec-61851-standard-mahdi-aac-image5.jpg" alt="Control Pilot Circuit Diagram" class="w-full h-auto rounded-md mx-auto" onerror="this.onerror=null; this.src='https://placehold.co/600x300/f8f9fa/6c757d?text=Circuit+Image+Not+Found';">
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800">Initial State (No Connection):</h4>
+                            <p class="mt-2 text-blue-700">Before plugging in, switches S2 and S3 in the vehicle are open. The EVSE connects the circuit to its internal +12V supply via switch S1. Therefore, the EVSE measures a steady <strong>+12V DC</strong> at the pilot contact, confirming that no vehicle is connected.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: State A -->
+                    <div id="step-2" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Step 2: State A - EVSE Ready</h2>
+                        <p class="mb-4">The charging station is powered on. It applies a steady <strong>+12V DC</strong> signal to the Control Pilot pin to indicate it is ready and waiting for a vehicle.</p>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-yellow-800">Signal Status:</h4>
+                             <ul class="list-disc list-inside mt-2 text-yellow-700">
+                                <li>CP Voltage: <strong>+12V DC</strong></li>
+                                <li>State: <strong>A</strong> (Ready)</li>
+                                <li>Pins Active: None</li>
+                            </ul>
+                        </div>
+                        <p class="mt-4">Observe the plot's constant +12V line and the open contactor in the equipment diagram.</p>
+                    </div>
+                    
+                    <!-- Step 3: State B -->
+                    <div id="step-3" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Step 3: State B - Vehicle Connected</h2>
+                        <p class="mb-2">The driver plugs the connector into the vehicle. The vehicle's internal circuit (a resistor and diode, represented by R2) connects to the CP line, pulling the voltage down.</p>
+                        <p class="mb-4">The EVSE detects this change and immediately begins generating a 1kHz square wave. The vehicle's resistor loads the positive side of this signal, clamping its peak voltage down to <strong>+9V</strong>.</p>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                             <h4 class="font-semibold text-green-800">Signal Status:</h4>
+                             <ul class="list-disc list-inside mt-2 text-green-700">
+                                <li>CP Signal: <strong>1kHz Square Wave (+9V / -12V)</strong></li>
+                                <li>State: <strong>B</strong> (Vehicle Connected)</li>
+                                <li>Pins Active: CP, PP, PE</li>
+                            </ul>
+                        </div>
+                         <p class="mt-4">The plot now shows this +9V peak square wave. The equipment diagram shows the plug is connected.</p>
+                    </div>
+
+                    <!-- Step 4: Current Advertisement -->
+                    <div id="step-4" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Step 4: EVSE Advertises Max Current</h2>
+                        <p class="mb-4">The EVSE tells the car how much current it can safely supply by adjusting the <strong>duty cycle</strong> of the square wave. Select an amperage below to see how the duty cycle and plot change.</p>
+                        
+                        <div id="amp-selector" class="flex flex-wrap gap-2 my-4">
+                            <input type="radio" name="amps" id="amp16" value="16"><label for="amp16" class="radio-label">16 Amps</label>
+                            <input type="radio" name="amps" id="amp24" value="24"><label for="amp24" class="radio-label">24 Amps</label>
+                            <input type="radio" name="amps" id="amp32" value="32" checked><label for="amp32" class="radio-label">32 Amps</label>
+                            <input type="radio" name="amps" id="amp40" value="40"><label for="amp40" class="radio-label">40 Amps</label>
+                        </div>
+
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-indigo-800">Duty Cycle & Current:</h4>
+                             <ul class="list-disc list-inside mt-2 text-indigo-700">
+                                <li><strong>Formula:</strong> Amps = Duty Cycle (%) * 0.6</li>
+                                <li id="duty-cycle-text">For <strong>32 Amps</strong>, the EVSE sets a <strong>53.3% duty cycle</strong>.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: State C -->
+                    <div id="step-5" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Step 5: State C - EV Ready to Charge</h2>
+                        <p class="mb-2">When the vehicle is ready to accept power, it closes switch S3, adding another resistor in parallel. This further pulls down the positive peak of the CP signal from +9V to <strong>+6V</strong>.</p>
+                        <div class="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-cyan-800">Signal Status:</h4>
+                             <ul class="list-disc list-inside mt-2 text-cyan-700">
+                                <li>CP Signal: <strong>1kHz Square Wave (+6V / -12V)</strong></li>
+                                <li>State: <strong>C</strong> (Ready to Charge)</li>
+                            </ul>
+                        </div>
+                        <p class="mt-4">The EVSE detects this voltage drop as the "start charging" command. Notice the plot's positive peaks are now at the +6V level.</p>
+                    </div>
+
+                    <!-- Step 6: Charging Active -->
+                    <div id="step-6" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Step 6: Charging is Active!</h2>
+                        <p class="mb-4">The handshake is complete. The EVSE closes its internal contactor, allowing AC power to flow to the vehicle's on-board charger.</p>
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-emerald-800">System Status:</h4>
+                             <ul class="list-disc list-inside mt-2 text-emerald-700">
+                                <li>EVSE contactor is <strong>CLOSED</strong>.</li>
+                                <li>AC power is flowing.</li>
+                                <li>Pins Active: All pins are now active, with L1 & L2 carrying power.</li>
+                            </ul>
+                        </div>
+                        <p class="mt-4">The equipment diagram shows the contactor closed and power flowing. The J1772 power pins are now red.</p>
+                    </div>
+                    
+                    <!-- Step 7: Charging Complete -->
+                    <div id="step-7" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Step 7: Charging Complete or Paused</h2>
+                        <p class="mb-4">When the battery is full, the vehicle signals the EVSE to stop by opening switch S3. This causes the positive peak of the CP signal to return from +6V back up to <strong>+9V</strong>.</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800">System Status:</h4>
+                             <ul class="list-disc list-inside mt-2 text-blue-700">
+                                <li>The EVSE detects the return to a +9V peak (State B) and immediately opens its contactor, stopping the power.</li>
+                                <li>The system is back in State B: Connected, but not charging.</li>
+                            </ul>
+                        </div>
+                        <p class="mt-4">The plot's positive voltage has returned to the +9V peak, and the contactor in the diagram is open again.</p>
+                    </div>
+                    
+                    <!-- Step 8: Unplug -->
+                    <div id="step-8" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Step 8: Unplugging the Connector</h2>
+                        <p class="mb-4">The charging session is over. When the driver unplugs the connector, switch S2 opens and the CP circuit is broken.</p>
+                        <div class="bg-gray-100 border border-gray-200 rounded-lg p-4">
+                             <h4 class="font-semibold text-gray-800">System Status:</h4>
+                             <ul class="list-disc list-inside mt-2 text-gray-700">
+                                <li>The EVSE returns the CP signal to a steady <strong>+12V DC</strong>.</li>
+                                <li>The system is back in State A, and all pins are inactive.</li>
+                            </ul>
+                        </div>
+                         <p class="mt-4">Congratulations, you've completed a full, safe charging cycle!</p>
+                    </div>
+                    
+                    <!-- Step 9: Error Handling & OCPP -->
+                    <div id="step-9" class="step-content">
+                        <h2 class="text-2xl font-bold mb-4">Bonus: Error Handling & OCPP</h2>
+                        <p class="mb-4">The J1772 protocol includes critical safety features. Below are some common errors that would immediately and safely stop a charging session.</p>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <h4 class="font-semibold text-red-800">Common Charging Faults:</h4>
+                            <ul class="list-disc list-inside mt-2 text-red-700 text-sm">
+                                <li><strong>Pilot Fault (CX014):</strong> The control pilot voltage is out of the expected range. The EVSE will set the CP voltage to 0V (State E).</li>
+                                <li><strong>Ground Fault (CX002):</strong> A ground fault circuit interrupter (GFCI) has been activated, indicating a dangerous leakage of current. Power is cut instantly.</li>
+                                <li><strong>Over Temperature (CX003/CX018):</strong> Sensors in the EVSE or connector handle detect excessive heat, causing charging to stop or reduce power.</li>
+                                <li><strong>EV/EVSE Contactor Fault (CX016/CX017):</strong> The contactors fail to open or close correctly, creating a major safety risk.</li>
+                            </ul>
+                        </div>
+
+                        <h4 class="font-semibold text-gray-800 text-xl mb-2">Beyond J1772: The Role of OCPP</h4>
+                        <p class="text-gray-700">While <strong>J1772</strong> manages the direct communication between the car and the charger, most public chargers also use the <strong>Open Charge Point Protocol (OCPP)</strong>. OCPP is a universal open-source language that allows charging stations (of any brand) to talk to a central management system (the cloud). This is essential for:</p>
+                        <ul class="list-disc list-inside mt-2 text-gray-600">
+                             <li>Remote Monitoring & Control (starting/stopping chargers)</li>
+                             <li>User Authentication & Billing</li>
+                             <li>Firmware Updates & Diagnostics</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="mt-8 pt-6 border-t flex justify-between items-center">
+                    <button id="prev-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Previous
+                    </button>
+                    <span id="step-counter" class="text-sm text-gray-500">Step 0 of 9</span>
+                    <button id="next-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Connector Comparison Modal -->
+    <div id="connector-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full p-6 relative animate-fade-in">
+            <button id="close-connector-modal-btn" class="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+            <h3 class="text-xl font-bold mb-4">AC Connector & Cable</h3>
+            <p class="text-sm text-gray-600 mb-4">This simulator focuses on the <strong>Type 1 (J1772)</strong> connector, common in North America and Japan. Europe and other regions often use the <strong>Type 2 (Mennekes)</strong> connector, which also supports three-phase AC power.</p>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-center mb-2 text-gray-700">Connector Pinouts</h4>
+                    <img src="https://cdn.vector.com/cms/content/know-how/e-mobility/Graphics/Connector_AC_Type1_Type2.png" alt="AC Connector Types Comparison" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src='https://placehold.co/600x300/f8f9fa/6c757d?text=Image+Not+Found';">
+                </div>
+                <div>
+                    <h4 class="font-semibold text-center mb-2 text-gray-700">Cable and Connector</h4>
+                    <img src="https://evchargerprime.com/wp-content/uploads/2023/09/Connector-alongside-charging-cable.jpeg" alt="J1772 Charger Cable and Connector" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src='https://placehold.co/600x300/f8f9fa/6c757d?text=Image+Not+Found';">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const steps = document.querySelectorAll('.step-content');
+            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const stepCounter = document.getElementById('step-counter');
+            const ampRadios = document.querySelectorAll('input[name="amps"]');
+            
+            // Modal elements
+            const showConnectorBtn = document.getElementById('show-connector-modal-btn');
+            const closeConnectorBtn = document.getElementById('close-connector-modal-btn');
+            const connectorModal = document.getElementById('connector-modal');
+
+            let currentStep = 0;
+            const totalSteps = steps.length - 1;
+            let currentAmps = 32;
+
+            const updateUI = () => {
+                steps.forEach((step, index) => step.classList.toggle('active', index === currentStep));
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === totalSteps;
+                nextBtn.textContent = (currentStep === totalSteps) ? "Restart" : "Next";
+                stepCounter.textContent = `Step ${currentStep} of ${totalSteps}`;
+                updateVisualizations(currentStep);
+            };
+
+            const updateVisualizations = (step) => {
+                const plotPath = document.getElementById('plot-path');
+                const plotStatus = document.getElementById('plot-status');
+                const plotDetails = document.getElementById('plot-details');
+                const diagramStatus = document.getElementById('diagram-status');
+                const powerLine = document.getElementById('power-line');
+                const pilotLine = document.getElementById('pilot-line');
+                const contactorSwitch = document.getElementById('contactor-switch');
+                const connectorLine1 = document.getElementById('connector-line-1');
+                const connectorLine2 = document.getElementById('connector-line-2');
+                
+                const pins = {
+                    l1: document.getElementById('pin-l1'),
+                    l2: document.getElementById('pin-l2'),
+                    pe: document.getElementById('pin-pe'),
+                    cp: document.getElementById('pin-cp'),
+                    pp: document.getElementById('pin-pp')
+                };
+
+                const setPinActivity = (activePins, powerPins = []) => {
+                    for (const pin in pins) {
+                        pins[pin].classList.remove('active', 'power-active');
+                        if (activePins.includes(pin)) {
+                           pins[pin].classList.add('active');
+                        }
+                        if (powerPins.includes(pin)) {
+                           pins[pin].classList.add('power-active');
+                        }
+                    }
+                };
+
+                // Default states
+                powerLine.style.display = 'none';
+                pilotLine.style.display = 'none';
+                contactorSwitch.style.transform = 'rotate(-45deg)';
+
+                const dutyCycle = currentAmps / 0.6 / 100;
+
+                switch (step) {
+                    case 0: // Welcome
+                    case 1: // CP Circuit Intro
+                    case 2: // State A
+                        plotPath.setAttribute('d', 'M 25 15 H 280'); // +12V
+                        plotStatus.textContent = 'State: A';
+                        plotDetails.textContent = '+12V DC. EVSE is ready, no vehicle connected.';
+                        diagramStatus.textContent = 'Plug is disconnected.';
+                        setPinActivity([]);
+                        connectorLine1.setAttribute('x2', '100');
+                        connectorLine2.setAttribute('x2', '100');
+                        break;
+                    
+                    case 3: // State B
+                        plotPath.setAttribute('d', generateSquareWave(0.75, 0.5, 15, 130, 25, 255)); // +9V peak
+                        plotStatus.textContent = 'State: B';
+                        plotDetails.textContent = '1kHz Square Wave, +9V Peak. Vehicle connected.';
+                        diagramStatus.textContent = 'Plug is connected. Control Pilot active.';
+                        setPinActivity(['pe', 'cp', 'pp']);
+                        pilotLine.style.display = 'block';
+                        connectorLine1.setAttribute('x2', '140');
+                        connectorLine2.setAttribute('x2', '140');
+                        break;
+                    
+                    case 4: // Current Advert
+                        plotPath.setAttribute('d', generateSquareWave(0.75, dutyCycle, 15, 130, 25, 255)); // +9V peak, variable duty
+                        plotStatus.textContent = 'State: B';
+                        plotDetails.textContent = `Duty Cycle: ${(dutyCycle * 100).toFixed(1)}% -> ${currentAmps} Amps available.`;
+                        diagramStatus.textContent = 'EVSE advertising max current.';
+                        setPinActivity(['pe', 'cp', 'pp']);
+                        pilotLine.style.display = 'block';
+                        connectorLine1.setAttribute('x2', '140');
+                        connectorLine2.setAttribute('x2', '140');
+                        break;
+
+                    case 5: // State C
+                        plotPath.setAttribute('d', generateSquareWave(0.5, dutyCycle, 15, 130, 25, 255)); // +6V peak, variable duty
+                        plotStatus.textContent = 'State: C';
+                        plotDetails.textContent = 'Positive peak at +6V. Vehicle requests charge.';
+                        diagramStatus.textContent = 'Vehicle ready for charging.';
+                        setPinActivity(['pe', 'cp', 'pp']);
+                        pilotLine.style.display = 'block';
+                        connectorLine1.setAttribute('x2', '140');
+                        connectorLine2.setAttribute('x2', '140');
+                        break;
+
+                    case 6: // Charging Active
+                        plotPath.setAttribute('d', generateSquareWave(0.5, dutyCycle, 15, 130, 25, 255)); // +6V peak
+                        plotStatus.textContent = 'State: C (Charging)';
+                        plotDetails.textContent = 'Contactor closed. AC power is flowing.';
+                        diagramStatus.textContent = 'Charging is active!';
+                        setPinActivity(['pe', 'cp', 'pp', 'l1', 'l2'], ['l1', 'l2']);
+                        pilotLine.style.display = 'block';
+                        powerLine.style.display = 'block';
+                        contactorSwitch.style.transform = 'rotate(0deg)';
+                        connectorLine1.setAttribute('x2', '140');
+                        connectorLine2.setAttribute('x2', '140');
+                        break;
+                    
+                    case 7: // Charging Complete
+                        plotPath.setAttribute('d', generateSquareWave(0.75, dutyCycle, 15, 130, 25, 255)); // Back to +9V peak
+                        plotStatus.textContent = 'State: B';
+                        plotDetails.textContent = 'Charging stopped. Positive peak back to +9V.';
+                        diagramStatus.textContent = 'Charging complete. Power disconnected.';
+                        setPinActivity(['pe', 'cp', 'pp']);
+                        pilotLine.style.display = 'block';
+                        connectorLine1.setAttribute('x2', '140');
+                        connectorLine2.setAttribute('x2', '140');
+                        break;
+
+                    case 8: // Unplugged
+                        plotPath.setAttribute('d', 'M 25 15 H 280'); // +12V
+                        plotStatus.textContent = 'State: A';
+                        plotDetails.textContent = '+12V DC. Ready for next vehicle.';
+                        diagramStatus.textContent = 'Plug is disconnected.';
+                        setPinActivity([]);
+                        connectorLine1.setAttribute('x2', '100');
+                        connectorLine2.setAttribute('x2', '100');
+                        break;
+                    
+                    case 9: // Error
+                        plotPath.setAttribute('d', 'M 25 70 H 280'); // 0V
+                        plotStatus.textContent = 'State: E (Error)';
+                        plotDetails.textContent = '0V DC. Fault detected (e.g., GFCI). Charging stopped.';
+                        diagramStatus.textContent = 'ERROR! Charging stopped safely.';
+                        setPinActivity(['pe', 'cp', 'pp']); // Still connected during error
+                        connectorLine1.setAttribute('x2', '140');
+                        connectorLine2.setAttribute('x2', '140');
+                        break;
+                }
+            };
+            
+            function generateSquareWave(voltScale, duty, topY, bottomY, startX, width) {
+                const numCycles = 5;
+                const cycleWidth = width / numCycles;
+                const highWidth = cycleWidth * duty;
+                const zeroY = 70; 
+                const highY = zeroY - ((zeroY - topY) / 12 * 9) * voltScale / 0.75;
+                
+                let d = `M ${startX} ${highY}`;
+                for (let i = 0; i < numCycles; i++) {
+                    const currentX = startX + i * cycleWidth;
+                    d += ` H ${currentX + highWidth}`;
+                    d += ` V ${bottomY}`;
+                    d += ` H ${currentX + cycleWidth}`;
+                    d += ` V ${highY}`;
+                }
+                return d;
+            }
+
+            // --- Main Navigation ---
+            nextBtn.addEventListener('click', () => {
+                currentStep = (currentStep === totalSteps) ? 0 : currentStep + 1;
+                updateUI();
+            });
+
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateUI();
+                }
+            });
+
+            // --- Amperage Selector ---
+            ampRadios.forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    currentAmps = parseInt(event.target.value);
+                    const duty = (currentAmps / 0.6).toFixed(1);
+                    document.getElementById('duty-cycle-text').innerHTML = `For <strong>${currentAmps} Amps</strong>, the EVSE sets a <strong>${duty}% duty cycle</strong>.`;
+                    updateVisualizations(currentStep); // Redraw plot with new duty cycle
+                });
+            });
+
+            // --- Modal Logic ---
+            const closeModal = () => {
+                connectorModal.classList.add('hidden');
+                connectorModal.classList.remove('flex');
+            }
+
+            if (showConnectorBtn) {
+                showConnectorBtn.addEventListener('click', () => {
+                    connectorModal.classList.remove('hidden');
+                    connectorModal.classList.add('flex');
+                });
+            }
+            if (closeConnectorBtn) {
+                closeConnectorBtn.addEventListener('click', closeModal);
+            }
+            if (connectorModal) {
+                connectorModal.addEventListener('click', (event) => {
+                    // Close modal if backdrop is clicked
+                    if (event.target === connectorModal) {
+                        closeModal();
+                    }
+                });
+            }
+
+            // Initial UI setup
+            updateUI();
+        });
+    </script>
+</body>
+</html>
+
