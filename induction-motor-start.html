@@ -49,7 +49,7 @@
         .controls { padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #fafafa; }
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.9em; }
-        .input-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .input-group input, .input-group select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         .button-group { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         button { padding: 10px; border: none; border-radius: 5px; color: #fff; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
         #runButton { background-color: #3498db; } #runButton:hover { background-color: #2980b9; }
@@ -78,14 +78,14 @@
             <h3>Governing Equation & Assumptions</h3>
             <p>The simulation solves the fundamental equation of motion for a rotating system, where the net torque accelerates the system's inertia:</p>
             <!-- MathJax Equation -->
-            <p>$$ T_e(\omega) - T_L = J \frac{d\omega}{dt} + B\omega $$</p>
+            <p>$$ T_e(\omega) - (T_{base}(\omega) + B\omega) = J \frac{d\omega}{dt} $$</p>
             <p>Where:</p>
             <ul>
                 <li>\(T_e(\omega)\) is the motor's speed-dependent electrical torque.</li>
-                <li>\(T_L\) is the constant load torque.</li>
+                <li>\(T_{base}(\omega)\) is the base load torque, which can be constant or a function of speed (e.g., for a fan).</li>
+                <li>\(B\omega\) is the viscous friction torque. The sum \(T_{base}(\omega) + B\omega\) is the total load torque.</li>
                 <li>\(J\) is the total system inertia (motor + load).</li>
                 <li>\(\omega\) is the rotational speed in radians per second.</li>
-                <li>\(B\) is the viscous friction coefficient (torque proportional to speed).</li>
                 <li>\(\frac{d\omega}{dt}\) is the angular acceleration.</li>
             </ul>
             <p><b>Parameters used in last simulation:</b> J = <span id="param-j">...</span> kg·m², B = <span id="param-b">...</span> Nm/(rad/s)</p>
@@ -109,12 +109,27 @@
                 
                 <h2>Load Parameters</h2>
                 <div class="input-group">
-                    <label for="inertia">Total Inertia (J) (kg·m²)</label>
-                    <input type="number" id="inertia" value="1.5">
+                    <label for="loadType">Load Type</label>
+                    <select id="loadType">
+                        <option value="constant">Constant Torque</option>
+                        <option value="fan">Fan Load (T = k · n²)</option>
+                    </select>
+                </div>
+                <div id="constantLoadInputs">
+                    <div class="input-group">
+                        <label for="loadTorque">Constant Load Torque (T<sub>L</sub>) (Nm)</label>
+                        <input type="number" id="loadTorque" value="40">
+                    </div>
+                </div>
+                <div id="fanLoadInputs" style="display: none;">
+                    <div class="input-group">
+                        <label for="fanConstant">Fan Constant (k)</label>
+                        <input type="number" id="fanConstant" value="0.000035" step="0.000001" min="0">
+                    </div>
                 </div>
                 <div class="input-group">
-                    <label for="loadTorque">Constant Load Torque (T<sub>L</sub>) (Nm)</label>
-                    <input type="number" id="loadTorque" value="40">
+                    <label for="inertia">Total Inertia (J) (kg·m²)</label>
+                    <input type="number" id="inertia" value="1.5">
                 </div>
                 <div class="input-group">
                     <label for="frictionCoefficient">Friction Coefficient (B) (Nm/(rad/s))</label>
@@ -156,20 +171,22 @@
 // 1. Convert current speed from RPM to rad/s
 const omega = currentSpeedRpm * (2 * Math.PI / 60);
 
-// 2. Calculate speed-dependent frictional torque
-const frictionalTorque = B * omega;
+// 2. Calculate the base load torque (constant or fan)
+let baseLoadTorque = (loadType === 'fan') 
+    ? k * currentSpeedRpm**2 
+    : T_L;
 
-// 3. Calculate the net torque available for acceleration
-const netTorque = motorTorque - loadTorque - frictionalTorque;
+// 3. Calculate the total load torque including friction
+const totalLoadTorque = baseLoadTorque + (B * omega);
 
-// 4. Calculate angular acceleration (alpha = Torque / Inertia)
+// 4. Calculate the net torque available for acceleration
+const netTorque = motorTorque - totalLoadTorque;
+
+// 5. Calculate angular acceleration (alpha = Torque / Inertia)
 const angularAcceleration = netTorque / J;
 
-// 5. Calculate the change in speed (RPM) over the time step
-const speedChangeRpm = angularAcceleration * (60 / (2 * Math.PI)) * timeStep;
-
-// 6. Update the speed for the next iteration
-currentSpeedRpm += speedChangeRpm;
+// 6. Update the speed (RPM) for the next iteration
+currentSpeedRpm += angularAcceleration * (60 / (2 * Math.PI)) * timeStep;
             </code></pre>
         </div>
     </div>
@@ -177,6 +194,20 @@ currentSpeedRpm += speedChangeRpm;
     <script>
         document.addEventListener('DOMContentLoaded', (event) => {
             Prism.highlightAll();
+            
+            const loadTypeSelect = document.getElementById('loadType');
+            const constantLoadDiv = document.getElementById('constantLoadInputs');
+            const fanLoadDiv = document.getElementById('fanLoadInputs');
+
+            loadTypeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'constant') {
+                    constantLoadDiv.style.display = 'block';
+                    fanLoadDiv.style.display = 'none';
+                } else {
+                    constantLoadDiv.style.display = 'none';
+                    fanLoadDiv.style.display = 'block';
+                }
+            });
         });
 
         document.getElementById('runButton').addEventListener('click', runSimulation);
@@ -220,22 +251,30 @@ currentSpeedRpm += speedChangeRpm;
         }
 
         function getInputs() {
+            const loadType = document.getElementById('loadType').value;
+            const loadValue = (loadType === 'constant') 
+                ? parseFloat(document.getElementById('loadTorque').value)
+                : parseFloat(document.getElementById('fanConstant').value);
+
             const params = {
                 syncSpeed: parseFloat(document.getElementById('syncSpeed').value),
                 pulloutTorque: parseFloat(document.getElementById('pulloutTorque').value),
                 startingTorque: parseFloat(document.getElementById('startingTorque').value),
                 inertia: parseFloat(document.getElementById('inertia').value),
-                loadTorque: parseFloat(document.getElementById('loadTorque').value),
                 frictionCoefficient: parseFloat(document.getElementById('frictionCoefficient').value),
                 simulationDuration: parseFloat(document.getElementById('simulationDuration').value),
-                timeStep: parseFloat(document.getElementById('timeStep').value)
+                timeStep: parseFloat(document.getElementById('timeStep').value),
+                loadType: loadType,
+                loadValue: loadValue
             };
-            for (const key in params) { if (isNaN(params[key])) { alert(`Error: Input for "${key}" must be a valid number.`); return null; }}
+
+            for (const key in params) { if (isNaN(params[key]) && key !== 'loadType') { alert(`Error: Input for "${key}" must be a valid number.`); return null; }}
             if (params.syncSpeed <= 0 || params.pulloutTorque <= 0 || params.inertia <= 0 || params.timeStep <= 0 || params.simulationDuration <= 0 || params.frictionCoefficient < 0) { alert("Error: Speeds, torques, inertia, duration, and time step must be positive. Friction cannot be negative."); return null; }
-            if (params.loadTorque >= params.startingTorque) {
+            
+            if (params.loadType === 'constant' && params.loadValue >= params.startingTorque) {
                  const resultsDiv = document.getElementById('results');
                  resultsDiv.className = 'results-error';
-                 resultsDiv.textContent = `Error: Load Torque (${params.loadTorque} Nm) is >= Starting Torque (${params.startingTorque} Nm). The motor will stall.`;
+                 resultsDiv.textContent = `Error: Load Torque (${params.loadValue} Nm) is >= Starting Torque (${params.startingTorque} Nm). The motor will stall.`;
                  Plotly.purge('torqueSpeedChart'); Plotly.purge('timeDomainChart');
                  return null;
             }
@@ -246,6 +285,7 @@ currentSpeedRpm += speedChangeRpm;
             if (currentSpeedRpm >= params.syncSpeed) return 0;
             const slip = (params.syncSpeed - currentSpeedRpm) / params.syncSpeed;
             if (slip <= 0) return 0;
+            // Kloss Equation for torque-speed curve approximation
             return (2 * params.pulloutTorque) / (slip / s_m + s_m / slip);
         }
         
@@ -262,9 +302,18 @@ currentSpeedRpm += speedChangeRpm;
                 if (!steadyStateReached) {
                     motorTorque = getMotorTorque(currentSpeedRpm, params, s_m);
                     
+                    let baseLoadTorque;
+                    if (params.loadType === 'constant') {
+                        baseLoadTorque = params.loadValue;
+                    } else { // fan load
+                        baseLoadTorque = params.loadValue * currentSpeedRpm * currentSpeedRpm;
+                    }
+
                     const omega = currentSpeedRpm * (2 * Math.PI / 60);
                     const frictionalTorque = params.frictionCoefficient * omega;
-                    const netTorque = motorTorque - params.loadTorque - frictionalTorque;
+                    const totalLoadTorque = baseLoadTorque + frictionalTorque;
+
+                    const netTorque = motorTorque - totalLoadTorque;
                     
                     if (Math.abs(netTorque) < 0.1 || currentSpeedRpm >= params.syncSpeed) {
                         steadyStateReached = true;
@@ -299,29 +348,39 @@ currentSpeedRpm += speedChangeRpm;
         }
 
         function plotTorqueSpeedCurve(params) {
-            const speedPoints = [], torquePoints = [];
+            const speedPoints = [], torquePoints = [], loadSpeedPoints = [], totalLoadTorquePoints = [];
             const a = params.startingTorque / params.pulloutTorque;
             const s_m = (2 - Math.sqrt(4 - 4 * a * a)) / (2 * a);
+            
             for(let i = 0; i <= 100; i++) {
                 const speed = (i/100) * params.syncSpeed;
+                // Motor curve points
                 speedPoints.push(speed);
                 torquePoints.push(getMotorTorque(speed, params, s_m));
+                
+                // Load curve points
+                loadSpeedPoints.push(speed);
+                let baseLoadTorque;
+                if (params.loadType === 'constant') {
+                    baseLoadTorque = params.loadValue;
+                } else { // fan load
+                    baseLoadTorque = params.loadValue * speed * speed;
+                }
+                const omega = speed * (2 * Math.PI / 60);
+                const frictionalTorque = params.frictionCoefficient * omega;
+                const totalLoad = baseLoadTorque + frictionalTorque;
+                totalLoadTorquePoints.push(totalLoad);
             }
+
             const motorTrace = { x: speedPoints, y: torquePoints, mode: 'lines', name: 'Motor Torque', line: { color: '#3498db', width: 2 } };
-            const loadTrace = { x: [0, params.syncSpeed], y: [params.loadTorque, params.loadTorque], mode: 'lines', name: 'Constant Load (T<sub>L</sub>)', line: { color: '#e74c3c', dash: 'dash' } };
+            const loadTrace = { x: loadSpeedPoints, y: totalLoadTorquePoints, mode: 'lines', name: 'Total Load Torque', line: { color: '#e74c3c', dash: 'dash' } };
             const operatingPointTrace = { x: [0], y: [0], mode: 'markers', name: 'Operating Point', marker: { color: '#f39c12', size: 12, symbol: 'circle-open', line: {width: 3}}, visible: false };
             
             const layout = {
                 title: 'Torque vs. Speed Characteristic',
                 xaxis: { title: 'Speed (RPM)', range: [0, params.syncSpeed * 1.1] },
                 yaxis: { title: 'Torque (Nm)', range: [0, params.pulloutTorque * 1.2] },
-                legend: {
-                    y: -0.2,
-                    yanchor: 'top',
-                    x: 0.5,
-                    xanchor: 'center',
-                    orientation: 'h'
-                },
+                legend: { y: -0.2, yanchor: 'top', x: 0.5, xanchor: 'center', orientation: 'h' },
                 margin: { l: 60, r: 30, b: 80, t: 50 }
             };
             Plotly.newPlot('torqueSpeedChart', [motorTrace, loadTrace, operatingPointTrace], layout, {responsive: true});

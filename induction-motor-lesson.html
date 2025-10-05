@@ -178,6 +178,33 @@
         }
         .tool-link:hover { background-color: var(--secondary-color); transform: translateY(-2px); text-decoration: none; }
 
+        /* --- Exercise Styles --- */
+        .exercise-box {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .exercise-box ul { list-style-type: none; padding-left: 0;}
+        .exercise-box li { margin-bottom: 8px; font-family: 'Courier New', monospace; }
+        .exercise-choices { list-style-type: upper-alpha; padding-left: 30px; }
+        .exercise-choices li { font-family: 'Lato', sans-serif; }
+        .solution-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        details > summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1em;
+        }
+
     </style>
 </head>
 <body>
@@ -222,6 +249,12 @@
                 <div class="tab-button-content">
                     <i class="material-icons">timer</i>
                     <span>Startup Simulation</span>
+                </div>
+            </button>
+            <button class="tab-button" data-tab="tab5">
+                <div class="tab-button-content">
+                    <i class="material-icons">quiz</i>
+                    <span>Application Exercise</span>
                 </div>
             </button>
         </div>
@@ -365,6 +398,61 @@
             <div class="tool-link-container">
                 <a href="induction-motor-start.html" class="tool-link">Simulate an Induction Motor Startup</a>
             </div>
+        </div>
+
+        <div id="tab5" class="tab-content">
+            <h2>Test Your Knowledge: Motor & Load Matching</h2>
+            <p>
+                Let's apply what you've learned. You are an engineer tasked with selecting a motor for a centrifugal fan. You have the motor's equivalent circuit parameters and the fan's load characteristic. Your goal is to determine the final operating speed.
+            </p>
+
+            <div class="exercise-box">
+                <h4>Scenario Data</h4>
+                <p><strong>Motor Parameters:</strong></p>
+                <ul>
+                    <li>Phase Voltage (V1): 220 V</li>
+                    <li>Frequency: 50 Hz</li>
+                    <li>Poles: 4</li>
+                    <li>R1: 0.5 &Omega;</li>
+                    <li>X1: 1.2 &Omega;</li>
+                    <li>R2': 0.6 &Omega;</li>
+                    <li>X2': 1.2 &Omega;</li>
+                    <li>Xm: 40 &Omega;</li>
+                </ul>
+                <p><strong>Fan Load Characteristic:</strong></p>
+                <p>The torque required by the fan is proportional to the square of its speed (n) in rpm: <code>T_load = k * n²</code>, where <code>k = 0.0000355</code>.</p>
+            </div>
+            
+            <h4 style="margin-top: 30px;">Your Task</h4>
+            <p>
+                Using the <a href="tw_plot.html" target="_blank">Torque-Speed Plotter</a>, determine the approximate steady-state operating speed where the motor's torque curve intersects the fan's load torque curve.
+            </p>
+            <p><strong>At what speed will the motor run?</strong></p>
+            <ol class="exercise-choices">
+                <li>1350 rpm</li>
+                <li>1478 rpm</li>
+                <li>1500 rpm</li>
+                <li>The motor will fail to start this load.</li>
+            </ol>
+
+            <br>
+            <details>
+                <summary>Click to reveal the solution</summary>
+                <div class="solution-box">
+                    <p><strong>Correct Answer:</strong> B) 1478 rpm</p>
+                    <h4>Explanation:</h4>
+                    <p>The steady-state operating point is where the torque produced by the motor is exactly equal to the torque required by the load (\(T_{motor} = T_{load}\)). Here's how to find it:</p>
+                    <ol>
+                        <li>Go to the <a href="tw_plot.html" target="_blank">Torque-Speed Plotter</a>.</li>
+                        <li>Enter all the given motor parameters into the input fields.</li>
+                        <li>For the "Load Torque Equation", enter the fan's characteristic: <code>0.0000355 * n**2</code>.</li>
+                        <li>Click "Plot Curves".</li>
+                        <li>Observe where the blue motor torque curve crosses the orange load torque curve. This intersection point is the stable operating point.</li>
+                        <li>By hovering your mouse over the intersection point on the chart, you'll see that the speed is approximately <strong>1478 rpm</strong> and the torque is around <strong>77.5 Nm</strong>.</li>
+                    </ol>
+                    <p>The motor's starting torque (at 0 rpm) is significantly higher than the load's required torque, so it will start the load without any issues.</p>
+                </div>
+            </details>
         </div>
     </main>
 
