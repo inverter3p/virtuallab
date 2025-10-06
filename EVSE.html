@@ -98,7 +98,10 @@
             <div class="lg:col-span-1 space-y-8">
                 <!-- Equipment Diagram -->
                 <div class="bg-white p-4 rounded-lg shadow-md">
-                    <h3 class="text-lg font-semibold mb-3 text-center">System Components</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold">System Components</h3>
+                        <button id="show-system-overview-btn" class="text-xs font-medium text-blue-600 hover:underline focus:outline-none">View Overview</button>
+                    </div>
                     <svg id="equipment-diagram" viewBox="0 0 300 200" class="w-full">
                         <!-- EVSE -->
                         <rect x="10" y="50" width="80" height="100" rx="5" fill="#e0f2fe" stroke="#0ea5e9" stroke-width="2"/>
@@ -391,7 +394,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- Connector Comparison Modal -->
@@ -403,11 +405,29 @@
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h4 class="font-semibold text-center mb-2 text-gray-700">Connector Pinouts</h4>
-                    <img src="https://cdn.vector.com/cms/content/know-how/e-mobility/Graphics/Connector_AC_Type1_Type2.png" alt="AC Connector Types Comparison" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src=https://placehold.co/600x300/f8f9fa/6c757d?text=Image+Not+Found';">
+                    <img src="https://cdn.vector.com/cms/content/know-how/e-mobility/Graphics/Connector_AC_Type1_Type2.png" alt="AC Connector Types Comparison" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src='https://placehold.co/600x300/f8f9fa/6c757d?text=Image+Not+Found';">
                 </div>
                 <div>
                     <h4 class="font-semibold text-center mb-2 text-gray-700">Cable and Connector</h4>
                     <img src="https://evchargerprime.com/wp-content/uploads/2023/09/Connector-alongside-charging-cable.jpeg" alt="J1772 Charger Cable and Connector" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src='https://placehold.co/600x300/f8f9fa/6c757d?text=Image+Not+Found';">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Overview Modal -->
+    <div id="system-overview-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full p-6 relative animate-fade-in">
+            <button id="close-system-overview-modal-btn" class="absolute top-2 right-3 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
+            <h3 class="text-xl font-bold mb-4">Charging System Diagrams</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-center mb-2 text-gray-700">AC/DC System Overview</h4>
+                    <img src="https://cdn.vector.com/cms/content/know-how/e-mobility/Graphics/AC_DC_Charging_Setup.png" alt="AC and DC Charging System Overview" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src='https://placehold.co/800x450/f8f9fa/6c757d?text=Image+Not+Found';">
+                </div>
+                <div>
+                    <h4 class="font-semibold text-center mb-2 text-gray-700">3-Phase AC EVSE Connection</h4>
+                     <img src="https://ik.imagekit.io/Nithiphat/images/3_phase_EVSE_WB_simply_connection.jpg?updatedAt=1759751879734" alt="3-Phase EVSE Wirign Diagram" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src='https://placehold.co/750x420/f8f9fa/6c757d?text=Image+Not+Found';">
                 </div>
             </div>
         </div>
@@ -426,6 +446,9 @@
             const showConnectorBtn = document.getElementById('show-connector-modal-btn');
             const closeConnectorBtn = document.getElementById('close-connector-modal-btn');
             const connectorModal = document.getElementById('connector-modal');
+            const showSystemOverviewBtn = document.getElementById('show-system-overview-btn');
+            const closeSystemOverviewBtn = document.getElementById('close-system-overview-modal-btn');
+            const systemOverviewModal = document.getElementById('system-overview-modal');
 
             let currentStep = 0;
             const totalSteps = steps.length - 1;
@@ -475,7 +498,7 @@
                 powerLine.style.display = 'none';
                 pilotLine.style.display = 'none';
                 contactorSwitch.style.transform = 'rotate(-45deg)';
-
+                
                 const dutyCycle = currentAmps / 0.6 / 100;
 
                 switch (step) {
@@ -612,28 +635,32 @@
             });
 
             // --- Modal Logic ---
-            const closeModal = () => {
-                connectorModal.classList.add('hidden');
-                connectorModal.classList.remove('flex');
+            const closeModal = (modal) => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
             }
-
-            if (showConnectorBtn) {
-                showConnectorBtn.addEventListener('click', () => {
-                    connectorModal.classList.remove('hidden');
-                    connectorModal.classList.add('flex');
-                });
-            }
-            if (closeConnectorBtn) {
-                closeConnectorBtn.addEventListener('click', closeModal);
-            }
-            if (connectorModal) {
-                connectorModal.addEventListener('click', (event) => {
-                    // Close modal if backdrop is clicked
-                    if (event.target === connectorModal) {
-                        closeModal();
-                    }
-                });
-            }
+            
+            const setupModal = (button, modal, closeButton) => {
+                if (button) {
+                    button.addEventListener('click', () => {
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    });
+                }
+                if (closeButton) {
+                    closeButton.addEventListener('click', () => closeModal(modal));
+                }
+                if (modal) {
+                    modal.addEventListener('click', (event) => {
+                        if (event.target === modal) {
+                            closeModal(modal);
+                        }
+                    });
+                }
+            };
+            
+            setupModal(showConnectorBtn, connectorModal, closeConnectorBtn);
+            setupModal(showSystemOverviewBtn, systemOverviewModal, closeSystemOverviewBtn);
 
             // Initial UI setup
             updateUI();
@@ -641,6 +668,4 @@
     </script>
 </body>
 </html>
-
-
 
