@@ -173,9 +173,9 @@
                         <line x1="25" y1="10" x2="25" y2="130" stroke="black" stroke-width="1"/>
                         <!-- Y-axis labels -->
                         <text x="20" y="15" text-anchor="end" class="text-[10px]">+12V</text>
-                        <text x="20" y="43" text-anchor="end" class="text-[10px]">+9V</text>
-                        <text x="20" y="57" text-anchor="end" class="text-[10px]">+6V</text>
-                        <text x="20" y="75" text-anchor="end" class="text-[10px]">0V</text>
+                        <text x="20" y="30" text-anchor="end" class="text-[10px]">+9V</text>
+                        <text x="20" y="44" text-anchor="end" class="text-[10px]">+6V</text>
+                        <text x="20" y="70" text-anchor="end" class="text-[10px]">0V</text>
                         <text x="20" y="135" text-anchor="end" class="text-[10px]">-12V</text>
                         <!-- X-axis label -->
                         <text x="150" y="145" text-anchor="middle" class="text-[10px]">Time</text>
@@ -264,7 +264,7 @@
                     <!-- Step 3: State B -->
                     <div id="step-3" class="step-content">
                         <h2 class="text-2xl font-bold mb-4">Step 3: State B - Vehicle Connected</h2>
-                        <p class="mb-2">The driver plugs the connector into the vehicle. The vehicle's internal circuit (a resistor and diode, represented by R2) connects to the CP line, pulling the voltage down.</p>
+                        <p class="mb-2">The driver plugs the connector into the vehicle. The vehicle's internal circuit (a resistor and diode, represented by S2) connects to the CP line, pulling the voltage down.</p>
                         <p class="mb-4">The EVSE detects this change and immediately begins generating a 1kHz square wave. The vehicle's resistor loads the positive side of this signal, clamping its peak voltage down to <strong>+9V</strong>.</p>
                         <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                              <h4 class="font-semibold text-green-800">Signal Status:</h4>
@@ -403,7 +403,7 @@
              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h4 class="font-semibold text-center mb-2 text-gray-700">Connector Pinouts</h4>
-                    <img src="https://cdn.vector.com/cms/content/know-how/e-mobility/Graphics/Connector_AC_Type1_Type2.png" alt="AC Connector Types Comparison" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src='https://cdn.vector.com/cms/content/know-how/e-mobility/Graphics/Connector_AC_Type1_Type2.png';">
+                    <img src="https://cdn.vector.com/cms/content/know-how/e-mobility/Graphics/Connector_AC_Type1_Type2.png" alt="AC Connector Types Comparison" class="w-full h-auto rounded-md border" onerror="this.onerror=null; this.src='https://placehold.co/600x300/f8f9fa/6c757d?text=Image+Not+Found';">
                 </div>
                 <div>
                     <h4 class="font-semibold text-center mb-2 text-gray-700">Cable and Connector</h4>
@@ -641,5 +641,4 @@
     </script>
 </body>
 </html>
-
 
