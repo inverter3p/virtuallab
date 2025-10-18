@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบทดสอบ: การวัดค่าทางไฟฟ้าและเครื่องมือวัด</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .sequence-item {
+            cursor: grab;
+            user-select: none;
+        }
+        .sequence-item:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div id="quiz-container" class="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <!-- Quiz Header -->
+        <div class="mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 text-center">แบบทดสอบ: การวัดค่าทางไฟฟ้า</h1>
+            <div class="mt-4 bg-gray-200 rounded-full h-2.5 w-full">
+                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-600 mt-2">
+                <span id="question-counter"></span>
+                <span id="score-counter">คะแนน: 0</span>
+            </div>
+        </div>
+
+        <!-- Question and Options -->
+        <div id="question-area">
+            <div id="image-container" class="mb-4 flex justify-center"></div>
+            <h2 id="question-text" class="text-lg md:text-xl font-medium text-gray-900 mb-5">Loading question...</h2>
+            <div id="options-container" class="space-y-3">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+        </div>
+        
+        <!-- Controls for Sequence Questions -->
+        <div id="sequence-controls" class="mt-4 text-center hidden">
+             <button id="check-sequence-btn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition-colors">
+                ตรวจคำตอบ
+            </button>
+        </div>
+
+
+        <!-- Feedback Area -->
+        <div id="feedback-area" class="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200 hidden">
+            <h3 id="feedback-title" class="font-bold text-lg mb-2"></h3>
+            <p id="explanation-text" class="text-gray-700"></p>
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-8 flex justify-end items-center">
+            <button id="next-btn" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors hidden">
+                ข้อต่อไป
+            </button>
+        </div>
+    </div>
+    
+    <!-- Results Screen -->
+    <div id="results-container" class="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 text-center hidden">
+         <h1 class="text-3xl font-bold text-gray-800 mb-4">สรุปผล</h1>
+         <p class="text-xl text-gray-600 mb-2">คุณทำได้</p>
+         <p id="final-score" class="text-5xl font-bold text-blue-600 mb-6"></p>
+         <p id="final-message" class="text-lg text-gray-700 mb-8"></p>
+         <button id="restart-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors text-lg">
+             ทำแบบทดสอบอีกครั้ง
+         </button>
+    </div>
+
+
+<script>
+    // URL รูปภาพสำหรับข้อ 36-40 (จำเป็นต้องนำรูปไปฝากไว้ที่ Host ที่สามารถเข้าถึงได้)
+    const imageUrls = {
+        '36-37': 'https://ik.imagekit.io/Nithiphat/images/circuit-diagram%20(17).png?updatedAt=1760775151653',
+        '38': 'https://ik.imagekit.io/Nithiphat/images/Screenshot_421.png?updatedAt=1760775185909',
+        '39': 'https://ik.imagekit.io/Nithiphat/images/circuit-diagram%20(18).png?updatedAt=1760775151645',
+        '40': 'https://ik.imagekit.io/Nithiphat/images/circuit-diagram%20(19).png?updatedAt=1760775151649'
+    };
+
+    const quizData = [
+    {
+        question: "1. มาตรฐานความปลอดภัย \"CAT\" ที่ระบุบนมัลติมิเตอร์ ใช้จำแนกความสามารถในด้านใดเป็นหลัก",
+        options: ["การทนทานต่อแรงดันเกินชั่วขณะ", "การทนทานต่อกระแสไฟฟ้าแรงสูง", "ระดับแรงดันสูงสุดที่วัดได้", "ความทนทานต่อการเกิด Arc flash"],
+        answer: "การทนทานต่อแรงดันเกินชั่วขณะ",
+        explanation: "มาตรฐาน CAT (Category) บนมัลติมิเตอร์บ่งบอกถึงความสามารถในการทนทานต่อ \"แรงดันเกินชั่วขณะ\" (Transient Overvoltage) ซึ่งเป็นพลังงานไฟฟ้ากระชากที่อันตรายในระบบ ยิ่ง CAT สูง ยิ่งปลอดภัยในสภาพแวดล้อมที่มีพลังงานสูง"
+    },
+    {
+        question: "2. หากต้องการวัดแรงดันไฟฟ้าที่ \"ตู้เบรกเกอร์\" ภายในอาคาร ควรเลือกใช้มัลติมิเตอร์ในข้อใด",
+        options: ["CAT I", "CAT II", "CAT III", "CAT IV"],
+        answer: "CAT III",
+        explanation: "ตู้เบรกเกอร์ (Distribution Panel) ซึ่งเป็นจุดจ่ายไฟหลักของอาคาร จัดอยู่ในประเภท CAT III ซึ่งมีความเสี่ยงจากแรงดันเกินชั่วขณะสูงกว่าปลั๊กไฟตามผนังทั่วไป (ซึ่งเป็น CAT II)"
+    },
+    {
+        question: "3. ข้อใดคือความผิดพลาดที่ \"อันตรายที่สุด\" ในการใช้มัลติมิเตอร์ ซึ่งอาจทำให้มิเตอร์ระเบิดได้",
+        options: ["วัดความต้านทานในวงจรที่มีไฟ", "ตั้ง Range ต่ำกว่าค่าแรงดันที่วัด", "ใช้สายวัดที่เป็น CAT II กับมิเตอร์ที่เป็น CAT IV", "เสียบสายวัดไว้ที่ช่องวัดกระแส แล้วไปวัดแรงดันไฟฟ้า"],
+        answer: "เสียบสายวัดไว้ที่ช่องวัดกระแส แล้วไปวัดแรงดันไฟฟ้า",
+        explanation: "การเสียบสายวัดที่ช่องวัดกระแส (A หรือ mA) แล้วนำไปวัดแรงดันไฟฟ้า จะเป็นการสร้างสภาวะลัดวงจรผ่านมัลติมิเตอร์โดยตรง เนื่องจากช่องวัดกระแสมีความต้านทานต่ำมาก ทำให้กระแสไฟฟ้ามหาศาลไหลผ่านและอาจทำให้ฟิวส์ระเบิดหรือมิเตอร์เสียหายรุนแรงได้"
+    },
+    {
+        question: "4. ตามมาตรฐาน IEC กระแสไฟฟ้าปริมาณเท่าใดที่ไหลผ่านร่างกาย สามารถทำให้เกิดภาวะหัวใจห้องล่างเต้นระรัวและเสียชีวิตได้",
+        options: ["ต่ำกว่า 0.5 มิลลิแอมป์", "5-10 มิลลิแอมป์", "มากกว่า 30 มิลลิแอมป์", "1 แอมป์"],
+        answer: "มากกว่า 30 มิลลิแอมป์",
+        explanation: "กระแสไฟฟ้าที่มากกว่า 30 มิลลิแอมป์ (mA) ถือเป็นอันตรายอย่างยิ่งและสามารถทำให้เกิดภาวะหัวใจห้องล่างเต้นระรัว (Ventricular Fibrillation) ซึ่งทำให้หัวใจหยุดการสูบฉีดเลือดและเสียชีวิตได้ นี่คือเหตุผลที่เครื่องตัดไฟรั่ว (RCD) มักจะตัดที่ค่า 30 mA"
+    },
+    {
+        question: "5. มัลติมิเตอร์ CAT II 1000V/CAT III 600V ใช้กับสายวัด CAT II 1000V ระดับปลอดภัยจะอยู่ที่ระดับใด",
+        options: ["CAT II 600V", "CAT II 1000V", "CAT III 1000V", "ใช้งานร่วมกันไม่ได้"],
+        answer: "CAT II 1000V",
+        explanation: "ระดับความปลอดภัยของระบบการวัดทั้งหมด (มิเตอร์ + สายวัด) จะถูกจำกัดโดยชิ้นส่วนที่มีระดับความปลอดภัยต่ำที่สุด ในกรณีนี้ สายวัดมีระดับ CAT II ดังนั้นทั้งระบบจึงมีระดับความปลอดภัยที่ CAT II และสามารถทนแรงดันได้สูงสุดที่ 1000V ในสภาพแวดล้อมนั้น"
+    },
+    {
+        question: "6. การกระทำใด \"ห้ามทำ\" อย่างเด็ดขาดเมื่อต้องการวัดค่าความต้านทาน (Ohms)",
+        options: ["สัมผัสขาอุปกรณ์ด้วยนิ้วมือ", "วัดในวงจรที่ยังมีไฟฟ้าอยู่", "ตั้งย่านการวัดต่ำกว่าค่าจริง", "ใช้สายวัดสีแดงต่อช่อง COM"],
+        answer: "วัดในวงจรที่ยังมีไฟฟ้าอยู่",
+        explanation: "ห้ามวัดความต้านทานในวงจรที่ยังมีไฟฟ้าอยู่โดยเด็ดขาด เพราะมัลติมิเตอร์จะจ่ายแรงดันไฟฟ้าขนาดเล็กๆ ออกมาเพื่อวัดค่าความต้านทาน หากมีแรงดันจากภายนอกเข้ามา จะทำให้มิเตอร์เสียหายและได้ค่าที่ผิดพลาด"
+    },
+    {
+        question: "7. ไม่ควรใช้ฟิวส์ที่ในรถยนต์มาใช้ในมัลติมิเตอร์เพราะ",
+        options: ["มีพิกัดแรงดันที่ต่ำกว่า (12V) ทำให้เกิดการตัดวงจรได้", "มีค่าความต้านทานภายในไม่เท่ากัน จะส่งผลให้การวัดค่ากระแสไฟฟ้าเกิดความผิดพลาด", "มีขนาดและรูปร่างต่างกัน ทำให้ไม่สามารถใส่เข้าไปในช่องฟิวส์ของมัลติมิเตอร์ได้พอดี", "ฟิวส์สำหรับมัลติมิเตอร์เป็นชนิดพิเศษ (HRC Fuse) ซึ่งฟิวส์ทั่วไปทำไม่ได้"],
+        answer: "ฟิวส์สำหรับมัลติมิเตอร์เป็นชนิดพิเศษ (HRC Fuse) ซึ่งฟิวส์ทั่วไปทำไม่ได้",
+        explanation: "ฟิวส์ในมัลติมิเตอร์คุณภาพสูงเป็นชนิด HRC (High Rupturing Capacity) ที่ออกแบบมาให้ทนต่อแรงดันสูงและสามารถตัดวงจรที่มีพลังงานสูงได้อย่างปลอดภัย ฟิวส์รถยนต์ไม่ได้ถูกออกแบบมาเพื่อการนี้และอาจระเบิดได้เมื่อเกิดการลัดวงจรในระบบไฟฟ้าแรงสูง"
+    },
+    {
+        question: "8. \"Floating Voltage\" คืออะไรและส่งผลอย่างไร",
+        options: ["แรงดันที่ไม่มีจุดอ้างอิงกราวด์ อาจช็อตผู้ใช้ได้", "แรงดันไม่คงที่ซึ่งเกิดจากไฟกระชาก", "แรงดันที่เกิดจากการเหนี่ยวนำในสายไฟ", "แรงดันที่สร้าง Ground Loop ในเครื่องมือวัด"],
+        answer: "แรงดันที่ไม่มีจุดอ้างอิงกราวด์ อาจช็อตผู้ใช้ได้",
+        explanation: "Floating Voltage คือแรงดันไฟฟ้าที่ไม่มีการเชื่อมต่อกับกราวด์ ทำให้ศักย์ไฟฟ้าของมัน \"ลอย\" เทียบกับดิน หากผู้ใช้สัมผัสจุดนั้น ร่างกายอาจกลายเป็นเส้นทางให้ไฟฟ้าไหลลงกราวด์และถูกไฟฟ้าดูดได้"
+    },
+    {
+        question: "9. หลักการสำคัญที่สุดในการต่อ \"โวลต์มิเตอร์\" เพื่อวัดแรงดันไฟฟ้าคือข้อใด",
+        options: ["ต่ออนุกรมกับวงจร", "ต่อขนานหรือคร่อมจุดที่ต้องการวัด", "ต้องตัดไฟออกจากวงจรก่อนเริ่มวัดเสมอ", "ต้องเสียบสายสีดำเข้าช่อง COM"],
+        answer: "ต่อขนานหรือคร่อมจุดที่ต้องการวัด",
+        explanation: "โวลต์มิเตอร์ใช้วัดความต่างศักย์ระหว่างสองจุด จึงต้องต่อ \"ขนาน\" หรือ \"คร่อม\" อุปกรณ์หรือจุดที่ต้องการวัดเสมอ โวลต์มิเตอร์มีความต้านทานภายในสูงมากเพื่อไม่ให้กระทบกับวงจรที่วัด"
+    },
+    {
+        question: "10. หลักการสำคัญที่สุดในการต่อ \"แอมมิเตอร์\" ด้วยมัลติมิเตอร์คือข้อใด",
+        options: ["ต่ออนุกรมกับวงจร", "ต่อขนานหรือคร่อมจุดที่ต้องการวัด", "ต้องตัดไฟออกจากวงจรก่อนเริ่มวัดเสมอ", "ต้องเสียบสายสีดำเข้าช่อง COM"],
+        answer: "ต่ออนุกรมกับวงจร",
+        explanation: "แอมมิเตอร์ใช้วัดกระแสที่ไหลผ่านวงจร จึงต้องต่อ \"อนุกรม\" เพื่อให้กระแสทั้งหมดไหลผ่านมิเตอร์ แอมมิเตอร์มีความต้านทานภายในต่ำมากเพื่อลดผลกระทบต่อวงจร"
+    },
+    {
+        question: "11. เมื่อใช้มัลติมิเตอร์ โหมดการวัดใดที่มักจะใช้ช่องสำหรับเสียบสายวัดร่วมกัน",
+        options: ["VΩΑ", "10A mA", "VΩmA", "VA"],
+        answer: "VΩmA",
+        explanation: "มัลติมิเตอร์ส่วนใหญ่จะออกแบบให้ช่องเสียบสายวัด (สีแดง) หนึ่งช่องใช้ร่วมกันสำหรับการวัดแรงดัน (V), ความต้านทาน (Ω), และกระแสต่ำ (mA/μA) โดยจะมีช่องแยกต่างหากสำหรับวัดกระแสสูง (เช่น 10A)"
+    },
+    {
+        question: "12. การใช้แคลมป์มิเตอร์วัดกระแสในสายเคเบิลที่มี 2 เส้น (Line และ Neutral) ที่ถูกต้องคือทำอย่างไร",
+        options: ["คล้องรวบทั้งสองเส้นพร้อมกัน", "คล้องสายไฟเพียงเส้นเดียวเท่านั้น", "คล้องสายไฟทีละเส้น เริ่มจากสาย Line ก่อนเสมอ", "คล้องที่สาย Neutral เท่านั้น"],
+        answer: "คล้องสายไฟเพียงเส้นเดียวเท่านั้น",
+        explanation: "แคลมป์มิเตอร์ทำงานโดยการวัดสนามแม่เหล็กที่เกิดจากกระแสไฟฟ้า ในสายเคเบิล 2 เส้น กระแสของสาย Line และ Neutral จะไหลในทิศตรงข้าม ทำให้สนามแม่เหล็กหักล้างกัน ดังนั้นต้องคล้องสายไฟเพียงเส้นเดียวเท่านั้นจึงจะวัดค่าได้"
+    },
+    {
+        question: "13. การใช้ \"แคลมป์มิเตอร์\" วัดกำลังไฟฟ้าระบบ 1 เฟส ต้องทำอย่างไร",
+        options: ["ใช้ปากคีบคล้องสาย Line และใช้สายวัดแตะที่สาย Neutral กับ Ground", "ใช้ปากคีบคล้องทั้งสาย Line และ Neutral พร้อมกัน และใช้สายวัดแตะคร่อมที่สาย Line และ Ground", "ใช้ปากคีบคล้องสาย Line และใช้สายวัดแตะคร่อมที่สาย Line และ Neutral", "ใช้ปากคีบคล้องสาย Line เพื่อวัดค่ากระแสก่อน จากนั้นย้ายแคลมป์มิเตอร์ไปวัดแรงดันที่สาย Line"],
+        answer: "ใช้ปากคีบคล้องสาย Line และใช้สายวัดแตะคร่อมที่สาย Line และ Neutral",
+        explanation: "การวัดกำลังไฟฟ้า (วัตต์) ต้องใช้ทั้งค่ากระแสและแรงดัน แคลมป์มิเตอร์สำหรับวัดกำลังไฟฟ้าจะใช้ปากคีบคล้องสาย Line เพื่อวัดกระแส และใช้สายวัด (Probes) แตะที่สาย Line และ Neutral เพื่อวัดแรงดัน จากนั้นมิเตอร์จะคำนวณค่ากำลังไฟฟ้าให้"
+    },
+    {
+        question: "14. ในโหมดวัดความต้านทาน หากหน้าจอของมัลติมิเตอร์แสดงสัญลักษณ์ \"OL\" หมายความว่าอย่างไร",
+        options: ["แบตเตอรี่ของมิเตอร์ต่ำ", "กระแสที่ผ่านวงจรมีค่าสูงกว่าค่าพิกัด", "ความต้านทานที่วัดมีค่าต่ำเกินไป", "ค่าที่วัดได้สูงเกินย่านการวัดที่ตั้งไว้ หรือวงจรขาด"],
+        answer: "ค่าที่วัดได้สูงเกินย่านการวัดที่ตั้งไว้ หรือวงจรขาด",
+        explanation: "\"OL\" ย่อมาจาก Overload หรือ Open Loop ในโหมดวัดความต้านทาน หมายความว่าค่าความต้านทานสูงเกินกว่าย่าน (Range) ที่ตั้งไว้ หรือหมายถึงวงจรเปิด (ขาดออกจากกัน) ซึ่งมีความต้านทานเป็นอนันต์"
+    },
+    {
+        question: "15. ในการวัดความต้านทานที่ถูกวิธี ไม่ควรสัมผัสปลายโลหะของสายวัดและขาอุปกรณ์พร้อมกันขณะวัด",
+        options: ["เพราะอาจโดนไฟฟ้าดูด", "เพราะตามกฎของโอห์ม แรงดันจากมิเตอร์ที่ตกคร่อมความต้านทานจะมีค่าเปลี่ยนไป", "เพราะความต้านทานของร่างกายจะเข้าไปขนานกับอุปกรณ์ ทำให้ค่าที่วัดได้ผิดเพี้ยน", "เพราะจะทำให้มิเตอร์เสียหาย"],
+        answer: "เพราะความต้านทานของร่างกายจะเข้าไปขนานกับอุปกรณ์ ทำให้ค่าที่วัดได้ผิดเพี้ยน",
+        explanation: "ร่างกายมนุษย์มีความต้านทานไฟฟ้า การสัมผัสขาอุปกรณ์และปลายสายวัดจะทำให้ความต้านทานของร่างกายเราไปต่อขนานกับตัวต้านทานที่ต้องการวัด ส่งผลให้ค่าความต้านทานรวมที่วัดได้ต่ำกว่าความเป็นจริง"
+    },
+    {
+        question: "16. แคลมป์มิเตอร์ที่ใช้วัดได้ทั้งกระแส AC และ DC ต้องอาศัยเซ็นเซอร์ชนิดพิเศษที่เรียกว่าอะไร",
+        options: ["Electromagnetic Induction Sensor", "Hall Effect Sensor", "Ferraris Sensor", "Ferromagnetic Sensor"],
+        answer: "Hall Effect Sensor",
+        explanation: "แคลมป์มิเตอร์สำหรับ AC ทั่วไปใช้หลักการหม้อแปลงกระแส (Current Transformer) ซึ่งทำงานกับสนามแม่เหล็กที่เปลี่ยนแปลงเท่านั้น แต่การวัดกระแส DC ซึ่งมีสนามแม่เหล็กคงที่ ต้องใช้ Hall Effect Sensor ซึ่งสามารถตรวจจับสนามแม่เหล็กได้ทั้ง AC และ DC"
+    },
+    {
+        question: "17. วัตถุประสงค์หลักของฟังก์ชัน \"Phase Detection\" ในแคลมป์มิเตอร์คืออะไร",
+        options: ["เพื่อตรวจสอบว่าเป็นระบบสามเฟสหรือไม่", "เพื่อตรวจสอบว่าลำดับเฟสถูกต้องหรือไม่", "เพื่อวัดค่า Power Factor", "เพื่อวัดความถี่ของไฟฟ้า"],
+        answer: "เพื่อตรวจสอบว่าลำดับเฟสถูกต้องหรือไม่",
+        explanation: "ฟังก์ชัน Phase Detection หรือ Phase Sequence/Rotation ใช้เพื่อตรวจสอบลำดับของเฟสในระบบไฟฟ้า 3 เฟส (เช่น A-B-C หรือ R-S-T) ซึ่งมีความสำคัญอย่างยิ่งต่อการหมุนของมอเตอร์ 3 เฟส หากลำดับเฟสผิด มอเตอร์จะหมุนกลับทาง"
+    },
+    {
+        question: "18. ในการต่อมิเตอร์ไฟฟ้า kWh Meter เข้ากับสายเมนและสายเข้าบ้าน ลำดับการเข้าสายที่ตัวมิเตอร์มีการจัดวางจากเทอร์มินอลซ้ายไปขวาอย่างไร",
+        options: ["Line (in) – N (in) - Line (out) – N (out)", "Line (in) – N (in) - N (out) – Line (out)", "Line (in) - Line (out) - N (in) – N (out)", "Line (in) – N (out) - N (out) – Line (out)"],
+        answer: "Line (in) – N (in) - N (out) – Line (out)",
+        explanation: "มาตรฐานการเข้าสายของ kWh meter อาจแตกต่างกันไป แต่รูปแบบที่พบบ่อยในมิเตอร์บางรุ่นคือ: ช่อง 1 (ซ้ายสุด) คือ Line เข้า, ช่อง 2 คือ Neutral เข้า, ช่อง 3 คือ Neutral ออก, และช่อง 4 คือ Line ออก จึงควรตรวจสอบไดอะแกรมบนตัวมิเตอร์จริงทุกครั้งก่อนทำการติดตั้ง"
+    },
+    {
+        question: "19. ในการวัดกำลังไฟฟ้า 3P4W แบบสมดุลด้วยแคลมป์มิเตอร์ตามตัวอย่าง ต้องต่อสายวัดแรงดันอย่างไร",
+        options: ["แตะระหว่างเฟส L1 และ L2", "แตะระหว่างเฟส L1 และ L3", "แตะระหว่างเฟสที่คล้องแคลมป์อยู่ กับสายนิวทรัล", "ไม่ต้องใช้สายวัดแรงดัน"],
+        answer: "แตะระหว่างเฟสที่คล้องแคลมป์อยู่ กับสายนิวทรัล",
+        explanation: "ในระบบ 3 เฟส 4 สาย (3P4W) แบบสมดุล (Balanced Load) เราสามารถวัดกำลังไฟฟ้าของเฟสเดียวแล้วคูณด้วย 3 ได้ การวัดกำลังของเฟสเดียวต้องใช้กระแสของเฟสนั้น (วัดโดยการคล้องแคลมป์ที่สายเฟส) และแรงดันของเฟสนั้นเทียบกับนิวทรัล (Phase-to-Neutral Voltage)"
+    },
+    {
+        question: "20. โหมด \"Continuity\" (สัญลักษณ์เสียง) ของมัลติมิเตอร์ใช้เพื่อวัตถุประสงค์ใด",
+        options: ["ใช้วัดความดังของเสียง", "ใช้วัดสายไฟ โดยมีเสียงเตือนเมื่อความต้านทานต่ำ", "ใช้ตรวจสอบสายไฟ โดยจะมีเสียงเตือนเมื่อสายขาด", "ใช้วัดค่าตัวเก็บประจุ"],
+        answer: "ใช้วัดสายไฟ โดยมีเสียงเตือนเมื่อความต้านทานต่ำ",
+        explanation: "โหมด Continuity ใช้สำหรับตรวจสอบความต่อเนื่องของวงจรไฟฟ้า เช่น ตรวจสอบว่าสายไฟขาดหรือไม่ โดยมิเตอร์จะส่งเสียงเตือน (Beep) เมื่อตรวจพบว่ามีความต้านทานต่ำมากระหว่างปลายสายวัดทั้งสอง ซึ่งหมายความว่าวงจรนั้นเชื่อมต่อถึงกันดี"
+    },
+    {
+        question: "21. จงเรียงลำดับขั้นตอนการใช้ DMM วัดค่า \"ความต้านทาน\" ของตัวต้านทานที่อยู่นอกวงจร",
+        type: 'sequence',
+        options: [
+            "(A) นำปลายสายวัดแตะที่ขาของตัวต้านทานแล้วอ่าน",
+            "(B) หมุนปุ่มฟังก์ชันไปที่ย่านวัดความต้านทาน (Ω)",
+            "(C) เสียบสายดำที่ช่อง COM และสายแดงที่ช่อง VΩ",
+            "(D) หมุนเปลี่ยนย่านการวัดหากหน้าจอแสดงผล OL"
+        ],
+        answer: "C-B-A-D",
+        explanation: "ลำดับที่ถูกต้องคือ: 1. เตรียมมิเตอร์ (เสียบสายวัด) 2. ตั้งค่ามิเตอร์ (เลือกโหมด) 3. ทำการวัด (แตะอุปกรณ์) 4. ปรับค่า (หากจำเป็น) เพื่อให้อ่านค่าได้ละเอียดขึ้น"
+    },
+    {
+        question: "22. จงเรียงลำดับขั้นตอนการใช้ DMM วัดค่า \"แรงดันไฟฟ้ากระแสตรง\" (DC Voltage) ของแบตเตอรี่",
+        type: 'sequence',
+        options: [
+            "(A) นำสายวัดสีแดงแตะขั้วบวก และสายสีดำแตะขั้วลบแล้วอ่านค่า",
+            "(B) หมุนปุ่มไปที่สัญลักษณ์ V ที่มีเส้นตรง (V---)",
+            "(C) เสียบสายดำที่ช่อง COM และสายแดงที่ช่อง V",
+            "(D) ปรับย่านการวัดที่สูงกว่าค่าที่คาดว่าจะเจอ"
+        ],
+        answer: "C-B-D-A",
+        explanation: "ลำดับที่ถูกต้องคือ: 1. เตรียมมิเตอร์ (เสียบสายวัด) 2. เลือกโหมดที่ถูกต้อง (VDC) 3. ตั้งย่านเพื่อความปลอดภัย (สูงสุดไว้ก่อน) 4. ทำการวัด"
+    },
+    {
+        question: "23. จงเรียงลำดับขั้นตอนการใช้ DMM วัด \"กระแสไฟฟ้า\" ในวงจรไฟฟ้าอย่างถูกต้อง",
+        type: 'sequence',
+        options: [
+            "(A) ต่อมิเตอร์อนุกรมกับวงจรที่จุดที่ต้องการวัด",
+            "(B) หมุนปุ่มไปที่ย่านวัดกระแส (A) และเลือกประเภท AC หรือ DC",
+            "(C) ปิดแหล่งจ่ายไฟ และตัดการเชื่อมต่อวงจร (Break the circuit) ในจุดที่ต้องการวัด",
+            "(D) เสียบสายดำที่ช่อง COM และสายแดงที่ช่อง A หรือ mA ให้ถูกต้อง"
+        ],
+        answer: "D-B-C-A",
+        explanation: "ลำดับที่ถูกต้องและปลอดภัยที่สุดคือ: 1. เตรียมมิเตอร์สำหรับวัดกระแส (เสียบสายที่ช่อง A) 2. ตั้งค่าโหมดวัดกระแส 3. **ปิดไฟและตัดวงจร** (สำคัญที่สุด) 4. นำมิเตอร์เข้าไปต่ออนุกรมในวงจร"
+    },
+    {
+        question: "24. เมื่อใช้มัลติมิเตอร์แบบ Manual Ranging หากไม่แน่ใจค่าที่จะวัด ควรเริ่มตั้งย่านการวัดอย่างไร",
+        options: ["เริ่มจากย่านต่ำสุด แล้วค่อยๆ เพิ่มขึ้น", "เริ่มจากย่านสูงสุด แล้วค่อยๆ ลดลงมาเพื่อให้ได้ค่าละเอียดขึ้น", "ตั้งไว้ที่ย่านกลางๆ แล้วปรับให้ละเอียดขึ้น", "สามารถนำไปใช้ได้ทั้ง 3 วิธี"],
+        answer: "เริ่มจากย่านสูงสุด แล้วค่อยๆ ลดลงมาเพื่อให้ได้ค่าละเอียดขึ้น",
+        explanation: "เพื่อความปลอดภัยของเครื่องมือวัด ควรเริ่มจากการตั้งย่านการวัด (Range) ไปที่ค่าสูงสุดก่อนเสมอ เพื่อป้องกันไม่ให้ค่าที่วัดสูงเกินย่านที่ตั้งไว้ซึ่งอาจทำให้มิเตอร์เสียหายได้ จากนั้นจึงค่อยๆ ปรับลดระดับลงมาเพื่อให้ได้ค่าที่อ่านได้ละเอียดและแม่นยำขึ้น"
+    },
+    {
+        question: "25. ในการวัดกระแสรั่วไหล (Leakage Current) ด้วยแคลมป์มิเตอร์ ต้องคล้องสายอย่างไร",
+        options: ["คล้องรวบทั้งสาย Line และ Neutral", "คล้องเฉพาะสาย Line", "คล้องเฉพาะสาย Ground", "คล้องสาย Line ก่อน จากนั้นกดปุ่ม Hold แล้วย้ายไปคล้องสาย Neutral"],
+        answer: "คล้องรวบทั้งสาย Line และ Neutral",
+        explanation: "กระแสรั่วไหลคือกระแสที่ไม่ได้ไหลกลับในเส้นทางปกติ (สาย Neutral) แต่รั่วไหลลงดินแทน ในสภาวะปกติ กระแสในสาย Line และ Neutral จะเท่ากันและมีทิศตรงข้าม ทำให้สนามแม่เหล็กหักล้างกันเป็นศูนย์เมื่อคล้องรวบกัน หากมีกระแสรั่วไหล ผลรวมของกระแสจะไม่เป็นศูนย์ และแคลมป์มิเตอร์จะสามารถวัดค่ากระแสส่วนต่างนั้นได้"
+    },
+    {
+        question: "26. ข้อใดคือความแตกต่างที่สำคัญระหว่าง \"วัตต์มิเตอร์\" (Wattmeter) และ \"กิโลวัตต์-ชั่วโมงมิเตอร์\" (kWh Meter)",
+        options: ["วัตต์มิเตอร์วัดกระแสและแรงดัน, kWh Meter วัดแรงดัน กระแส และ power factor", "วัตต์มิเตอร์วัดกำลังไฟฟ้าในหน่วย W ที่ละเอียดกว่า ขณะที่ kWh Meter จะวัดกำลังไฟฟ้าในหน่วย kW", "วัตต์มิเตอร์วัดกำลังไฟฟ้า ณ ขณะนั้น, kWh Meter สะสมพลังงานไฟฟ้าตามเวลา", "ไม่มีข้อแตกต่าง ใช้งานแทนกันได้ เนื่องจากทั้งสองตัวใช้หลักการวัดแรงดันและกระแสเหมือนกัน"],
+        answer: "วัตต์มิเตอร์วัดกำลังไฟฟ้า ณ ขณะนั้น, kWh Meter สะสมพลังงานไฟฟ้าตามเวลา",
+        explanation: "วัตต์มิเตอร์ (Wattmeter) วัด \"กำลังไฟฟ้า\" (Power) ซึ่งเป็นอัตราการใช้พลังงาน ณ ขณะใดขณะหนึ่ง มีหน่วยเป็นวัตต์ (W) ส่วนกิโลวัตต์-ชั่วโมงมิเตอร์ (kWh Meter) หรือมิเตอร์วัดพลังงานไฟฟ้า จะวัด \"พลังงานไฟฟ้า\" (Energy) ซึ่งเป็นกำลังไฟฟ้าที่ถูกใช้ไปสะสมตามระยะเวลา มีหน่วยเป็นกิโลวัตต์-ชั่วโมง (kWh) หรือยูนิต"
+    },
+    {
+        question: "27. มิเตอร์แบบใดที่เหมาะสำหรับสังเกต \"แนวโน้มการเปลี่ยนแปลง\" ของสัญญาณที่รวดเร็วและต่อเนื่อง",
+        options: ["แบบดิจิทัล (Digital)", "แบบแอนะล็อก หรือแบบเข็ม (Analog)", "แบบตั้งโต๊ะที่มีความละเอียด 4 หลัก (Bench type)", "แบบติดตั้งบนแผง (Panel mounted)"],
+        answer: "แบบแอนะล็อก หรือแบบเข็ม (Analog)",
+        explanation: "มิเตอร์แบบแอนะล็อก (แบบเข็ม) สามารถแสดงการเปลี่ยนแปลงของสัญญาณที่รวดเร็วและต่อเนื่องได้ดีกว่า ทำให้ผู้ใช้มองเห็น \"แนวโน้ม\" การขึ้นลงของค่าได้ง่าย ในขณะที่มิเตอร์ดิจิทัลอาจแสดงตัวเลขที่กระพริบเร็วเกินไปจนอ่านค่าได้ยาก"
+    },
+    {
+        question: "28. เหตุใดจึงต้องวัดค่าของ \"Power Factor\" (ตัวประกอบกำลัง) โดยเฉพาะในโรงงานอุตสาหกรรม",
+        options: ["เพื่อป้องกันไม่ให้อุปกรณ์ไฟฟ้า เช่น มอเตอร์ เกิดความเสียหายจากแรงดันไฟฟ้าที่ไม่สมดุล", "เพื่อคำนวณค่ากำลังไฟฟ้าตามสมการ P = VIxpf", "เพื่อตรวจสอบว่าการใช้กำลังไฟฟ้าไม่ส่งผลกระทบต่อความถี่ของระบบไฟฟ้า (50 Hz)", "เพื่อหลีกเลี่ยงค่าปรับจากการไฟฟ้า หากค่า power factor ต่ำเกินไป"],
+        answer: "เพื่อหลีกเลี่ยงค่าปรับจากการไฟฟ้า หากค่า power factor ต่ำเกินไป",
+        explanation: "Power Factor (PF) ที่มีค่าต่ำ (น้อยกว่า 1) หมายความว่ามีการใช้พลังงานไฟฟ้าอย่างไม่มีประสิทธิภาพ ทำให้ต้องใช้กระแสไฟฟ้าในระบบสูงเกินความจำเป็น การไฟฟ้าจึงมีการเรียกเก็บค่าปรับกับผู้ใช้ไฟรายใหญ่ (เช่น โรงงานอุตสาหกรรม) ที่มีค่า PF ต่ำกว่าเกณฑ์ที่กำหนด เพื่อกระตุ้นให้มีการปรับปรุงค่า PF ให้สูงขึ้น"
+    },
+    {
+        question: "29. มัลติมิเตอร์แบบ \"True RMS\" มีความสามารถต่างจากมิเตอร์แบบทั่วไปอย่างไร",
+        options: ["ตอบสนองต่อสัญญาณไฟฟ้ากระแสสลับได้เร็วกว่า", "วัดค่าไฟฟ้ากระแสตรง (DC) ในสัญญาณได้", "แสดงค่าจากการวัดที่แท้จริง ไม่ใช่จากการคำนวณ", "วัดค่ารูปคลื่นไฟฟ้ากระแสสลับ (AC) ที่บิดเบี้ยวได้ถูกต้องกว่า"],
+        answer: "วัดค่ารูปคลื่นไฟฟ้ากระแสสลับ (AC) ที่บิดเบี้ยวได้ถูกต้องกว่า",
+        explanation: "มิเตอร์ทั่วไปจะวัดค่าเฉลี่ยของสัญญาณ AC แล้วคำนวณเป็นค่า RMS โดยตั้งสมมติฐานว่าเป็นรูปคลื่นไซน์ (Sine wave) ที่สมบูรณ์ แต่ True RMS มิเตอร์สามารถวัดค่า RMS ที่แท้จริงของรูปคลื่นที่ผิดเพี้ยนไปจากรูปคลื่นไซน์ (Non-sinusoidal) ได้อย่างแม่นยำ ซึ่งสำคัญมากในระบบไฟฟ้าสมัยใหม่ที่มีอุปกรณ์อิเล็กทรอนิกส์จำนวนมาก"
+    },
+    {
+        question: "30. มาตรฐานความถี่ไฟฟ้าในประเทศไทยคือเท่าใด",
+        options: ["50± 0.1 เฮิรตซ์", "50± 0.5 เฮิรตซ์", "50± 1 เฮิรตซ์", "50± 5 เฮิรตซ์"],
+        answer: "50± 0.5 เฮิรตซ์",
+        explanation: "ความถี่ของระบบไฟฟ้าในประเทศไทยคือ 50 เฮิรตซ์ (Hz) และการไฟฟ้าจะควบคุมความถี่ให้มีความคลาดเคลื่อนน้อยมาก โดยทั่วไปจะอยู่ในช่วง ±0.5 Hz หรือแคบกว่านั้นเพื่อรักษาเสถียรภาพของระบบ"
+    },
+    {
+        question: "31. ตัวเลขบนมิเตอร์ไฟฟ้า kWh meter เช่น 15(45) A, ตัวเลขในวงเล็บ (45) หมายถึงอะไร",
+        options: ["พิกัดกระแสใช้งานจริง", "พิกัดกระแสเมื่อใช้งานกับระบบไฟฟ้า 3 เฟส", "ระดับชั้นความแม่นยำ", "พิกัดกระแสสูงสุดชั่วขณะ"],
+        answer: "พิกัดกระแสสูงสุดชั่วขณะ",
+        explanation: "บน kWh Meter, ตัวเลขหน้าคือพิกัดกระแสพื้นฐาน (Basic Current, Ib) คือ 15A และตัวเลขในวงเล็บคือพิกัดกระแสสูงสุด (Maximum Current, Imax) คือ 45A ซึ่งเป็นค่ากระแสสูงสุดที่มิเตอร์สามารถทนได้อย่างต่อเนื่องโดยไม่เสียหาย"
+    },
+    {
+        question: "32. เครื่องมือใดที่สามารถแสดง \"รูปคลื่น\" ของสัญญาณไฟฟ้าออกมาเป็นกราฟให้เห็นได้",
+        options: ["Power meter", "Energy Data logger", "Oscilloscope", "ถูกทุกข้อ"],
+        answer: "Oscilloscope",
+        explanation: "ออสซิลโลสโคป (Oscilloscope) เป็นเครื่องมือวัดที่ออกแบบมาเพื่อแสดงรูปคลื่นของสัญญาณไฟฟ้าในรูปแบบกราฟระหว่างแรงดันไฟฟ้า (แกน Y) กับเวลา (แกน X) ทำให้สามารถวิเคราะห์รูปร่าง, ความถี่, และแอมพลิจูดของสัญญาณได้"
+    },
+    {
+        question: "33. \"แคลมป์มิเตอร์\" มีข้อได้เปรียบกว่า \"มัลติมิเตอร์\" ในการวัดกระแสอย่างไร",
+        options: ["สามารถวัดกระแสได้ทั้งสองทิศทาง โดยไม่ต้องกังวลขั้วบวกหรือขั้วลบ", "วัดได้โดยไม่ต้องตัดต่อสายไฟ ทำให้สะดวกและปลอดภัยกว่า", "วัดได้แม่นยำกว่าเนื่องจากใช้หลักการแม่เหล็กไฟฟ้า", "สามารถวัดค่ากำลังไฟฟ้าได้"],
+        answer: "วัดได้โดยไม่ต้องตัดต่อสายไฟ ทำให้สะดวกและปลอดภัยกว่า",
+        explanation: "ข้อได้เปรียบที่สำคัญที่สุดของแคลมป์มิเตอร์คือ สามารถวัดกระแสไฟฟ้าได้โดยไม่ต้องดับไฟและตัดต่อวงจรเพื่อแทรกมิเตอร์เข้าไปแบบอนุกรม เพียงแค่ใช้ปากคีบคล้องไปที่สายไฟเส้นเดียว ทำให้การทำงานสะดวก รวดเร็ว และปลอดภัยกว่าการใช้มัลติมิเตอร์อย่างมาก"
+    },
+    {
+        question: "34. สถานการณ์: นิสิตกำลังทดลองวงจรไฟฟ้ากระแสตรง 12V และต้องการวัดกระแสที่ไหลผ่านหลอดไฟซึ่งคาดว่ามีค่าประมาณ 220mA โดยตั้งมัลติมิเตอร์แบบดิจิตอลไปที่ย่านวัดกระแส \"10A\" แล้วต่ออนุกรมเข้าไปในวงจรอย่างถูกต้อง ผลลัพธ์ที่คาดว่าจะเห็นคือ",
+        options: ["\"OL\"", "0 A", "0.2 A", "มิเตอร์จะส่งเสียงปี๊บเตือน เพราะค่าต่ำเกินไป"],
+        answer: "0.2 A",
+        explanation: "ค่ากระแส 220mA เท่ากับ 0.22A ซึ่งอยู่ในย่านการวัด 10A ของมิเตอร์ อย่างไรก็ตาม มิเตอร์ดิจิทัลในย่านวัดสูงๆ (เช่น 10A) อาจมีความละเอียดเพียงทศนิยม 1 หรือ 2 ตำแหน่ง จึงอาจแสดงผลเป็น 0.2A หรือ 0.22A การเลือกย่านวัดที่สูงเกินไปอาจทำให้อ่านค่าได้ไม่ละเอียดพอ"
+    },
+    {
+        question: "35. เหตุใดมิเตอร์วัดกำลังไฟฟ้าแบบสามเฟสในงานอุตสาหกรรม จึงต้องใช้หม้อแปลงกระแส (Current Transformer - CT) แทนการต่อสายไฟหลักผ่านตัวมิเตอร์โดยตรง",
+        options: ["เพื่อลดระดับแรงดันไฟฟ้าที่สูงในระบบสามเฟสให้ปลอดภัยสำหรับมิเตอร์", "เพื่อความสะดวกและปลอดภัยในการติดตั้งที่ไม่ต้องต่อสายไฟเข้าตัวมิเตอร์", "เพื่อช่วยในการคำนวณค่าตัวประกอบกำลัง (Power Factor)", "เพื่อทำหน้าที่ลดทอนกระแสลงให้อยู่ในย่านที่มิเตอร์สามารถวัดได้อย่างปลอดภัย"],
+        answer: "เพื่อทำหน้าที่ลดทอนกระแสลงให้อยู่ในย่านที่มิเตอร์สามารถวัดได้อย่างปลอดภัย",
+        explanation: "ในงานอุตสาหกรรม กระแสไฟฟ้าในสายเมนมักมีค่าสูงมาก (หลายร้อยหรือหลายพันแอมป์) เกินกว่าที่มิเตอร์จะรับได้โดยตรง หม้อแปลงกระแส (CT) จึงถูกใช้เพื่อ \"ลดทอน\" หรือแปลงกระแสไฟฟ้าค่าสูงๆ ลงมาเป็นค่าต่ำๆ (เช่น 5A) ตามอัตราส่วนที่กำหนด เพื่อป้อนเข้าสู่มิเตอร์อย่างปลอดภัย"
+    },
+    {
+        question: "36. จากรูปวงจร ให้ระบุว่าสัญลักษณ์มิเตอร์หมายเลข (36) เป็นมิเตอร์ประเภทใด",
+        image: imageUrls['36-37'],
+        options: ["โวลต์มิเตอร์", "แอมมิเตอร์", "โอห์มมิเตอร์", "วัตต์มิเตอร์"],
+        answer: "แอมมิเตอร์",
+        explanation: "มิเตอร์หมายเลข (36) ต่ออนุกรมกับวงจรเพื่อวัดกระแสที่ไหลผ่าน ดังนั้นจึงเป็นแอมมิเตอร์"
+    },
+    {
+        question: "37. จากรูปวงจร ให้ระบุว่าสัญลักษณ์มิเตอร์หมายเลข (37) เป็นมิเตอร์ประเภทใด",
+        image: imageUrls['36-37'],
+        options: ["โวลต์มิเตอร์", "แอมมิเตอร์", "โอห์มมิเตอร์", "วัตต์มิเตอร์"],
+        answer: "โวลต์มิเตอร์",
+        explanation: "มิเตอร์หมายเลข (37) ต่อขนานคร่อมขดลวดด้านขาออกของ Auto transformer เพื่อวัดแรงดันตกคร่อม ดังนั้นจึงเป็นโวลต์มิเตอร์"
+    },
+    {
+        question: "38. จากรูปวงจร ให้ระบุว่าอุปกรณ์ที่รับสัญญาณจาก CT ทั้งสามตัว คือมิเตอร์ประเภทใด",
+        image: imageUrls['38'],
+        options: ["โวลต์มิเตอร์", "แอมมิเตอร์", "โอห์มมิเตอร์", "วัตต์มิเตอร์"],
+        answer: "วัตต์มิเตอร์",
+        explanation: "อุปกรณ์นี้รับสัญญาณทั้งจาก Current Transformer (CT) เพื่อวัดกระแส และรับสัญญาณแรงดันโดยตรง (Voltage Inputs) เพื่อนำมาคำนวณกำลังไฟฟ้า (Power) ดังนั้นจึงเป็น วัตต์มิเตอร์ หรือ Power Meter"
+    },
+    {
+        question: "39. จากรูปวงจร มิเตอร์ที่แสดงค่า 50.0 คือมิเตอร์ประเภทใด",
+        image: imageUrls['39'],
+        options: ["โวลต์มิเตอร์", "แอมมิเตอร์", "โอห์มมิเตอร์", "วัตต์มิเตอร์"],
+        answer: "โอห์มมิเตอร์",
+        explanation: "จากภาพ มิเตอร์ถูกต่อคร่อมหรือต่อขนานกับตัวต้านทาน 100Ω 2 ตัว โดยที่สวิตช์อยู่ในสถานะเปิดวงจร จึงไม่มีแรงดันหรือกระแสในวงจร ค่าที่วัดได้นั้นจึงเป็นค่าของความต้านทาน"
+    },
+    {
+        question: "40. จากรูปวงจรมิเตอร์ที่ตำแหน่งหมายเลข (40) คือมิเตอร์ประเภทใด",
+        image: imageUrls['40'],
+        options: ["โวลต์มิเตอร์", "แอมมิเตอร์", "โอห์มมิเตอร์", "วัตต์มิเตอร์"],
+        answer: "แอมมิเตอร์",
+        explanation: "มิเตอร์หมายเลข (40) ต่ออนุกรมกับวงจรเพื่อวัดกระแสที่ไหลผ่าน ดังนั้นจึงเป็นแอมมิเตอร์"
+    }
+];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let dragSrcEl = null;
+
+    const quizContainer = document.getElementById('quiz-container');
+    const resultsContainer = document.getElementById('results-container');
+    const imageContainer = document.getElementById('image-container');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const feedbackArea = document.getElementById('feedback-area');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const explanationText = document.getElementById('explanation-text');
+    const nextBtn = document.getElementById('next-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const questionCounter = document.getElementById('question-counter');
+    const scoreCounter = document.getElementById('score-counter');
+    const finalScoreEl = document.getElementById('final-score');
+    const finalMessageEl = document.getElementById('final-message');
+    const sequenceControls = document.getElementById('sequence-controls');
+    const checkSequenceBtn = document.getElementById('check-sequence-btn');
+
+
+    function startQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        quizContainer.classList.remove('hidden');
+        resultsContainer.classList.add('hidden');
+        scoreCounter.textContent = `คะแนน: 0`;
+        loadQuestion();
+    }
+    
+    function loadQuestion() {
+        feedbackArea.classList.add('hidden');
+        nextBtn.classList.add('hidden');
+        sequenceControls.classList.add('hidden');
+        imageContainer.innerHTML = '';
+        
+        const question = quizData[currentQuestionIndex];
+
+        questionText.textContent = question.question;
+        optionsContainer.innerHTML = '';
+
+        if (question.image) {
+            const img = document.createElement('img');
+            img.src = question.image;
+            img.alt = `วงจรสำหรับข้อที่ ${currentQuestionIndex + 1}`;
+            img.classList.add('max-w-full', 'h-auto', 'mx-auto', 'rounded-lg', 'border');
+            imageContainer.appendChild(img);
+        }
+
+        if (question.type === 'sequence') {
+            loadSequenceQuestion(question);
+        } else {
+            loadMultipleChoiceQuestion(question);
+        }
+        
+        updateProgress();
+    }
+
+    function loadMultipleChoiceQuestion(question) {
+        question.options.forEach(option => {
+            const button = document.createElement('button');
+            button.textContent = option;
+            button.classList.add('option-btn', 'w-full', 'text-left', 'p-4', 'bg-white', 'border', 'border-gray-300', 'rounded-lg', 'hover:bg-blue-50', 'hover:border-blue-400');
+            button.addEventListener('click', () => selectAnswer(button.textContent));
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function loadSequenceQuestion(question) {
+        question.options.forEach(option => {
+            const div = document.createElement('div');
+            div.textContent = option;
+            div.draggable = true;
+            div.classList.add('sequence-item', 'p-4', 'bg-gray-100', 'border', 'border-gray-300', 'rounded-lg');
+            addDragDropHandlers(div);
+            optionsContainer.appendChild(div);
+        });
+        sequenceControls.classList.remove('hidden');
+    }
+
+    function selectAnswer(selectedOption) {
+        const question = quizData[currentQuestionIndex];
+        const isCorrect = selectedOption === question.answer;
+
+        if (isCorrect) {
+            score++;
+            feedbackTitle.textContent = 'ถูกต้อง!';
+            feedbackTitle.className = 'font-bold text-lg mb-2 text-green-600';
+        } else {
+            feedbackTitle.textContent = 'ยังไม่ถูกต้อง';
+            feedbackTitle.className = 'font-bold text-lg mb-2 text-red-600';
+        }
+        
+        explanationText.textContent = question.explanation;
+        feedbackArea.classList.remove('hidden');
+
+        Array.from(optionsContainer.children).forEach(button => {
+            button.disabled = true;
+            if (button.textContent === question.answer) {
+                button.classList.remove('border-gray-300', 'bg-white');
+                button.classList.add('bg-green-100', 'border-green-500', 'border-2');
+            } else if (button.textContent === selectedOption && !isCorrect) {
+                button.classList.remove('border-gray-300', 'bg-white');
+                button.classList.add('bg-red-100', 'border-red-500', 'border-2');
+            }
+        });
+        
+        scoreCounter.textContent = `คะแนน: ${score}`;
+        nextBtn.classList.remove('hidden');
+    }
+    
+    function checkSequenceAnswer() {
+        const question = quizData[currentQuestionIndex];
+        const userSequence = Array.from(optionsContainer.children)
+            .map(item => item.textContent.match(/\(([^)]+)\)/)[1])
+            .join('-');
+            
+        const isCorrect = userSequence === question.answer;
+
+        if (isCorrect) {
+            score++;
+            feedbackTitle.textContent = 'ถูกต้อง!';
+            feedbackTitle.className = 'font-bold text-lg mb-2 text-green-600';
+        } else {
+            feedbackTitle.textContent = 'ยังไม่ถูกต้อง';
+            feedbackTitle.className = 'font-bold text-lg mb-2 text-red-600';
+        }
+        
+        explanationText.textContent = `ลำดับที่ถูกต้องคือ: ${question.answer.replace(/-/g, ' -> ')}. ${question.explanation}`;
+        feedbackArea.classList.remove('hidden');
+        
+        Array.from(optionsContainer.children).forEach(item => {
+            item.draggable = false;
+            item.classList.remove('bg-gray-100');
+            item.classList.add(isCorrect ? 'bg-green-100' : 'bg-red-100');
+        });
+
+        sequenceControls.classList.add('hidden');
+        scoreCounter.textContent = `คะแนน: ${score}`;
+        nextBtn.classList.remove('hidden');
+    }
+
+
+    function updateProgress() {
+        const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+        questionCounter.textContent = `ข้อที่ ${currentQuestionIndex + 1} / ${quizData.length}`;
+    }
+    
+    function showResults() {
+        quizContainer.classList.add('hidden');
+        resultsContainer.classList.remove('hidden');
+        
+        const percentage = Math.round((score / quizData.length) * 100);
+        finalScoreEl.textContent = `${score} / ${quizData.length} (${percentage}%)`;
+        
+        let message = "เยี่ยมมาก! มีความเข้าใจในเนื้อหาเป็นอย่างดี";
+        if (percentage < 50) {
+            message = "พยายามอีกนิดนะ! ลองทบทวนเนื้อหาแล้วทำอีกครั้ง";
+        } else if (percentage < 80) {
+            message = "ทำได้ดี! มีความเข้าใจในเนื้อหา";
+        }
+        finalMessageEl.textContent = message;
+    }
+
+    // Drag and Drop handlers for sequence questions
+    function addDragDropHandlers(el) {
+        el.addEventListener('dragstart', handleDragStart, false);
+        el.addEventListener('dragenter', handleDragEnter, false);
+        el.addEventListener('dragover', handleDragOver, false);
+        el.addEventListener('dragleave', handleDragLeave, false);
+        el.addEventListener('drop', handleDrop, false);
+        el.addEventListener('dragend', handleDragEnd, false);
+    }
+    
+    function handleDragStart(e) {
+        dragSrcEl = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+        this.style.opacity = '0.4';
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault(); 
+        }
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        this.classList.add('border-blue-400', 'border-2');
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('border-blue-400', 'border-2');
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) {
+            e.stopPropagation(); 
+        }
+        if (dragSrcEl != this) {
+            dragSrcEl.innerHTML = this.innerHTML;
+            this.innerHTML = e.dataTransfer.getData('text/html');
+        }
+        return false;
+    }
+
+    function handleDragEnd(e) {
+        this.style.opacity = '1';
+        Array.from(optionsContainer.children).forEach(item => {
+            item.classList.remove('border-blue-400', 'border-2');
+        });
+    }
+
+
+    nextBtn.addEventListener('click', () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    });
+    
+    restartBtn.addEventListener('click', startQuiz);
+    checkSequenceBtn.addEventListener('click', checkSequenceAnswer);
+
+    // Initial load
+    startQuiz();
+</script>
+
+</body>
+</html>
