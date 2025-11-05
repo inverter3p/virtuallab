@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Battery Part 2: Characteristics & Management</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Configure Tailwind to use the 'Inter' font family */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the active navigation link, set by JavaScript */
+        nav a.active {
+            @apply bg-orange-600 text-white font-semibold;
+        }
+
+        /* Custom styles for code/formula blocks */
+        .formula {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-full lg:w-72 lg:fixed lg:top-0 lg:left-0 lg:h-full bg-slate-800 text-white p-5 shadow-lg overflow-y-auto">
+        <h1 class="text-2xl font-bold mb-6 pb-4 border-b border-orange-500">
+            EV Battery Part 2
+        </h1>
+        <ul class="space-y-2">
+            <li><a href="#capacity-crate" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Capacity & C-Rate</a></li>
+            <li><a href="#soc-soh" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SOC, DOD, & SOH</a></li>
+            <li><a href="#charging" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Charging Characteristics</a></li>
+            <li><a href="#self-discharge" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Self-Discharge</a></li>
+            <li><a href="#cycle-life" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Cycle Life</a></li>
+            <li><a href="#cycle-life-determination" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Cycle Life Determination</a></li>
+            <li><a href="#modeling" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Battery Modeling</a></li>
+            <li><a href="#matlab-builder" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">MATLAB Battery Builder</a></li>
+            <li><a href="#soc-estimation" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SOC Estimation</a></li>
+            <li><a href="#cell-balancing" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Cell Balancing</a></li>
+            <li><a href="#bms-architecture" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">BMS Architecture</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-72 p-6 md:p-10">
+
+        <!-- Slide 1: Capacity & C-Rate -->
+        <section id="capacity-crate" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Charge Capacity & C-Rate</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Measuring Capacity and Speed</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Capacity (Ah):</strong> Amp-hours. A measure of charge. (e.g., 10 Ah = 1A for 10hrs, or 10A for 1hr).</p>
+                        <p class="mt-2"><strong>C-Rate:</strong> A normalized measure of charge/discharge rate relative to capacity.</p>
+                        <ul class="list-disc list-inside ml-4">
+                            <li><strong>1C =</strong> Charge/discharge in 1 hour.</li>
+                            <li><strong>0.5C =</strong> Charge/discharge in 2 hours.</li>
+                            <li><strong>2C =</strong> Charge/discharge in 30 minutes.</li>
+                        </ul>
+                         <p class="mt-2 text-sm text-slate-500">Note: Real-world capacity is not constant and can decrease at higher discharge rates.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">A battery's charge capacity is measured in <strong>Amp-hours (Ah)</strong>. This tells us how much current the battery can provide over time. To talk about charging and discharging speed in a way that is independent of the battery's size, we use the <strong>C-rate</strong>. A 1C rate means delivering a current equal to the battery's Ah capacity, which would fully discharge it in one hour. A 2C rate means a current twice the Ah capacity, discharging it in half an hour. This is crucial for understanding fast charging specifications.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What does a 1C charge rate mean?</li>
+                            <li>Is a higher C-rate associated with faster or slower charging?</li>
+                            <li>A battery has a capacity of 80 Ah. What is the current (in Amps) for a 0.5C charge? For a 4C discharge?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: SOC, DOD, & SOH -->
+        <section id="soc-soh" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">State of Charge (SOC), Depth of Discharge (DOD), & State of Health (SOH)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Battery Vital Signs</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>State of Charge (SOC):</strong> The current charge level as a percentage of max capacity. 100% is full.</p>
+                        <p class="mt-2"><strong>Depth of Discharge (DOD):</strong> The percentage of capacity discharged. It's the inverse of SOC.</p>
+                        <p class="mt-2 formula">SOC% + DOD% = 100%</p>
+                        <p class="mt-2"><strong>State of Health (SOH):</strong> The battery's current ability to store energy compared to when it was new. (e.g., SOH of 80% means it can only hold 80% of its original capacity).</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Three key parameters define a battery's condition. <strong>SOC</strong> is the 'fuel gauge,' showing the current charge level. <strong>DOD</strong> is the opposite, indicating how much has been used. <strong>SOH</strong> is a measure of the battery's age and degradation, representing its current maximum capacity relative to its capacity when it was new. A battery is often considered at the end of its useful life for an EV when its SOH drops to around 70-80%.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>If a battery is at 15% SOC, what is its DOD?</li>
+                            <li>A new 100 kWh battery now has an SOH of 90%. What is its current maximum energy capacity?</li>
+                            <li>Which of the three parameters (SOC, DOD, SOH) decreases over the long-term life of the battery?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Charging Characteristics -->
+        <section id="charging" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Charging Characteristics</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The CC-CV Method</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>Li-ion batteries use a two-stage charging profile:</p>
+                        <p class="mt-2"><strong>Stage 1: Constant Current (CC)</strong><br>The charger supplies a high, steady current. Voltage rises. This is the fast part of charging (e.g., up to ~80% SOC).</p>
+                        <p class="mt-2"><strong>Stage 2: Constant Voltage (CV)</strong><br>Once the battery hits its max voltage (e.g., 4.2V), the charger holds that voltage. The current tapers off as the battery becomes full.</p>
+                         <p class="mt-2 text-sm text-slate-500">A cell is "fully charged" when voltage is near max and current drops below a threshold (e.g., C/10).</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Charging a Li-ion battery uses a specific two-stage process called <strong>Constant Current, Constant Voltage (CC-CV)</strong>. In the first stage (CC), the charger provides a steady current, allowing the battery to absorb energy quickly. This continues until the cell voltage hits its upper limit. At that point, the charger switches to the second stage (CV), holding the voltage at that maximum level. The current will then gradually decrease as the battery "tops off". This is why charging from 80% to 100% takes much longer than from 20% to 40%.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What do CC and CV stand for in battery charging?</li>
+                             <li>In which stage is the charging current decreasing?</li>
+                             <li>Why does charging from 80% to 100% take much longer than charging from 20% to 40%?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Self-Discharge -->
+        <section id="self-discharge" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Self-Discharge</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Losing Charge Over Time</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li>A natural, internal chemical process, not a manufacturing defect.</li>
+                            <li>The rate of discharge increases significantly with higher temperatures (doubles roughly every 10°C).</li>
+                            <li>A higher State of Charge (SOC) also leads to a higher rate of self-discharge.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">All batteries naturally lose some of their charge over time, even when not connected to anything. This is called <strong>self-discharge</strong>. It's an inherent characteristic of the battery's chemistry. The rate of this discharge is highly dependent on two main factors: temperature and state of charge. A battery stored in a hot environment will lose its charge much faster than one in a cool place. Similarly, a battery stored at 100% SOC will lose charge faster than one stored at 50% SOC, which is why long-term storage recommendations often specify a partial charge.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>Is self-discharge considered a manufacturing defect?</li>
+                             <li>What are the two main factors that increase the rate of self-discharge?</li>
+                             <li>For long-term storage, is it better to leave a battery fully charged or partially charged? Why?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Cycle Life -->
+        <section id="cycle-life" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Cycle Life</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Measuring Battery Lifespan</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Definition of a "Cycle":</strong> A cycle is counted each time the accumulated discharge capacity equals the battery's total design capacity.</p>
+                        <p class="mt-2"><strong>Stress Factors:</strong> Cycle life is reduced by high temperatures, high C-rates, and high Depth of Discharge (DOD).</p>
+                        <p class="mt-2"><strong>End of Life:</strong> A battery's life is often considered "over" for EV applications when its capacity decays to 70-80% of its nominal (original) capacity.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">A battery's <strong>cycle life</strong> is a measure of its longevity. A "cycle" is not simply one instance of charging and discharging. It's a cumulative measure. One cycle is completed every time the total energy discharged adds up to the battery's nominal capacity. For example, discharging a battery by 25% and recharging it four times is equivalent to one full cycle. As a battery ages and undergoes more cycles, its ability to hold a charge gradually decreases. The main factors that accelerate this aging are high temperatures, high charge/discharge rates, and how deeply the battery is discharged on average.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>How is one "cycle" technically defined for a battery?</li>
+                             <li>If you use 20% of your EV's battery each day, how many days will it take to complete one full equivalent cycle?</li>
+                             <li>Name the three main stress factors that reduce a battery's cycle life.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 6: Cycle Life Determination -->
+        <section id="cycle-life-determination" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Cycle Life Determination</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Quantifying Usage</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Rainflow Counting:</strong> An algorithm used to analyze a variable load history (like an EV's SOC over a day) and break it down into a series of simple, countable stress cycles.</p>
+                        <p class="mt-2"><strong>Palmgren-Miner Rule:</strong> A rule to estimate total life consumption. It assumes the damage from different stress cycles is cumulative.</p>
+                        <p class="mt-2 formula">Total Damage = &Sigma; (n<sub>i</sub> / N<sub>fi</sub>)</p>
+                        <p class="mt-1 text-sm text-slate-500">Where n<sub>i</sub> is the number of cycles at a certain stress level, and N<sub>fi</sub> is the total cycles to failure at that level.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">To predict a battery's lifespan under real-world conditions, we need to quantify how it's being used. The <strong>Rainflow counting algorithm</strong> is a standard engineering method for converting a complex SOC history into a set of simple cycles, each with a specific Depth of Discharge. Once we have this data, we can apply the <strong>Palmgren-Miner rule</strong>. This rule helps estimate the total "damage" or life consumed by adding up the damage fractions from all the different types of cycles experienced by the battery. Failure is predicted to occur when the total accumulated damage reaches 1 (or 100%).</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the purpose of the Rainflow counting algorithm?</li>
+                            <li>According to the Palmgren-Miner rule, what does it mean if the total life consumption (LC) equals 1?</li>
+                            <li>A battery can withstand 1000 cycles at 80% DOD. If a car undergoes 300 of these cycles, what is its life consumption ratio for this stress level?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Battery Modeling -->
+        <section id="modeling" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Battery Modeling</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Simulating a Battery</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Why Model?</strong> To predict battery behavior (voltage, temp, SOC) for BMS algorithm development without needing a physical battery.</p>
+                        <p class="mt-2"><strong>Equivalent Circuit Models (ECM):</strong> A common approach using ideal voltage sources, resistors, and capacitors to simulate a real battery.</p>
+                        <p class="mt-2"><strong>Thevenin 2-RC Model:</strong> A popular ECM that captures internal resistance (`R0`) and transient polarization effects (`R1/C1`, `R2/C2`).</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">To develop the complex algorithms inside a BMS, engineers need to simulate how a battery will behave. This is done through <strong>battery modeling</strong>. A popular method is the <strong>Equivalent Circuit Model (ECM)</strong>, which represents the battery's complex chemistry with a simple circuit of resistors and capacitors. For example, a resistor `R0` models the immediate voltage drop when a current is drawn, while RC pairs model slower voltage changes. These models are crucial for accurately estimating a battery's State of Charge in real-time, as their parameters change with temperature and SOC.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>Why do engineers create models of batteries?</li>
+                             <li>In an ECM, what component represents the immediate voltage drop under load?</li>
+                             <li>The model parameters (like resistance) are not constant. What two key factors cause them to change?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: MATLAB Battery Builder -->
+        <section id="matlab-builder" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">MATLAB Battery Builder</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Practical Modeling Application</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>Tools like MATLAB's Simscape Battery Builder allow engineers to:</p>
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                           <li>Virtually construct battery modules and packs from predefined cell types (e.g., 4680 cylindrical).</li>
+                           <li>Define the series and parallel configuration (e.g., 6S 74P).</li>
+                           <li>Simulate electrical and thermal performance under various load conditions.</li>
+                           <li>Choose the simulation detail level (lumped vs. detailed) to balance accuracy and speed.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Modern engineering software provides powerful tools for battery modeling. MATLAB Simscape, for example, has a "Battery Builder" app that allows users to create complex battery pack models from the ground up. An engineer can specify the cell type, how many are in series and parallel per module, and how the modules are arranged in the pack. This virtual pack can then be used in simulations to test BMS control strategies, analyze thermal performance, and predict overall vehicle range and performance before any physical hardware is built.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What is the benefit of using a tool like MATLAB Battery Builder?</li>
+                             <li>What does the term "lumped" resolution mean in a simulation?</li>
+                             <li>Using the specs for a 4680 cell (3.7V, 86.5Wh), how many cells would be needed in series to create a pack with a nominal voltage of ~400V?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: SOC Estimation -->
+        <section id="soc-estimation" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">State of Charge Estimation</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Estimating the "Fuel Level"</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>SOC is not directly measurable. It must be estimated using methods like:</p>
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                           <li><strong>Coulomb Counting:</strong> Integrates the current flowing in/out of the battery. Simple, but prone to drift over time.</li>
+                           <li><strong>Open Circuit Voltage (OCV):</strong> Uses the resting voltage of the battery and a lookup table. Accurate, but the battery must be at rest.</li>
+                           <li><strong>Model-Based (Kalman Filter):</strong> Combines a battery model with real-time measurements to provide a highly accurate estimate, even under dynamic conditions.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">One of the most difficult jobs for a BMS is accurately estimating the SOC. The simplest method is <strong>Coulomb Counting</strong>, which is like using a flow meter to track how much charge has entered or left. While useful, it accumulates errors over time. The <strong>OCV method</strong> is like checking the pressure in a tank, but it only works when the battery has been resting for a long time. The most advanced technique is using a <strong>Kalman Filter</strong>, a sophisticated algorithm that combines the predictions of a battery model with actual measurements to continuously correct and refine the SOC estimate, giving the best of both worlds.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What is the main limitation of the Coulomb Counting method?</li>
+                             <li>Why is the Open Circuit Voltage method often impractical for an EV in motion?</li>
+                             <li>Which estimation method combines a battery model with measurements for the highest accuracy?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: Cell Balancing -->
+        <section id="cell-balancing" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Cell Balancing</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Keeping Cells in Harmony</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>Over time, cell voltages in a series string drift apart. The pack's performance is limited by the weakest cell.</p>
+                        <p class="mt-2"><strong>Passive Balancing:</strong> Bleeds excess charge from the highest-voltage cells through a resistor (as heat) during charging. Simple but inefficient.</p>
+                        <p class="mt-2"><strong>Active Balancing:</strong> Uses small converters to actively move charge from higher-voltage cells to lower-voltage cells. More complex and expensive, but far more efficient.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Due to tiny manufacturing differences, cells in a series string will not age identically, causing their voltages to become imbalanced. This is a problem because the entire pack must stop charging when the first cell hits its max voltage, and stop discharging when the first cell hits its minimum voltage. This reduces the usable capacity of the entire pack. <strong>Cell balancing</strong> is the process of equalizing these voltages. <strong>Passive balancing</strong> is a simple method that burns off extra energy from high cells. <strong>Active balancing</strong> is a more advanced technique that shuttles energy from high cells to low cells, preserving the energy and improving overall pack efficiency.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>Why is cell balancing necessary in a large battery pack?</li>
+                             <li>What is the main disadvantage of passive cell balancing?</li>
+                             <li>Which method, active or passive, would lead to a longer driving range over the life of the vehicle? Why?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: BMS Architecture -->
+        <section id="bms-architecture" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">BMS Architecture</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Core Components</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>A typical BMS has three key parts:</p>
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                           <li><strong>Analog Front-End (AFE):</strong> The "senses". Directly measures cell voltages, temperatures, and current.</li>
+                           <li><strong>Microcontroller (MCU):</strong> The "brain". Processes data from the AFE, runs safety algorithms, and communicates with the rest of the vehicle.</li>
+                           <li><strong>Fuel Gauge IC:</strong> A specialized "co-processor". Runs the complex SOC/SOH estimation algorithms, freeing up the main MCU.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">A modern Battery Management System is a sophisticated piece of electronics with several key components. The <strong>Analog Front-End (AFE)</strong> is the hardware that physically connects to the battery cells to take precise measurements. This raw data is fed to the main <strong>Microcontroller (MCU)</strong>, which acts as the central processor, making decisions and controlling safety features like contactors. To handle the computationally intensive task of SOC estimation, many systems use a dedicated <strong>Fuel Gauge IC</strong>. This specialized chip runs advanced algorithms, providing accurate state estimation and leaving the MCU free to handle critical safety and communication tasks.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What is the main role of the AFE in a BMS?</li>
+                             <li>Why might a dedicated Fuel Gauge IC be used instead of running all calculations on the main MCU?</li>
+                             <li>Which component (AFE, MCU, or Fuel Gauge) is responsible for communicating the battery's status to the car's dashboard?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all slide sections and navigation links
+            const sections = document.querySelectorAll('.slide-section');
+            const navLinks = document.querySelectorAll('nav a');
+
+            if (!sections.length || !navLinks.length) {
+                console.warn('Observer script: Could not find sections or nav links.');
+                return;
+            }
+
+            const observerOptions = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0.4 // Trigger when 40% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // When a section is 40% visible
+                    if (entry.isIntersecting) {
+                        // Get the ID of the visible section
+                        const visibleSectionId = entry.target.id;
+
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+
+                        // Find the corresponding nav link and add the 'active' class
+                        const activeLink = document.querySelector(`nav a[href="#${visibleSectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each slide section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

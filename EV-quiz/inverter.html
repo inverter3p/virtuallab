@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Power Inverter</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Configure Tailwind to use the 'Inter' font family */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the active navigation link, set by JavaScript */
+        nav a.active {
+            @apply bg-orange-600 text-white font-semibold;
+        }
+
+        /* Custom styles for code/formula blocks */
+        .formula {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-full lg:w-72 lg:fixed lg:top-0 lg:left-0 lg:h-full bg-slate-800 text-white p-5 shadow-lg overflow-y-auto">
+        <h1 class="text-2xl font-bold mb-6 pb-4 border-b border-orange-500">
+            EV Power Inverter
+        </h1>
+        <ul class="space-y-2">
+            <li><a href="#intro" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Introduction</a></li>
+            <li><a href="#spwm" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SPWM Limitation</a></li>
+            <li><a href="#svm" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SVM Advantage</a></li>
+            <li><a href="#dc-voltage" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">DC Voltage Levels</a></li>
+            <li><a href="#foc" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Vector Control (FOC)</a></li>
+            <li><a href="#svm-hexagon" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SVM Explained</a></li>
+            <li><a href="#svm-algorithm" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SVM Algorithm</a></li>
+            <li><a href="#ref-designs" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Reference Designs</a></li>
+            <li><a href="#what-is-sic" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">What is SiC?</a></li>
+            <li><a href="#comparison" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Performance Comparison</a></li>
+            <li><a href="#attributes" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Inverter Attributes</a></li>
+            <li><a href="#losses" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Power Device Losses</a></li>
+            <li><a href="#effect-of-losses" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Effect of Losses</a></li>
+            <li><a href="#switching-freq" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Switching Frequency</a></li>
+            <li><a href="#integration" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Integration</a></li>
+            <li><a href="#design-example" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Design Example</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-72 p-6 md:p-10">
+
+        <!-- Slide 1: Introduction -->
+        <section id="intro" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">EV Power Inverter and PMSM Drives</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Overview</h3>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        <p class="font-semibold">DR. NITHIPHAT TEERAKAWANICH</p>
+                        <p>Focus on EV power inverters and PMSM drives.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">This presentation provides an overview of EV power inverters, focusing on Permanent Magnet Synchronous Motor (PMSM) drives.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the main topic of this presentation?</li>
+                            <li>Who is the presenter?</li>
+                            <li>What specific type of motor drive is the focus?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: SPWM -->
+        <section id="spwm" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">2-Level Inverter with Sinusoidal PWM (SPWM)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">SPWM Limitation</h3>
+                    <p class="mb-4">Peak Line-to-Line voltage is limited.</p>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left">
+                       V<sub>L-L, peak</sub> = 0.866 &times; V<sub>DC</sub>
+                    </div>
+                    <div class="p-4 bg-red-50 border border-red-300 rounded-lg text-left mt-4">
+                        <p class="text-red-700 font-semibold">This means the full potential of the high-voltage battery is not utilized.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">A 2-level inverter using Sinusoidal Pulse Width Modulation (SPWM) generates a waveform where the peak Line-to-Line voltage is limited to 86.6% of the DC bus voltage (VDC). This means that the full potential of the high-voltage battery is not utilized.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is a significant limitation of a 2-Level Inverter with SPWM?</li>
+                            <li>What is the formula for the peak Line-to-Line voltage in this type of inverter?</li>
+                            <li>What does this limitation imply for the use of the HV Battery?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: SVM -->
+        <section id="svm" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">2-Level Inverter with Space Vector Modulation (SVM)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">SVM Advantage</h3>
+                    <p class="mb-4">Adds a 3rd harmonic to boost output.</p>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left">
+                       V<sub>L-L, peak</sub> = 1.000 &times; V<sub>DC</sub>
+                    </div>
+                    <div class="p-4 bg-green-50 border border-green-300 rounded-lg text-left mt-4">
+                        <p class="text-green-700 font-semibold">Results in a ~15.5% increase in output voltage and full utilization of the battery's VDC rating.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">By using Space Vector Modulation (SVM), the inverter can generate a waveform that includes a 3rd harmonic component. In a balanced three-phase system, this harmonic is cancelled out, which allows for a higher fundamental output voltage. This method enables the peak Line-to-Line voltage to reach 100% of the VDC, resulting in a ~15.5% increase in output voltage compared to SPWM.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>How does SVM improve upon SPWM in a 2-level inverter?</li>
+                            <li>What is the role of the 3rd harmonic in SVM?</li>
+                            <li>What is the percentage increase in output voltage when using SVM?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: DC Voltage Levels -->
+        <section id="dc-voltage" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">DC Voltage Level Considerations</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Affected Components</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li>Motor Design</li>
+                            <li>Battery Capacity</li>
+                            <li>Inverter Power Devices</li>
+                            <li>Charger</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The level of DC voltage has a significant impact on several key components of an electric vehicle's powertrain. This includes the design of the motor, the capacity of the battery, the selection of power devices within the inverters, and the charger.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What aspects of an EV are affected by the DC voltage level?</li>
+                            <li>Why would motor design be influenced by DC voltage?</li>
+                            <li>How does the DC voltage level relate to the choice of power devices?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: FOC -->
+        <section id="foc" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Vector Control of PMSM</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Field-Oriented Control (FOC)</h3>
+                    <p class="mb-4">Creates a rotating magnetic field.</p>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <p><strong>Representations:</strong></p>
+                        <ul class="list-disc list-inside ml-4 mt-1">
+                            <li>ABC (stator)</li>
+                            <li>&alpha;&beta; (stationary)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Field-Oriented Control (FOC) is a method used for the vector control of Permanent Magnet Synchronous Motors (PMSM). It involves creating a rotating magnetic field, which can be represented by both ABC and &alpha;&beta; space vectors. This control strategy is crucial for achieving high performance in PMSM drives.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is another name for Vector Control of a PMSM?</li>
+                            <li>What are the two different space vector representations mentioned?</li>
+                            <li>What is the primary goal of FOC?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: SVM Hexagon -->
+        <section id="svm-hexagon" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Space Vector Modulation (SVM)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">SVM Hexagon</h3>
+                    <p class="mb-4">Switching configurations (S1, S3, S5) create specific voltage vectors.</p>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Diagram of the Space Vector Hexagon]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">SVM is a technique where different switching configurations of the inverter's power devices (S1, S3, S5) create specific voltage vectors. These vectors determine the magnitude and direction of the voltage applied to the motor terminals, which can be visualized in a space vector hexagon. This allows for precise control over the motor's operation.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>How are different voltage vectors generated in SVM?</li>
+                            <li>What is a space vector hexagon used for?</li>
+                            <li>What is the maximum peak phase voltage achieved with SVM?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: SVM Algorithm -->
+        <section id="svm-algorithm" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Space Vector Modulation (SVM) Algorithm</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Algorithm Steps</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <ol class="list-decimal list-inside space-y-2">
+                            <li>Determine voltage sector.</li>
+                            <li>Calculate "ON" time for sequence.</li>
+                            <li>Generate gate pulse signals (via MCU).</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The SVM algorithm consists of several key steps. First, the voltage sector is determined. Then, the "ON" time for the switching sequence in each sector is calculated. This involves using trigonometry to solve for coefficients that determine the magnitude of two adjacent space vectors. Finally, this information is used to generate the gate pulse signals for the inverter's switches, which can be implemented using a Microcontroller Unit (MCU).</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the main steps of the SVM algorithm?</li>
+                            <li>How is the "ON" time for the switching sequence calculated?</li>
+                            <li>What hardware component is typically used to implement the SVM algorithm?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Reference Designs -->
+        <section id="ref-designs" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Reference Designs of EV Power Inverters</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Power Module Evolution</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <p><strong>Examples:</strong></p>
+                        <ul class="list-disc list-inside ml-4 mt-1 space-y-1">
+                            <li>Fuji Electric 6 IGBT Module</li>
+                            <li>Starpower SiC MOSFET Module</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">This section showcases examples of EV power inverter reference designs, including different generations of IGBT and SiC MOSFET power modules. It highlights the evolution of these components, such as the Fuji Electric 6 IGBT Switches module and the Starpower SiC MOSFET Power Module.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the two main types of power modules mentioned?</li>
+                            <li>What is an example of an IGBT power module cited?</li>
+                            <li>What is an example of a SiC MOSFET power module cited?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: What is SiC? -->
+        <section id="what-is-sic" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">What is SiC?</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Silicon Carbide (SiC)</h3>
+                    <p>A compound semiconductor (Silicon + Carbon).</p>
+                    <p>Powerful alternative to traditional Silicon (Si).</p>
+                    <p>Unique atomic structure gives exceptional properties.</p>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Silicon Carbide (SiC) is a compound semiconductor material that is becoming a powerful alternative to traditional silicon (Si) in power electronics. Its unique atomic structure, formed by combining silicon and carbon atoms, gives it exceptional properties compared to silicon.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What does SiC stand for in power electronics?</li>
+                            <li>What elements is SiC composed of?</li>
+                            <li>What is the primary advantage of SiC over traditional silicon?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: Comparison -->
+        <section id="comparison" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Performance Comparison</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">SiC MOSFET vs. Si-IGBT</h3>
+                    <p class="mb-4">Compared in a 690V, 190kVA grid-tied converter.</p>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <p><strong>Key Metrics:</strong></p>
+                        <ul class="list-disc list-inside ml-4 mt-1">
+                            <li>Efficiency</li>
+                            <li>Switching Losses</li>
+                            <li>Thermal Performance</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">When comparing SiC MOSFETs and Si-IGBTs in a 690V, 190kVA grid-tied industrial two-level voltage source converter, performance differences become evident. These comparisons often focus on efficiency, switching losses, and thermal performance.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the two types of power devices being compared?</li>
+                            <li>What is the application context for this comparison?</li>
+                            <li>What are some of the key performance metrics used?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Attributes -->
+        <section id="attributes" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Required Attributes of EV Inverters</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Key Requirements</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <ul class="list-disc list-inside ml-4 space-y-2 font-semibold">
+                            <li>High Efficiency (Maximize range)</li>
+                            <li>High Power Density (Compact)</li>
+                            <li>Low Cost</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The key requirements for EV inverters are high efficiency, high power density, and low cost. Efficiency is crucial for maximizing the vehicle's range by minimizing energy loss. High power density, which relates to being lightweight and compact, is achieved through reduced losses and smaller passive components like inductors and capacitors.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the three main required attributes of EV inverters?</li>
+                            <li>Why is high efficiency important for an EV inverter?</li>
+                            <li>How is high power density achieved in an EV inverter?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 12: Losses -->
+        <section id="losses" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Losses in Power Devices</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Two Main Types of Loss</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <p><strong>1. Conduction Loss:</strong></p>
+                        <p class="text-sm ml-4">Occurs when device is "on".</p>
+                        <p class="mt-2"><strong>2. Switching Loss:</strong></p>
+                        <p class="text-sm ml-4">Occurs during "on" &harr; "off" transition.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Power devices in inverters experience two main types of losses: conduction loss and switching loss. Conduction loss occurs when the device is in the "on" state and conducting current. Switching loss occurs during the transition between the "on" and "off" states. These losses contribute to the overall inefficiency of the inverter and generate heat.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the two primary types of losses in power devices?</li>
+                            <li>When does conduction loss occur?</li>
+                            <li>What is the consequence of these losses in an inverter?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 13: Effect of Losses -->
+        <section id="effect-of-losses" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Effect of Losses in Power Devices</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Consequences of Losses</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li>Reduced inverter efficiency.</li>
+                            <li>Temperature rise (heat).</li>
+                            <li>Thermal cycling &rArr; degrades module lifecycle.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The losses in power devices have a direct impact on the inverter's efficiency and lead to a temperature rise. This thermal cycling can degrade the lifecycle of the power modules. Therefore, managing these losses is crucial for the longevity and reliability of the inverter.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are two main effects of losses in power devices?</li>
+                            <li>How do losses affect the lifespan of power modules?</li>
+                            <li>Why is thermal management important in an EV inverter?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Switching Frequency -->
+        <section id="switching-freq" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Switching Frequency Considerations</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Trade-offs</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <p><strong>Higher Frequency &uarr;</strong></p>
+                        <ul class="list-disc list-inside ml-4 mt-1">
+                            <li>Better output waveform quality</li>
+                            <li>Increased switching losses</li>
+                            <li>Increased EMI (Interference)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The choice of switching frequency in an inverter involves a trade-off between several factors. A higher switching frequency can improve the quality of the output waveform but also increases switching losses. Additionally, it can lead to electromagnetic interference (EMI) issues that need to be addressed in the design.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the main considerations when choosing a switching frequency?</li>
+                            <li>What is the benefit of a higher switching frequency on the output?</li>
+                            <li>What is a potential negative consequence of a high switching frequency?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 15: Integration -->
+        <section id="integration" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Other Design Integration Considerations</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Critical Components</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li>DC Link Capacitor (smooths voltage)</li>
+                            <li>Bus Bar (power distribution)</li>
+                            <li>Cooling Fixture (thermal mgmt)</li>
+                            <li>Sensors (monitoring, control)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Beyond the core power electronics, several other components are critical for a complete and functional EV inverter design. These include the DC link capacitor, which smooths the DC voltage, the bus bar for power distribution, the cooling fixture for thermal management, and various sensors for monitoring and control.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are some other important design considerations for an EV inverter?</li>
+                            <li>What is the function of the DC link capacitor?</li>
+                            <li>Why is a cooling fixture an important part of the inverter design?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 16: Design Example -->
+        <section id="design-example" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Example of Design Integration</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">150kW Traction Inverter</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 inline-block">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li>Uses discrete SiC FETs</li>
+                            <li>Top-side-cooled package</li>
+                            <li>High power density</li>
+                            <li>Efficient thermal management</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">This section points to a practical example of a 150kW Traction Inverter Design that utilizes discrete SiC FETs in a top-side-cooled package. This demonstrates a modern approach to achieving high power density and efficient thermal management in EV inverters.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the power rating of the example traction inverter?</li>
+                            <li>What type of power device is used in this design?</li>
+                            <li>What is the cooling strategy mentioned for this inverter design?</li>
+                        </Same ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all slide sections and navigation links
+            const sections = document.querySelectorAll('.slide-section');
+            const navLinks = document.querySelectorAll('nav a');
+
+            if (!sections.length || !navLinks.length) {
+                console.warn('Observer script: Could not find sections or nav links.');
+                return;
+            }
+
+            const observerOptions = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0.4 // Trigger when 40% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // When a section is 40% visible
+                    if (entry.isIntersecting) {
+                        // Get the ID of the visible section
+                        const visibleSectionId = entry.target.id;
+
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+
+                        // Find the corresponding nav link and add the 'active' class
+                        const activeLink = document.querySelector(`nav a[href="#${visibleSectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each slide section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

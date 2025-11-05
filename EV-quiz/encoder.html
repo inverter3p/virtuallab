@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>Motor Encoders: Decoding Motion</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Configure Tailwind to use the 'Inter' font family */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the active navigation link, set by JavaScript */
+        nav a.active {
+            @apply bg-orange-600 text-white font-semibold;
+        }
+
+        /* Custom styles for code/formula blocks */
+        .formula {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-full lg:w-72 lg:fixed lg:top-0 lg:left-0 lg:h-full bg-slate-800 text-white p-5 shadow-lg overflow-y-auto">
+        <h1 class="text-2xl font-bold mb-6 pb-4 border-b border-orange-500">
+            Motor Encoders
+        </h1>
+        <ul class="space-y-2">
+            <li><a href="#intro" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">What is an Encoder?</a></li>
+            <li><a href="#types" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Types of Encoders</a></li>
+            <li><a href="#incremental" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Incremental Encoders</a></li>
+            <li><a href="#absolute" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Absolute Encoders</a></li>
+            <li><a href="#gray-vs-binary" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Gray vs. Binary Code</a></li>
+            <li><a href="#resolution-inc" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Incremental Resolution</a></li>
+            <li><a href="#resolution-abs" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Absolute Resolution</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-72 p-6 md:p-10">
+
+        <!-- Slide 1: Introduction -->
+        <section id="intro" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">What is a Motor Encoder?</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Decoding Motion</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li>Converts mechanical motion (rotation) into an electrical signal.</li>
+                            <li>Provides feedback on position, speed, and direction.</li>
+                            <li>Essential for closed-loop control systems.</li>
+                            <li>Enables precise motion control.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">A motor encoder is a critical sensor that translates the physical movement of a motor shaft—such as rotation—into an electrical signal. This signal provides vital feedback about the motor's position, speed, and direction of rotation. This feedback is the cornerstone of closed-loop control systems, which allow for highly precise and automated control of motion in applications ranging from robotics to CNC machines.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the primary function of a motor encoder?</li>
+                            <li>What three key pieces of information does an encoder provide?</li>
+                            <li>Why is an encoder essential for a "closed-loop" control system?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: Types of Encoders -->
+        <section id="types" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Types of Encoders</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Two Main Categories</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-white rounded-md border border-slate-300">
+                            <p><strong>1. Incremental Encoders</strong><br>Generate pulses during rotation. Measures *relative* position change.</p>
+                        </div>
+                        <div class="p-4 bg-white rounded-md border border-slate-300">
+                            <p><strong>2. Absolute Encoders</strong><br>Provide a unique digital code for each position. Measures *absolute* position.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Motor encoders are broadly categorized into two main types: incremental and absolute. An incremental encoder outputs a stream of pulses as the motor turns, which can be used to determine speed and relative position change. An absolute encoder, on the other hand, outputs a unique digital word (code) for every distinct position of the shaft, meaning it always knows its exact position, even immediately after being powered on.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the fundamental difference in the output of an incremental vs. an absolute encoder?</li>
+                            <li>Which type would you choose if the exact position must be known at startup? Why?</li>
+                            <li>If an incremental encoder is powered off and the motor turned, what happens to the position info?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 3: Incremental Encoders -->
+        <section id="incremental" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Incremental Encoders in Detail</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Quadrature Output</h3>
+                    <p class="mb-4 text-center">Uses a disk with evenly spaced slots.</p>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Channel A & B:</strong> Two pulse trains 90° out of phase. The lead/lag relationship determines the direction of rotation.</p>
+                        <p class="mt-2"><strong>Channel Z (Index):</strong> A single pulse that occurs once per revolution, used for homing or reference.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Incremental encoders work by shining a light through a slotted disk onto photodetectors. This generates two square wave pulse signals, known as Channel A and Channel B. These channels are 90 degrees out of phase, a format called "quadrature." By observing which channel's pulse leads the other, the control system can determine the direction of rotation. The frequency of the pulses determines the speed. Many also include a third "Z" or "Index" channel that produces a single pulse per revolution for establishing a reference point.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>How is the direction of rotation determined using the A and B channels?</li>
+                            <li>What is the purpose of the Z (or Index) channel?</li>
+                            <li>An encoder has 2000 PPR. If the shaft rotates 2.5 times, how many pulses are counted on Channel A?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 4: Absolute Encoders -->
+        <section id="absolute" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Absolute Encoders in Detail</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Unique Positional Code</h3>
+                    <p class="mb-4 text-center">Uses a coded disk with unique patterns for each position.</p>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li>Multiple sensors read the pattern simultaneously.</li>
+                            <li>The output is a digital word (e.g., Binary or Gray code).</li>
+                            <li class="font-semibold"><strong>Key Advantage:</strong> Retains position information even after power loss.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Unlike incremental encoders, the disk in an absolute encoder features a unique pattern for each angular position. Multiple sensors read this pattern to generate a parallel digital output or "word" that unambiguously identifies the shaft's position. This means that as soon as the encoder is powered on, it can report its exact position without needing to move to a reference point. This is a crucial feature in applications where losing position during a power cycle would be catastrophic.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the main advantage of an absolute encoder over an incremental one?</li>
+                            <li>What feature of the absolute encoder's disk allows it to provide a unique code?</li>
+                            <li>A 4-bit encoder has 16 positions (360°/16 = 22.5° each). What angular range does code '1000' (8) correspond to?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Gray vs Binary -->
+        <section id="gray-vs-binary" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Absolute Encoders: Gray Code vs. Binary Code</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Minimizing Errors</h3>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-red-50 border border-red-300 rounded-lg">
+                            <p><strong>Binary Code Issue: Multiple Bit Changes</strong></p>
+                            <p class="mt-2 text-sm">When changing from 7 (0111) to 8 (1000), all four bits change. A slight misalignment can cause a massive error (e.g., reading 1111 = 15).</p>
+                        </div>
+                        <div class="p-4 bg-green-50 border border-green-300 rounded-lg">
+                            <p><strong>Gray Code Advantage: One Bit Change</strong></p>
+                            <p class="mt-2 text-sm">Gray code is designed so that only one bit changes between adjacent positions. This eliminates transitional errors, making it much more reliable.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Absolute encoders can use different coding schemes. Standard binary code is problematic because moving from one position to the next (e.g., 7 to 8) may require multiple bits to change simultaneously. Any slight sensor timing error can lead to a completely wrong position being reported. Gray code solves this by ensuring consecutive values differ by only one bit. This ensures that even with minor timing issues, the reported position will either be the old one or the new one, never a value that is far off.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the primary problem with using standard binary code in an encoder?</li>
+                            <li>How does Gray code solve this problem and improve reliability?</li>
+                            <li>When binary transitions from `0011` (3) to `0100` (4), how many bits change?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 6: Incremental Resolution -->
+        <section id="resolution-inc" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Incremental Encoder: Resolution & Speed</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Resolution (PPR)</h3>
+                    <p class="mb-4">Measured in <strong>Pulses Per Revolution (PPR)</strong>.</p>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left mb-4">
+                        Angular Resolution (°) = 360 / PPR
+                    </div>
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Maximum Speed</h3>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left">
+                        Max RPM = (Op. Freq. [Hz] &times; 60) / PPR
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The resolution of an incremental encoder is defined by its Pulses Per Revolution (PPR)—the number of pulses it generates on each channel for one full 360° turn. A higher PPR means a higher resolution. However, the PPR is linked to the maximum speed the encoder can track. The encoder's electronics have a maximum operating frequency (in Hz). This frequency, combined with the PPR, determines the maximum rotational speed (RPM) the encoder can handle before it starts missing pulses.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the angular resolution (in degrees) of an encoder with 3600 PPR?</li>
+                            <li>What two factors determine the maximum RPM of an incremental encoder?</li>
+                            <li>An encoder is rated for 200 kHz and has 4000 PPR. What is the max speed in RPM?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 7: Absolute Resolution -->
+        <section id="resolution-abs" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Absolute Encoder: Resolution & Selection</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Resolution (Bits)</h3>
+                    <p class="mb-4">Determined by the number of output <strong>bits (n)</strong>.</p>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left mb-4">
+                        Number of Positions = 2<sup>n</sup>
+                    </div>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left mb-4">
+                        Angular Resolution (°) = 360 / 2<sup>n</sup>
+                    </div>
+                    <div class="p-4 bg-white rounded-md border border-slate-300">
+                        <strong>Choosing an Encoder:</strong><br>
+                        Resolution, Environmental Factors, Output Interface
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">For an absolute encoder, resolution is determined by the number of bits in its digital output word. An encoder with 'n' bits can resolve 2<sup>n</sup> unique positions within a single turn. For example, a 10-bit encoder has 1024 positions, while a 16-bit encoder has 65,536. When selecting an encoder, resolution is key, but one must also consider environmental factors (like temperature) and the output interface (e.g., parallel, SSI, CANopen) to ensure it is compatible with the control system.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>How is the number of unique positions for an absolute encoder calculated?</li>
+                            <li>Besides resolution, name two other factors important when choosing an encoder.</li>
+                            <li>What is the minimum number of bits required for an angular resolution of at least 0.1 degrees?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all slide sections and navigation links
+            const sections = document.querySelectorAll('.slide-section');
+            const navLinks = document.querySelectorAll('nav a');
+
+            if (!sections.length || !navLinks.length) {
+                console.warn('Observer script: Could not find sections or nav links.');
+                return;
+            }
+
+            const observerOptions = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0.4 // Trigger when 40% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // When a section is 40% visible
+                    if (entry.isIntersecting) {
+                        // Get the ID of the visible section
+                        const visibleSectionId = entry.target.id;
+
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+
+                        // Find the corresponding nav link and add the 'active' class
+                        const activeLink = document.querySelector(`nav a[href="#${visibleSectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each slide section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

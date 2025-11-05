@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Li-ion Battery in EVs: Terminology and Basics</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Configure Tailwind to use the 'Inter' font family */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the active navigation link, set by JavaScript */
+        nav a.active {
+            @apply bg-orange-600 text-white font-semibold;
+        }
+
+        /* Custom styles for code/formula blocks */
+        .formula {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-full lg:w-72 lg:fixed lg:top-0 lg:left-0 lg:h-full bg-slate-800 text-white p-5 shadow-lg overflow-y-auto">
+        <h1 class="text-2xl font-bold mb-6 pb-4 border-b border-orange-500">
+            EV Battery Basics
+        </h1>
+        <ul class="space-y-2">
+            <li><a href="#intro" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Introduction</a></li>
+            <li><a href="#news" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Battery Technology News</a></li>
+            <li><a href="#terminology" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Core Terminology</a></li>
+            <li><a href="#cell-components" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Inside a Li-ion Cell</a></li>
+            <li><a href="#chemistries" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Types of Li-ion Chemistries</a></li>
+            <li><a href="#form-factors" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Cell Form Factors</a></li>
+            <li><a href="#key-factors" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Key Performance Factors</a></li>
+            <li><a href="#cell-to-pack" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">From Cell to Pack</a></li>
+            <li><a href="#bms" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Battery Management System</a></li>
+            <li><a href="#thermal" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Thermal Management</a></li>
+            <li><a href="#capacity-crate" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Capacity & C-Rate</a></li>
+            <li><a href="#soc-dod" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SoC & DoD</a></li>
+            <li><a href="#charging" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Charging Characteristics</a></li>
+            <li><a href="#self-discharge" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Self-Discharge</a></li>
+            <li><a href="#cycle-life" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Cycle Life</a></li>
+            <li><a href="#modeling" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Battery Modeling</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-72 p-6 md:p-10">
+
+        <!-- Slide 1: Introduction -->
+        <section id="intro" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Li-ion Battery in EVs</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-800 text-white rounded-lg p-6 flex flex-col justify-center items-center h-full">
+                    <h1 class="text-5xl font-bold text-white text-center">Li-ion Battery in EVs</h1>
+                    <p class="text-2xl font-light text-slate-200 mt-4">Terminology and Battery Basics</p>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Welcome to this overview of Lithium-ion batteries, the technology that powers the electric vehicle revolution. This presentation will cover the fundamental terminology, the core components of a battery cell, the different types of batteries in use, and how individual cells are assembled into the massive packs that power an EV.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Why are Li-ion batteries the dominant choice for modern electric vehicles?</li>
+                            <li>What do you think is the biggest challenge facing EV battery technology today?</li>
+                            <li>What is the difference between a battery "cell", "module", and "pack"?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 2: In the News -->
+        <section id="news" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">What's in the News?</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Rapid Innovation</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>Energy Density:</strong> CATL announces 500 Wh/kg condensed battery.</li>
+                            <li><strong>Charging Speed:</strong> CATL "Shenxing" 4C LFP battery (400km in 10 mins).</li>
+                            <li><strong>New Chemistries:</strong> BYD builds a 30 GWh Sodium-Ion battery factory.</li>
+                            <li><strong>Future Tech:</strong> Toyota advances its solid-state battery roadmap.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The field of battery technology is one of the most dynamic areas of research and development today. News from major manufacturers like CATL, Toyota, and BYD highlights a multi-faceted push for improvement. Key areas of innovation include increasing energy density (for longer range), dramatically speeding up charging times, developing alternative chemistries like sodium-ion to reduce reliance on lithium, and advancing next-generation solid-state batteries for improved safety and performance.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the three main areas of battery innovation mentioned?</li>
+                            <li>Why is a company like BYD investing in Sodium-Ion batteries?</li>
+                            <li>CATL's 500 Wh/kg battery: for a 100 kWh pack, what would the cells weigh? (100 kWh = 100,000 Wh)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 3: Terminology -->
+        <section id="terminology" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Core Terminology</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Language of Batteries</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>Physical:</strong> Cell Type, Form Factor, Module, Pack</li>
+                            <li><strong>Chemical:</strong> Anode, Cathode, Electrolyte, Separator</li>
+                            <li><strong>Electrical:</strong> Capacity (Ah), Energy Density (Wh/kg), Power Density (W/kg), C-Rate, Cycle Life, BMS</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">To understand EV batteries, we first need to learn the language. The terminology can be grouped into three categories. <strong>Physical</strong> terms describe the construction, from the smallest 'cell' to the 'module' and finally the 'pack'. <strong>Chemical</strong> terms refer to the internal components. <strong>Electrical</strong> terms describe its performance—how much energy it stores, how fast it can be charged/discharged, and how long it lasts.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the difference between Energy Density and Power Density?</li>
+                            <li>What does "BMS" stand for?</li>
+                            <li>Explain the hierarchy of Cell, Module, and Pack.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Inside a Cell -->
+        <section id="cell-components" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Inside a Li-ion Cell</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Key Components</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>Cathode (+):</strong> Stores lithium when discharged. Material (NMC, LFP) determines capacity/voltage.</li>
+                            <li><strong>Anode (-):</strong> Stores lithium when charged. Typically graphite.</li>
+                            <li><strong>Electrolyte:</strong> Liquid medium for ion flow.</li>
+                            <li><strong>Separator:</strong> Physical barrier to prevent short circuits.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Every Li-ion cell contains four key components. The <strong>Cathode</strong> and <strong>Anode</strong> store the lithium. The <strong>Electrolyte</strong> is the transport medium for ions. The <strong>Separator</strong> is a critical safety component that allows ions to pass but keeps the electrodes from touching. During discharge (powering the car), lithium ions travel from the anode to the cathode. During charging, the process is reversed.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the function of the separator?</li>
+                            <li>During charging, do ions move from cathode to anode or anode to cathode?</li>
+                            <li>What would happen if the anode and cathode made direct contact?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Chemistries -->
+        <section id="chemistries" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Types of Li-ion Chemistries</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Balancing the Trade-offs</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>NMC (Nickel Manganese Cobalt):</strong> Good balance of high energy density and decent cycle life.</li>
+                            <li><strong>LFP (Lithium Iron Phosphate):</strong> Prioritizes safety, long cycle life, and low cost (no cobalt). Lower energy density.</li>
+                            <li><strong>NCA (Nickel Cobalt Aluminum):</strong> High energy and long life, but more expensive and higher safety concerns.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">There is no "best" battery chemistry; each is a compromise. The cathode material is key. <strong>NMC</strong> is a common all-rounder. <strong>LFP</strong> is popular for standard-range vehicles where its safety, long life, and low cost are advantages. <strong>NCA</strong> is a high-performance option, famously used by Tesla, that pushes for maximum energy density.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Why is LFP often chosen for standard-range EVs?</li>
+                            <li>What is the main drawback of LFP compared to NMC?</li>
+                            <li>For a high-performance sports EV, would you choose LFP or NCA? Why?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Form Factors -->
+        <section id="form-factors" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Cell Form Factors</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Shape and Structure</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>Cylindrical:</strong> (e.g., 18650, 4680). Excellent thermal performance. Used by Tesla.</li>
+                            <li><strong>Prismatic:</strong> Rectangular, can-like shape. Space-efficient for packing.</li>
+                            <li><strong>Pouch:</strong> Flexible, soft case. Best packaging efficiency but needs structural support.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Battery cells are made in three primary shapes. <strong>Cylindrical</strong> cells are robust and easy to manufacture. <strong>Prismatic</strong> cells are hard-cased rectangles that stack easily. <strong>Pouch</strong> cells are like a sealed foil bag, offering design flexibility, but they need to be protected and constrained within the pack structure to prevent swelling.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the three main cell form factors?</li>
+                            <li>What is a key advantage of cylindrical cells?</li>
+                            <li>Why does a pouch cell need more structural support than a prismatic cell?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 7: Key Factors -->
+        <section id="key-factors" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Key Performance Factors</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Five Pillars</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>Energy Density (Wh/kg):</strong> Determines vehicle range.</li>
+                            <li><strong>Power Density (W/kg):</strong> Affects acceleration.</li>
+                            <li><strong>Cycle Life:</strong> How many times it can be charged/discharged.</li>
+                            <li><strong>Safety:</strong> Thermal stability and risk of fire.</li>
+                            <li><strong>Cost ($/kWh):</strong> The single biggest factor in the price of an EV.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">When evaluating an EV battery, we look at five key factors. <strong>Energy density</strong> dictates range. <strong>Power density</strong> affects acceleration. <strong>Cycle life</strong> determines lifespan. <strong>Safety</strong> focuses on preventing thermal runaway. <strong>Cost</strong> remains a critical barrier to EV adoption.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Which key factor determines an EV's driving range?</li>
+                            <li>Which factor affects its 0-60 mph acceleration time?</li>
+                            <li>A 75 kWh battery pack weighs 480 kg. What is its pack-level energy density in Wh/kg?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Cell to Pack -->
+        <section id="cell-to-pack" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">From Cell to Pack: The Tesla Model S Example</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Building a Battery Pack</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Cell:</strong> A single 18650 cell (~3.7V, ~3.4Ah)</p>
+                        <p class="mt-2"><strong>Module (6S 74P):</strong></p>
+                        <ul class="list-disc list-inside ml-4">
+                            <li>6 cells in <strong>Series</strong> (Voltage &uarr;: 6 * 3.7V ≈ 22.2V)</li>
+                            <li>74 cells in <strong>Parallel</strong> (Capacity &uarr;: 74 * 3.4Ah ≈ 251.6Ah)</li>
+                        </ul>
+                        <p class="mt-2"><strong>Pack:</strong> 16 modules in <strong>Series</strong> (16 * 22.2V ≈ 355V).</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">An EV pack is an assembly of thousands of cells. In the classic Tesla Model S, cells are first connected in <strong>parallel</strong> to increase capacity (a "brick"). Bricks are then connected in <strong>series</strong> to increase voltage. 74 cells in parallel (74P) are connected to 6 such groups in series (6S) to form one <strong>module</strong>. Finally, 16 modules are connected in series to create the high-voltage <strong>pack</strong>.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the purpose of connecting battery cells in series?</li>
+                            <li>What is the purpose of connecting battery cells in parallel?</li>
+                            <li>Using the cell specs (3.7V, 3.4Ah), calculate the voltage and capacity of one 6S 74P module.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: BMS -->
+        <section id="bms" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Battery Management System (BMS)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Brain of the Battery</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-decimal list-inside ml-4 space-y-2">
+                            <li><strong>Protection:</strong> Prevents over-charge, over-discharge, over-current, and over-temperature.</li>
+                            <li><strong>Monitoring:</strong> Calculates State of Charge (SoC) and State of Health (SoH).</li>
+                            <li><strong>Cell Balancing:</strong> Ensures all cells in series have an equal voltage.</li>
+                            <li><strong>Communication:</strong> Reports battery status to the rest of the vehicle.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The Battery Management System (BMS) is an electronic brain supervising the pack. Its most critical job is <strong>protection</strong>, keeping cells within safe limits. It <strong>monitors</strong> voltage and temperature to estimate the "fuel level" (SoC) and lifespan (SoH). A key function is <strong>cell balancing</strong>, which ensures all cells are at the same voltage to maximize capacity. Without a BMS, a large Li-ion pack would be unsafe and have a short life.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the four primary functions of a BMS?</li>
+                            <li>Why is cell balancing so important for a pack with many cells in series?</li>
+                            <li>What is the difference between State of Charge (SoC) and State of Health (SoH)?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: Thermal Management -->
+        <section id="thermal" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Thermal Management</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Keeping it Cool (and Warm)</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Problem:</strong> Li-ion batteries are sensitive. Too hot, they degrade and risk thermal runaway. Too cold, performance drops.</p>
+                        <p class="mt-2"><strong>Solution:</strong> Active thermal management. Most EVs use liquid cooling/heating with coolant circulated through channels in contact with the cells.</p>
+                        <p class="mt-2"><strong>Control:</strong> Aims to keep the <strong>maximum</strong> cell temperature in the ideal range (e.g., 15-35°C).</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Maintaining the battery's optimal temperature is critical for performance, safety, and longevity. Batteries generate heat during fast charging and high-power discharge. To manage this, EVs use a Thermal Management System (TMS), typically circulating liquid coolant to draw away heat. The same system can warm the batteries in cold weather. The system is controlled based on the hottest cell, not the average, to ensure no single cell overheats.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Why is thermal management critical for an EV battery?</li>
+                            <li>What happens to a Li-ion battery's performance in very cold weather?</li>
+                            <li>Why is the TMS controlled based on the max cell temperature, not the average?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Capacity & C-Rate -->
+        <section id="capacity-crate" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Charge Capacity & C-Rate</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Measuring Capacity and Speed</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Capacity (Ah):</strong> Amp-hours. A measure of charge. (e.g., 100 Ah = 100A for 1hr, or 10A for 10hrs).</p>
+                        <p class="mt-2"><strong>C-Rate:</strong> A normalized measure of charge/discharge rate relative to capacity.</p>
+                        <ul class="list-disc list-inside ml-4">
+                            <li><strong>1C =</strong> Charge/discharge in 1 hour.</li>
+                            <li><strong>0.5C =</strong> Charge/discharge in 2 hours.</li>
+                            <li><strong>2C =</strong> Charge/discharge in 30 minutes.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">A battery's charge capacity is measured in <strong>Amp-hours (Ah)</strong>. This tells us how much current it can provide over time. To talk about charging speed independent of size, we use the <strong>C-rate</strong>. A 1C rate means delivering a current equal to the Ah capacity, discharging it in one hour. A 2C rate means twice the current, discharging in half an hour. This is crucial for understanding fast charging specs.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What does a 1C charge rate mean?</li>
+                            <li>Is a higher C-rate associated with faster or slower charging?</li>
+                            <li>A battery is 80 Ah. What is the current (Amps) for a 0.5C charge? For a 4C discharge?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 12: SoC & DoD -->
+        <section id="soc-dod" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">State of Charge (SoC) & Depth of Discharge (DoD)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Battery's Fuel Gauge</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>State of Charge (SoC):</strong> The current charge level as a percentage of max capacity. 100% is full.</p>
+                        <p class="mt-2"><strong>Depth of Discharge (DoD):</strong> The percentage of capacity discharged. It's the inverse of SoC.</p>
+                        <p class="mt-2 formula">SoC% + DoD% = 100%</p>
+                        <p class="mt-2"><strong>Impact:</strong> Cycle life is strongly affected by DoD. Smaller discharges lead to a longer life.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed"><strong>State of Charge (SoC)</strong> is the equivalent of a fuel gauge, expressed as a percentage. <strong>Depth of Discharge (DoD)</strong> is the opposite; it's the percentage used. If SoC is 70%, DoD is 30%. This matters because the battery's lifespan (cycle life) is heavily dependent on how deeply it is discharged on average. To prolong life, it's best to avoid regular deep discharges to very low SoC levels.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the relationship between SoC and DoD?</li>
+                            <li>If a battery is at 20% SoC, what is its DoD?</li>
+                            <li>To maximize the cycle life of an EV battery, should you aim for a high average DoD or a low average DoD?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 13: Charging Characteristics -->
+        <section id="charging" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Charging Characteristics</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The CC-CV Method</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>Li-ion batteries use a two-stage charging profile:</p>
+                        <p class="mt-2"><strong>Stage 1: Constant Current (CC)</strong><br>The charger supplies a high, steady current. Voltage rises. This is the fast part of charging (e.g., up to ~80% SoC).</p>
+                        <p class="mt-2"><strong>Stage 2: Constant Voltage (CV)</strong><br>Once the battery hits its max voltage (e.g., 4.2V), the charger holds that voltage. The current tapers off as the battery becomes full.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Charging a Li-ion battery uses a specific two-stage process called <strong>Constant Current, Constant Voltage (CC-CV)</strong>. In the first stage (CC), the charger provides a steady current, allowing the battery to absorb energy quickly. This continues until the cell voltage hits its upper limit. At that point, the charger switches to the second stage (CV), holding the voltage at that maximum level. The current will then gradually decrease as the battery "tops off". This is why charging from 80% to 100% takes much longer than from 20% to 40%.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What do CC and CV stand for in battery charging?</li>
+                             <li>In which stage does the charging current decrease?</li>
+                             <li>Why does charging from 80% to 100% take much longer than charging from 20% to 40%?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Self-Discharge -->
+        <section id="self-discharge" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Self-Discharge</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Losing Charge Over Time</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li>A natural, internal chemical process, not a manufacturing defect.</li>
+                            <li>The rate of discharge increases significantly with higher temperatures.</li>
+                            <li>A higher State of Charge (SoC) also leads to a higher rate of self-discharge.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">All batteries naturally lose some of their charge over time, even when not connected to anything. This is called <strong>self-discharge</strong>. It's an inherent characteristic of the battery's chemistry. The rate of this discharge is highly dependent on two main factors: temperature and state of charge. A battery stored in a hot environment will lose its charge much faster than one in a cool place. Similarly, a battery stored at 100% SoC will lose charge faster than one stored at 50% SoC, which is why long-term storage recommendations often specify a partial charge.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>Is self-discharge considered a manufacturing defect?</li>
+                             <li>What are the two main factors that increase the rate of self-discharge?</li>
+                             <li>For long-term storage, is it better to leave a battery fully charged or partially charged? Why?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 15: Cycle Life -->
+        <section id="cycle-life" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Cycle Life</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Measuring Battery Lifespan</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Definition of a "Cycle":</strong> A cycle is counted each time the accumulated discharge capacity equals the battery's total design capacity.</p>
+                        <p class="mt-2">This means a cycle is not just one 0-100% discharge. Two discharges from 80% to 30% (50% DoD each) would equal one full equivalent cycle.</p>
+                        <p class="mt-2"><strong>Degradation:</strong> Battery capacity naturally decreases with each cycle. Cycle life is often defined as the number of cycles until the capacity drops to 80% of its original value.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">A battery's <strong>cycle life</strong> is a measure of its longevity. A "cycle" is not simply one instance of charging and discharging. It's a cumulative measure. One cycle is completed every time the total energy discharged adds up to the battery's nominal capacity. For example, discharging a battery by 25% and recharging it four times is equivalent to one full cycle. As a battery ages and undergoes more cycles, its ability to hold a charge (its capacity) gradually decreases. A manufacturer's warranty often specifies the cycle life until the battery's capacity degrades to a certain point, typically 70-80% of its initial capacity.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>How is one "cycle" technically defined for a battery?</li>
+                             <li>If you use 20% of your EV's battery each day, how many days will it take to complete one full equivalent cycle?</li>
+                             <li>What does it typically mean when a battery has reached the end of its "cycle life"?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 16: Battery Modeling -->
+        <section id="modeling" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Battery Modeling</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Simulating a Battery</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p><strong>Why Model?</strong> To predict battery behavior (voltage, temp, SoC) for BMS algorithm development without needing a physical battery.</p>
+                        <p class="mt-2"><strong>Equivalent Circuit Models (ECM):</strong> A common approach using ideal voltage sources, resistors, and capacitors to simulate a real battery.</p>
+                        <p class="mt-2"><strong>Thevenin 2-RC Model:</strong> A popular ECM that captures internal resistance (`Rs`) and transient voltage effects (`R1/C1`, `R2/C2`).</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">To develop the complex algorithms inside a BMS, engineers need to simulate how a battery will behave. This is done through <strong>battery modeling</strong>. A popular method is the <strong>Equivalent Circuit Model (ECM)</strong>, which represents the battery's complex chemistry with a simple circuit of resistors and capacitors. For example, a resistor `Rs` models the immediate voltage drop when current is drawn, while RC pairs model slower voltage changes. These models are crucial for accurately estimating a battery's State of Charge in real-time, as their parameters change with temperature and SoC.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>Why do engineers create models of batteries?</li>
+                             <li>In an ECM, what component represents the immediate voltage drop under load?</li>
+                             <li>According to the data table on the slide, does the internal resistance (R0c) generally increase or decrease as the battery's SoC goes from 100% down to 40%?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all slide sections and navigation links
+            const sections = document.querySelectorAll('.slide-section');
+            const navLinks = document.querySelectorAll('nav a');
+
+            if (!sections.length || !navLinks.length) {
+                console.warn('Observer script: Could not find sections or nav links.');
+                return;
+            }
+
+            const observerOptions = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0.4 // Trigger when 40% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // When a section is 40% visible
+                    if (entry.isIntersecting) {
+                        // Get the ID of the visible section
+                        const visibleSectionId = entry.target.id;
+
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+
+                        // Find the corresponding nav link and add the 'active' class
+                        const activeLink = document.querySelector(`nav a[href="#${visibleSectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each slide section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

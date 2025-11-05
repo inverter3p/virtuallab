@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regenerative Braking in EVs</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Configure Tailwind to use the 'Inter' font family */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the active navigation link, set by JavaScript */
+        nav a.active {
+            @apply bg-orange-600 text-white font-semibold;
+        }
+
+        /* Custom styles for code/formula blocks */
+        .formula {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <!-- On mobile, this will stack. On desktop (lg:), it becomes a fixed sidebar. -->
+    <nav class="w-full lg:w-72 lg:fixed lg:top-0 lg:left-0 lg:h-full bg-slate-800 text-white p-5 shadow-lg overflow-y-auto">
+        <h1 class="text-2xl font-bold mb-6 pb-4 border-b border-orange-500">
+            Regenerative Braking
+        </h1>
+        <ul class="space-y-2">
+            <li><a href="#intro" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Introduction</a></li>
+            <li><a href="#4q-control" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">4Q Drive Control</a></li>
+            <li><a href="#regen-basics" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Regen Mode Basics</a></li>
+            <li><a href="#regen-levels" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Regen Levels & Features</a></li>
+            <li><a href="#pmsm-regen" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Regen Braking of PMSM</a></li>
+            <li><a href="#foc-braking" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">FOC Electrical Braking</a></li>
+            <li><a href="#regen-power" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Regenerative Power Limit</a></li>
+            <li><a href="#distribution" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Braking Force Distribution</a></li>
+            <li><a href="#front-rear" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Front & Rear Braking Force</a></li>
+            <li><a href="#strategies" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Braking Strategies</a></li>
+            <li><a href="#energy-flow" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Energy Flow Analysis</a></li>
+            <li><a href="#tesla-regen" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Tesla Regen Braking</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <!-- On desktop (lg:), margin-left is added to avoid the fixed sidebar. -->
+    <main class="lg:ml-72 p-6 md:p-10">
+
+        <!-- Slide 1: Introduction -->
+        <section id="intro" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Regenerative Braking Calculation</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Regenerative Braking</h3>
+                    <p>Calculation</p>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        <p class="font-semibold">DR. NITHIPHAT TEERAKAWANICH</p>
+                        <p>Focus on control and calculation aspects of regenerative braking in EVs.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">This presentation covers the principles of inverter control during regenerative braking in electric vehicles. We will explore the underlying physics, control strategies, and performance limitations of recovering kinetic energy to charge the battery.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the main topic of this presentation?</li>
+                            <li>What fundamental energy conversion happens during regenerative braking?</li>
+                            <li>A 1500 kg EV is traveling at 20 m/s (72 km/h). What is its total kinetic energy? (KE = 0.5 * m * v²)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: 4Q Drive Control -->
+        <section id="4q-control" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">4Q Drive Control</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Four-Quadrant Operation</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p><strong>Q1:</strong> Forward Motoring (+Speed, +Torque)</p>
+                        <p><strong>Q2:</strong> Forward Braking (Regen) (+Speed, -Torque)</p>
+                        <p><strong>Q3:</strong> Reverse Motoring (-Speed, -Torque)</p>
+                        <p><strong>Q4:</strong> Reverse Braking (Regen) (-Speed, +Torque)</p>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Diagram of the four quadrants of a Torque-Speed curve]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">An electric drive operates in four quadrants, defined by the motor's speed and torque direction. Quadrant 1 is forward acceleration. Quadrant 2 is forward deceleration or regenerative braking, where the motor acts as a generator. Quadrants 3 and 4 represent the same actions but in the reverse direction.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>In which quadrant does forward regenerative braking occur?</li>
+                            <li>What is the sign of the torque in Quadrant 2?</li>
+                            <li>If a motor has -50 Nm torque at 300 rad/s, what is the power? Is it consumed or generated? (P = T * &omega;)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Regen Mode Basics -->
+        <section id="regen-basics" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Regenerative Mode in EV: Basics</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Regenerative Mode</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p><strong>Basics:</strong> Motor acts as a generator to capture kinetic energy.</p>
+                        <p><strong>Benefits:</strong> Increased efficiency, reduced brake wear.</p>
+                        <p><strong>Limitations:</strong> Battery capacity and State of Charge (SoC).</p>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Flow chart: Motor -> Inverter -> Battery (Regen Path)]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">When the driver lifts off the accelerator, the EV's motor controller reverses the motor's role. It turns kinetic energy into electrical energy, storing it in the battery. This improves efficiency and reduces wear on mechanical brakes. However, its effectiveness is limited if the battery is already full.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the primary benefit of regenerative braking?</li>
+                            <li>Under what condition does regenerative braking become less effective?</li>
+                            <li>If an EV recuperates 15 kWh at $0.15/kWh, what is the monetary value recovered?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 4: Regen Levels -->
+        <section id="regen-levels" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Regen Levels & Vehicle-Specific Features</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">User-Selectable Regen</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p><strong>Standard/Low Mode:</strong> Gentle deceleration, less energy recovery.</p>
+                        <p><strong>High/Standard Mode:</strong> Stronger deceleration, "one-pedal driving", max recovery.</p>
+                        <p><strong>Tesla 'Hold' Mode:</strong> Brings car to a complete stop and holds it.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Most EVs offer adjustable regenerative braking. A "Low" mode mimics coasting, while a "High" mode provides strong deceleration, enabling "one-pedal driving." Features like Tesla's "Hold" mode enhance this by bringing the car to a full stop without using the brake pedal.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is "one-pedal driving"?</li>
+                            <li>How does Tesla's "Hold" mode improve driving in traffic?</li>
+                            <li>How much more energy is recovered in "High" (45%) vs. "Low" (20%) regen for a 2000 kg car stopping from 16.67 m/s?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 5: PMSM Regen -->
+        <section id="pmsm-regen" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Regenerative Braking of PMSM</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">PMSM Performance</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p>Regenerative mode occurs in Q2 and Q4.</p>
+                        <p>PMSM performs well in motoring (Q1) and generating (Q2) under FOC.</p>
+                        <p>There is a limit to how much power can be regenerated.</p>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Torque-Speed curve showing power contours for a PMSM]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Permanent Magnet Synchronous Motors (PMSM) are common in EVs and operate efficiently in both motoring and regenerating modes. Using Field-Oriented Control (FOC), the inverter can command a negative torque to initiate regeneration. However, physical and electrical limits restrict the maximum power that can be sent to the battery.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What control method enables efficient regeneration in a PMSM?</li>
+                            <li>Why can't an infinite amount of power be regenerated?</li>
+                            <li>Does max regenerative power occur at the highest speed or medium speed?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: FOC Braking -->
+        <section id="foc-braking" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">FOC Electrical Braking Control</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Regen Braking Equations</h3>
+                    <p>Motor torque is proportional to the q-axis current (i<sub>q</sub>).</p>
+                    <p>Braking torque is generated by requesting a negative i<sub>q</sub>.</p>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left my-4">
+                        T<sub>em</sub> = n<sub>p</sub>&Psi;<sub>f</sub> i<sub>q</sub> <br>
+                        (Negative i<sub>q</sub> &rArr; Negative Torque)
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Phasor diagrams for Normal Driving vs. Regen Braking]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">In Field-Oriented Control (FOC), the torque of a PMSM is directly proportional to the q-axis current, i<sub>q</sub>. To achieve regenerative braking, the inverter's control system simply needs to generate a negative reference for i<sub>q</sub>. This reverses the torque, slowing the motor and generating electricity.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>In FOC, which current component produces torque?</li>
+                            <li>How does the control system initiate braking torque?</li>
+                            <li>If n<sub>p</sub>=4 and &Psi;<sub>f</sub>=0.1 Wb, what i<sub>q</sub> is needed for -80 Nm of torque?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 7: Regen Power Limit -->
+        <section id="regen-power" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Regenerative Power Limit</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Maximum Regenerative Power</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p>Regen power is a quadratic function of braking torque (i<sub>q</sub>).</p>
+                        <p>Max regen power is at <strong>half</strong> max braking torque.</p>
+                        <p>At max braking torque, all energy is lost as heat.</p>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Graph of Regen Power (Pin) vs. q-axis current (iq)]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Maximum braking torque does not correspond to maximum regenerative power. As torque increases, so do copper losses (heat) in the motor. The peak regenerative power sent to the battery occurs at half the maximum possible braking torque. Beyond this, more braking effort converts energy to heat rather than electricity.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>At what point is maximum regenerative power achieved?</li>
+                            <li>What happens to kinetic energy at maximum braking torque?</li>
+                            <li>If max braking torque is -200 Nm, at what torque is regen power maximal?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 8: Distribution -->
+        <section id="distribution" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Braking Force Distribution</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Brake Blending</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p>Total braking demand is met by a combination of:</p>
+                        <p><strong>1. Regenerative Braking:</strong> From electric motors.</p>
+                        <p><strong>2. Friction Braking:</strong> From mechanical brakes.</p>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Graph showing Total Torque split between Recuperation and Friction]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Brake blending combines regenerative and friction brakes. At low speeds or gentle deceleration, regen may handle the entire load. During hard braking, friction brakes are blended in to provide the necessary stopping power, ensuring safety and stability.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What two systems are combined in "brake blending"?</li>
+                            <li>Why are friction brakes still necessary in an EV?</li>
+                            <li>If demand is 5000 N and regen can provide 3000 N, how much force must friction brakes supply?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 9: Front Rear Braking -->
+        <section id="front-rear" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Front & Rear Braking Force</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Ideal Braking Distribution</h3>
+                    <p>During braking, weight transfers to the front axle.</p>
+                    <p>More braking force is applied to the front to prevent rear-wheel lock-up.</p>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left my-4">
+                        F<sub>bf</sub> + F<sub>br</sub> = m &times; a<sub>d</sub>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Graph of ideal vs. average braking force distribution]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">To ensure stability, braking force must be distributed correctly. As a car decelerates, weight shifts forward, giving front tires more grip. The ideal curve shows front brakes should always do more work. EV control systems mimic this ideal distribution using their blend of regenerative and friction braking.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Why apply more braking force to the front wheels?</li>
+                            <li>What does 'ad' represent in the equation?</li>
+                            <li>If a 1800 kg vehicle decelerates at 0.5g (g ≈ 9.8 m/s²), what is the total braking force?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: Strategies -->
+        <section id="strategies" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Braking Force Distribution Strategies</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Braking System Types</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p><strong>Parallel Braking:</strong> Regen and friction applied simultaneously. Simpler, less optimal.</p>
+                        <p><strong>Series Braking:</strong> Prioritizes regen first. Friction added when needed. More complex, max recovery.</p>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Diagrams showing Parallel vs. Series braking force]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">There are two main strategies. In a "parallel" system, both brakes engage when the pedal is pressed. In a "series" system, the controller first uses max regen, then adds friction brakes if more force is needed. The series strategy is superior for maximizing energy recovery.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What's the main difference between parallel and series braking?</li>
+                            <li>Which strategy is better for energy recovery?</li>
+                            <li>In a series system with 4000 N regen limit, if 6000 N is requested, what is the force from regen and friction?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Energy Flow -->
+        <section id="energy-flow" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Energy Flow Analysis</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Energy Path & Losses</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p>Losses occur at each step:</p>
+                        <ul class="list-disc list-inside ml-4">
+                            <li>Motor (Mechanical, Copper, Iron)</li>
+                            <li>Inverter (Switching, Conduction)</li>
+                            <li>Battery (Internal resistance)</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        [Sankey diagram showing energy flow and losses]
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Regeneration is not 100% efficient. Energy is lost as heat in the motor, the inverter, and the battery itself. Understanding these losses is key to designing more efficient EV powertrains.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Name two components where energy is lost during regen.</li>
+                            <li>Why is it impossible to recapture 100% of kinetic energy?</li>
+                            <li>If 100 kJ is available and efficiency is 70%, how much energy is stored? How much is lost?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 12: Tesla Regen -->
+        <section id="tesla-regen" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Regenerative Braking of Tesla Model S</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Regen Limitations</h3>
+                    <div class="text-left space-y-2 inline-block">
+                        <p>Regen power can be limited by the battery's state.</p>
+                        <p><strong>Limited when:</strong></p>
+                        <ul class="list-disc list-inside ml-4">
+                            <li>Battery is cold.</li>
+                            <li>Battery is fully charged (100% SoC).</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                        
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Modern EVs manage regen based on battery condition. For safety and longevity, power is reduced when the battery is cold or nearly full. The UI indicates this limitation, often with a dashed line on the power meter, so the driver knows to expect less deceleration.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What two conditions can limit regen power?</li>
+                            <li>How do EVs inform the driver that regen is limited?</li>
+                            <li>If max regen is 60 kW but is limited by 50% due to a cold battery, what is the max regen power?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all slide sections and navigation links
+            const sections = document.querySelectorAll('.slide-section');
+            const navLinks = document.querySelectorAll('nav a');
+
+            if (!sections.length || !navLinks.length) {
+                console.warn('Observer script: Could not find sections or nav links.');
+                return;
+            }
+
+            const observerOptions = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0.4 // Trigger when 40% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // When a section is 40% visible
+                    if (entry.isIntersecting) {
+                        // Get the ID of the visible section
+                        const visibleSectionId = entry.target.id;
+
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+
+                        // Find the corresponding nav link and add the 'active' class
+                        const activeLink = document.querySelector(`nav a[href="#${visibleSectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each slide section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

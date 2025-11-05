@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Technology: Part 1 & 2</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Configure Tailwind to use the 'Inter' font family */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the active navigation link, set by JavaScript */
+        nav a.active {
+            @apply bg-orange-600 text-white font-semibold;
+        }
+
+        /* Custom styles for code/formula blocks */
+        .formula {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-full lg:w-72 lg:fixed lg:top-0 lg:left-0 lg:h-full bg-slate-800 text-white p-5 shadow-lg overflow-y-auto">
+        <h1 class="text-2xl font-bold mb-6 pb-4 border-b border-orange-500">
+            EV Charging Tech
+        </h1>
+        <ul class="space-y-2">
+            <li><a href="#news" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Recent Developments</a></li>
+            <li><a href="#architecture" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Charger Architecture</a></li>
+            <li><a href="#standards" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Charging Levels & Standards</a></li>
+            <li><a href="#connectors" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Connectors in Thailand</a></li>
+            <li><a href="#evse-comm" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">EVSE & Communication</a></li>
+            <li><a href="#hlc" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">High-Level Communication</a></li>
+            <li><a href="#charging-methods" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Battery Charging Methods</a></li>
+            <li><a href="#future-tasks" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Future Considerations</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-72 p-6 md:p-10">
+
+        <!-- Slide 1: In the News -->
+        <section id="news" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Recent Developments in Charging & Battery Tech</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Industry Headlines</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 space-y-3">
+                        <div>
+                            <p class="font-semibold">ZEEKR "Golden Brick" LFP Battery</p>
+                            <ul class="list-disc list-inside ml-4 text-sm">
+                                <li>Max Charge Rate: 4.5C (500km range in 15 mins)</li>
+                                <li>Supports 800V architecture & 500kW charging</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Huawei 600kW Ultrafast Charger</p>
+                            <ul class="list-disc list-inside ml-4 text-sm">
+                                <li>Liquid-cooled for heat dissipation</li>
+                                <li>Output: 200-1000V DC</li>
+                            </ul>
+                        </div>
+                        <div>
+                             <p class="font-semibold">Thailand BOI Measures for Cell Production</p>
+                            <ul class="list-disc list-inside ml-4 text-sm">
+                                <li>Min Energy Density: 150 Wh/Kg</li>
+                                <li>Min Life Cycle: 1,000 rounds</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The EV charging landscape is evolving at a breakneck pace. We're seeing a dual push from both vehicle and infrastructure manufacturers. Battery makers like ZEEKR are releasing high C-rate LFP batteries that can absorb huge amounts of power safely. Simultaneously, companies like Huawei are building ultra-fast charging stations with outputs of 600kW or more to deliver that power. This synergy is key to solving charging anxiety and enabling true "gas station-like" convenience for EVs.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Which battery chemistry (e.g., LFP, NMC) best fits Thailand's BOI requirements for energy density and cycle life?</li>
+                            <li>ZEEKR's 95 kWh battery has a max charge rate of 4.5C. What is the theoretical peak charging power in kW? (Power = C-Rate × Capacity)</li>
+                            <li>Why is liquid cooling essential for a 600kW charger?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 2: Charger Architecture -->
+        <section id="architecture" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">EV Charger Architecture</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">AC vs. DC Charging</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 space-y-3">
+                         <div>
+                            <p class="font-semibold">AC Charging (Level 1 & 2)</p>
+                            <p class="formula text-sm">Grid (AC) &rarr; EVSE &rarr; On-Board Charger (AC to DC) &rarr; Battery</p>
+                            <p class="text-sm">The charger is <span class="font-bold">inside</span> the car. The external equipment (EVSE) is just a smart switch.</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">DC Fast Charging (Level 3)</p>
+                            <p class="formula text-sm">Grid (AC) &rarr; EVSE (AC to DC Charger) &rarr; Battery</p>
+                            <p class="text-sm">The charger is <span class="font-bold">outside</span> the car, in the large station. It bypasses the car's smaller on-board charger.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The key difference between AC and DC charging lies in where the conversion from AC (grid power) to DC (battery power) happens. In <strong>AC charging</strong>, a relatively simple external box called an EVSE (Electric Vehicle Supply Equipment) supplies AC power to the car. The actual conversion is done by the <strong>On-Board Charger (OBC)</strong> inside the vehicle. The size and cost of the OBC limit its power. In <strong>DC fast charging</strong>, the EVSE is a massive, powerful AC-to-DC converter that bypasses the OBC and delivers DC power directly to the battery, enabling much faster charging speeds.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>In DC fast charging, where is the AC-to-DC conversion performed?</li>
+                            <li>Why is AC charging generally slower than DC charging?</li>
+                            <li>A typical Level 2 home charger might operate at 240V and 32A. What is its power output in kilowatts (kW)? (Power = Voltage × Current)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 3: Standards -->
+        <section id="standards" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Charging Level Classification</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">SAE vs. IEC Standards</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-100">
+                                <tr><th class="p-2 text-left">Standard</th><th class="p-2 text-left">Typical Use</th><th class="p-2 text-left">Power</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t"><td class="p-2 font-semibold">SAE Level 1 / IEC Mode 2</td><td class="p-2">Home (Standard Outlet)</td><td class="p-2">1-3 kW</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">SAE Level 2 / IEC Mode 3</td><td class="p-2">Home/Public (AC)</td><td class="p-2">3-22 kW</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">SAE Level 3 / IEC Mode 4</td><td class="p-2">Public (DC Fast Charge)</td><td class="p-2">50-350+ kW</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="mt-2 text-xs text-slate-500">IEC Mode 1 (no safety communication) is generally not used for EVs.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Charging standards provide a common language for power levels and safety. The North American <strong>SAE J1772</strong> standard defines "Levels," while the international <strong>IEC 61851</strong> standard defines "Modes." <strong>Level 1 / Mode 2</strong> refers to slow charging from a regular wall socket, using a cable with a built-in protection device. <strong>Level 2 / Mode 3</strong> is the most common type for home and public AC charging, using a dedicated wallbox or station. <strong>Level 3 / Mode 4</strong> refers to DC fast charging, where power levels are significantly higher.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What charging level is most common for dedicated home installation?</li>
+                            <li>Which IEC mode corresponds to DC fast charging?</li>
+                            <li>A 70 kWh battery needs to be charged from 20% to 80%. How long would this take on a 7kW Level 2 charger? (Energy needed = 70kWh * (80%-20%))</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Connectors -->
+        <section id="connectors" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Connectors in Thailand</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Official Standards</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 space-y-3">
+                         <div>
+                            <p class="font-semibold">AC Charging Standard</p>
+                            <p><strong>Type 2</strong> (IEC 62196). This is the standard for both public and home AC charging across Thailand and Europe.</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">DC Charging Standard</p>
+                            <p><strong>CCS Type 2 (CCS2)</strong>. This plug "combines" the AC Type 2 connector with two large DC pins below it, allowing a vehicle to use the same port for both AC and DC charging.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">To ensure interoperability, Thailand has adopted specific connector standards. For all AC charging, the <strong>Type 2</strong> connector is the official standard. For DC fast charging, the dominant and official standard is the <strong>Combined Charging System (CCS) Type 2</strong>. The "combined" nature of this plug is its key advantage, as a single socket on the car can accept both slow AC and fast DC charging. While some older vehicles and stations might use the CHAdeMO standard, CCS2 is the mandated standard for all new installations.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the official AC charging connector standard in Thailand?</li>
+                            <li>What does the "Combined" in CCS2 refer to?</li>
+                            <li>Why is having a single port for both AC and DC charging beneficial for vehicle design?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: EVSE Communication -->
+        <section id="evse-comm" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">EVSE-to-Vehicle Communication (The Handshake)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Proximity Pilot (PP) & Control Pilot (CP)</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 space-y-3">
+                         <div>
+                            <p class="font-semibold">1. Proximity Pilot (PP)</p>
+                            <p>Tells the EVSE the <strong>maximum current capacity of the cable</strong>. This is done via a resistor inside the cable connector. A lower resistance means a higher capacity cable.</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">2. Control Pilot (CP)</p>
+                            <p>A multi-stage communication line. It signals the <strong>vehicle's state</strong> to the EVSE via voltage levels. The EVSE then sends a <strong>PWM signal</strong> back to the vehicle, indicating the <strong>maximum current the station can supply</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Before any high-power electricity flows, the charger (EVSE) and the vehicle perform a critical safety "handshake" using two dedicated pins in the connector. The <strong>Proximity Pilot (PP)</strong> signal allows the station to detect that a cable is plugged in and, more importantly, to know the maximum current the cable itself can handle. The <strong>Control Pilot (CP)</strong> is a more complex line. First, the car signals its status (e.g., "Connected," "Ready to Charge"). Once ready, the EVSE generates a square wave (PWM signal) on the CP line. The duty cycle of this wave tells the car the maximum current the station can provide, ensuring the car never tries to draw more power than the station can safely deliver.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the primary function of the Proximity Pilot (PP) signal?</li>
+                            <li>What does the PWM signal on the Control Pilot (CP) line communicate, and in which direction?</li>
+                            <li>If the car is ready and the EVSE can supply 32A, but the PP signal indicates a 16A cable is being used, what will be the maximum allowable charging current?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: High-Level Communication -->
+        <section id="hlc" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">High-Level Communication (HLC)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Beyond Basic Charging</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>When the EVSE sets the CP duty cycle to 5%, it's a signal to switch from basic PWM to a digital communication protocol.</p>
+                        <p class="mt-2 font-semibold">ISO 15118 / DIN 70121</p>
+                        <p>This enables advanced features by sending digital data over the power lines (Power Line Communication - PLC).</p>
+                        <ul class="list-disc list-inside ml-4 space-y-2 mt-2">
+                           <li><strong>Plug & Charge:</strong> Automatic authentication and billing.</li>
+                           <li><strong>Smart Charging:</strong> Grid-aware charging schedules.</li>
+                           <li><strong>Vehicle-to-Grid (V2G):</strong> Bidirectional power flow.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Modern DC fast charging requires more than just a simple current limit. <strong>High-Level Communication (HLC)</strong>, defined by standards like ISO 15118, allows the vehicle and charger to exchange complex digital information. This is typically done using Power Line Communication (PLC), which sends data over the existing power wires. HLC is the enabling technology for next-generation features like <strong>Plug & Charge</strong>, where the car automatically identifies itself to the network for seamless billing, and <strong>Vehicle-to-Grid (V2G)</strong>, which allows the EV to send power back to the grid to provide stability or earn revenue.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What signal on the CP line initiates High-Level Communication?</li>
+                            <li>What does "Plug & Charge" eliminate the need for?</li>
+                            <li>What is the fundamental capability enabled by V2G technology?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Charging Methods -->
+        <section id="charging-methods" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Battery Charging Methods</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Controlling the Flow</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300 space-y-3">
+                        <div>
+                            <p class="font-semibold">Constant Current-Constant Voltage (CC-CV)</p>
+                            <p>The standard method. A 'Constant Current' phase rapidly charges the battery to ~80%, followed by a 'Constant Voltage' phase where the current tapers off to safely top up the battery.</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Pulse Charging</p>
+                            <p>Applies the charging current in pulses with brief rest periods in between. This can reduce ion buildup and allow for higher peak currents, potentially speeding up the process for certain chemistries like LFP.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The method used to charge a Li-ion battery greatly affects its speed, efficiency, and long-term health. The universal standard is <strong>CC-CV</strong>. It provides a fast initial charge (CC) and then carefully manages the final stage (CV) to prevent over-voltage and maximize lifespan. More advanced methods like <strong>Pulse Charging</strong> are being explored to push charging speeds even higher. By delivering power in short, high-current bursts followed by rest periods, it can help the battery chemistry stabilize, potentially allowing for a faster overall charge without excessive degradation.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What are the two stages of the standard CC-CV charging method?</li>
+                            <li>What is the main benefit of Pulse Charging?</li>
+                            <li>In the CC-CV method, a 50 kWh battery is charged at 50 kW (a 1C rate). Roughly how long will it take to get from 10% to 80% SOC?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 8: Future Tasks -->
+        <section id="future-tasks" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Future Considerations & Further Tasks</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Key Engineering Challenges</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                           <li><strong>Voltage Compatibility:</strong> How can new 800V EVs efficiently use the existing 400V charging infrastructure?</li>
+                           <li><strong>Metering & Regulation:</strong> How are DC charging sessions accurately billed, and what are the national standards?</li>
+                           <li><strong>Safety Standards:</strong> What are the requirements for isolation, fault handling, and fire hazard control in public charging stations?</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">As charging technology accelerates, several important engineering and regulatory challenges arise. A key issue is <strong>backwards compatibility</strong> between new 800V vehicles and the vast network of 400V chargers. Solutions involve either on-board DC-DC converters in the car or multi-voltage capabilities in the chargers. Furthermore, the business and safety aspects are critical. Accurate, certified <strong>metering</strong> is needed for fair billing, and robust <strong>safety standards</strong> must be followed for everything from electrical fault protection to physical station safety and fire prevention, all governed by local regulations.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What is a potential solution for an 800V car to charge at a 400V station?</li>
+                             <li>Why is accurate metering a regulatory concern for public DC chargers?</li>
+                             <li>Beyond electrical faults, what is another major safety aspect for charging stations?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all slide sections and navigation links
+            const sections = document.querySelectorAll('.slide-section');
+            const navLinks = document.querySelectorAll('nav a');
+
+            if (!sections.length || !navLinks.length) {
+                console.warn('Observer script: Could not find sections or nav links.');
+                return;
+            }
+
+            const observerOptions = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0.4 // Trigger when 40% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // When a section is 40% visible
+                    if (entry.isIntersecting) {
+                        // Get the ID of the visible section
+                        const visibleSectionId = entry.target.id;
+
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+
+                        // Find the corresponding nav link and add the 'active' class
+                        const activeLink = document.querySelector(`nav a[href="#${visibleSectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each slide section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

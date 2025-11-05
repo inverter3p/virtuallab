@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMSM Motor Drives: Speed Control & Inverter Modulation</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Configure Tailwind to use the 'Inter' font family */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the active navigation link, set by JavaScript */
+        nav a.active {
+            @apply bg-orange-600 text-white font-semibold;
+        }
+
+        /* Custom styles for code/formula blocks */
+        .formula {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <!-- On mobile, this will stack. On desktop (lg:), it becomes a fixed sidebar. -->
+    <nav class="w-full lg:w-72 lg:fixed lg:top-0 lg:left-0 lg:h-full bg-slate-800 text-white p-5 shadow-lg overflow-y-auto">
+        <h1 class="text-2xl font-bold mb-6 pb-4 border-b border-orange-500">
+            PMSM Control
+        </h1>
+        <ul class="space-y-2">
+            <li><a href="#speed-control" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Speed Control Strategies</a></li>
+            <li><a href="#vector-control" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Vector Control (FOC)</a></li>
+            <li><a href="#current-loop" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Current Control Loop</a></li>
+            <li><a href="#2dof-pi" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">2DOF PI Controller</a></li>
+            <li><a href="#datasheet-perf" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Datasheet: Performance</a></li>
+            <li><a href="#datasheet-specs" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Datasheet: Specifications</a></li>
+            <li><a href="#spwm-inverter" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SPWM Inverter Limitations</a></li>
+            <li><a href="#svm-inverter" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">SVM Inverter Advantage</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <!-- On desktop (lg:), margin-left is added to avoid the fixed sidebar. -->
+    <main class="lg:ml-72 p-6 md:p-10">
+
+        <!-- Slide 1: Speed Control of PMSM -->
+        <section id="speed-control" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Speed Control of PMSM</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Control Strategies</h3>
+                    <div class="text-left space-y-3">
+                        <p><strong>Field-Oriented Control (FOC):</strong> Popular, precise, requires position sensor.</p>
+                        <p><strong>Direct Torque Control (DTC):</strong> Sensorless, faster torque response, higher ripple.</p>
+                        <div>
+                            <strong>Advanced Techniques:</strong>
+                            <ul class="list-disc list-inside ml-4 mt-1">
+                                <li>Model Predictive Control (MPC)</li>
+                                <li>Fuzzy Logic & Neural Networks</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Controlling the speed of a Permanent Magnet Synchronous Motor (PMSM) involves precisely manipulating its stator currents. The most common method is Field-Oriented Control (FOC), which offers excellent performance but requires rotor position feedback. Other methods like Direct Torque Control (DTC) offer faster response without sensors but can have higher torque ripple.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the most popular method for PMSM speed control?</li>
+                            <li>What is a key advantage of Direct Torque Control (DTC) over FOC?</li>
+                            <li>Why are advanced techniques like MPC used?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: Vector Control -->
+        <section id="vector-control" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Vector Control of PMSM (FOC)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">FOC Block Diagram</h3>
+                    <p class="mb-4">The core of FOC is transforming AC current variables into a DC rotating reference frame (d-q frame).</p>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p class="font-semibold">Key Components:</p>
+                        <ul class="list-disc list-inside ml-4 mt-1">
+                            <li>Speed & Position Sensing</li>
+                            <li>Clarke & Park Transforms</li>
+                            <li>PI Controllers for d-q currents</li>
+                            <li>Inverse Park Transform</li>
+                            <li>Space Vector Modulation (SVM)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Vector Control (FOC) is a technique that controls stator currents by representing them as a vector. It uses mathematical transformations (Clarke and Park) to convert three-phase AC currents into two DC components: the direct (d) axis current (controls flux) and the quadrature (q) axis current (controls torque). This achieves precise, independent control over torque and flux, similar to a DC motor.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the main goal of the Park and Clarke transformations?</li>
+                            <li>Which current component (d or q) primarily controls torque?</li>
+                            <li>What block generates the final gate signals for the inverter?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Current Control Loop -->
+        <section id="current-loop" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">The Current Control Loop</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Why is it necessary?</h3>
+                    <div class="text-left space-y-4">
+                        <p><strong>1. Direct Torque Control:</strong> Since torque is proportional to current,
+                            controlling current allows for precise and rapid control of torque (acceleration).</p>
+                        <p><strong>2. Protection & Overload:</strong> A current loop limits the current to safe
+                            levels, protecting the motor from overheating. It can also permit temporary overloading
+                            for short bursts of high torque.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The inner current control loop is the fastest and most critical part of FOC. Its primary purpose is to directly control torque, as torque is proportional to the q-axis current. A fast current loop means high dynamic performance. A second crucial function is protection; the loop ensures motor currents never exceed rated limits, preventing damage while allowing for controlled, short-term overload.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the primary reason for a current control loop?</li>
+                            <li>How does the current loop protect the motor?</li>
+                            <li>How does the loop enable safe "overload" capability?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: 2DOF PI Controller -->
+        <section id="2dof-pi" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">2DOF PI Current Controller</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Improving Performance</h3>
+                    <p class="mb-4">A standard PI controller (1DOF) struggles to balance set-point tracking and disturbance rejection.</p>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p class="font-semibold">2DOF Structure Separates Tasks:</p>
+                        <ul class="list-disc list-inside ml-4 mt-1">
+                            <li><strong>Tracking (Feedforward - Gff):</strong> Responds quickly to reference changes.</li>
+                            <li><strong>Disturbance Rejection (Feedback - Gc):</strong> Corrects for errors and disturbances (e.g., back-EMF).</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">In a PMSM, current loops face disturbances from back-EMF and d-q axis cross-coupling. A simple 1DOF PI controller struggles to tune for both fast command response and effective disturbance rejection. A Two-Degree-of-Freedom (2DOF) PI controller separates these tasks: a feedforward path provides fast set-point tracking, while a separate feedback path is optimized for disturbance rejection.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What two tasks does a 2DOF PI controller separate?</li>
+                            <li>What is a "disturbance" in the PMSM current loop?</li>
+                            <li>Why is this separation better than a 1DOF PI controller?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Datasheet Performance -->
+        <section id="datasheet-perf" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">PMSM Datasheet: Performance</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">YASKAWA SS7-Series</h3>
+                    <div class="text-left space-y-3">
+                        <p><strong>High Efficiency:</strong> Surpasses IE4 standards, especially under variable-speed control.</p>
+                        <p><strong>Fast Response:</strong> Current vector control provides high-speed response to reference and load changes.</p>
+                        <p><strong>Smooth Operation:</strong> Smooth acceleration and deceleration, even sensorless.</p>
+                        <div class="mt-4 p-4 border-dashed border-2 border-slate-400 rounded-lg text-center text-slate-600">
+                            [Datasheet graphs showing high efficiency curves and fast response to load changes]
+                        </div>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Datasheets for motors like the Yaskawa SS7-Series highlight key advantages. These PMSMs achieve efficiency ratings exceeding the IE4 "Super Premium Efficiency" class. When paired with a capable drive, their vector control algorithm allows for extremely fast response. The datasheet shows the motor can quickly recover its speed even when a 100% load is suddenly applied, demonstrating the control system's effectiveness.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What efficiency class does the SS7-Series motor approach?</li>
+                            <li>What control method enables fast response to load changes?</li>
+                            <li>How quickly does the speed recover after a 100% load torque is applied?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Datasheet Specs -->
+        <section id="datasheet-specs" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">PMSM Datasheet: Specifications</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">YASKAWA EST4</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>Motor Types:</strong> Compares Induction, Surface PM (SPM), and Interior PM (IPM) motors.</li>
+                            <li><strong>IPM Advantage:</strong> Uses both Magnetism and Reluctance torque for higher torque & wider speed range.</li>
+                            <li><strong>Sensor:</strong> Offers options like a 4096 P/R Resolver for feedback.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The datasheet compares different motor technologies. While induction motors are robust, PMSM variants like Surface (SPM) and Interior (IPM) permanent magnet motors offer better efficiency and compactness. IPM motors have a key advantage: they generate torque from both the magnets and "reluctance torque" (from the rotor's shape). This allows for higher torque and a wider constant-power speed range.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What three motor types are compared?</li>
+                            <li>What two types of torque does an IPM motor use?</li>
+                            <li>What is the resolution of the offered resolver sensor?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: SPWM -->
+        <section id="spwm-inverter" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">2-Level Inverter with Sinusoidal PWM (SPWM)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">DC Bus Voltage Limitation</h3>
+                    <p class="mb-4">SPWM cannot fully utilize the available DC bus voltage.</p>
+                    <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left mb-4">
+                       V<sub>L-L, peak</sub> = 0.866 &times; V<sub>DC</sub><br>
+                       V<sub>L-L, rms</sub> = 0.612 &times; V<sub>DC</sub>
+                    </div>
+                    <div class="p-4 bg-red-50 border border-red-300 rounded-lg text-left">
+                        <p>With a 400V<sub>rms</sub> AC supply, the DC bus becomes 540V<sub>DC</sub>.</p>
+                        <p class="font-semibold">Max motor voltage = 0.612 * 540 = <strong class="text-red-700">330 V<sub>rms</sub></strong>.</p>
+                        <p class="mt-2 text-red-700">This is insufficient to run a 380V motor at its full rating.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Sinusoidal Pulse Width Modulation (SPWM) is a standard method for controlling a 3-phase inverter. While simple, it has a significant drawback: it limits the maximum output AC voltage. The peak line-to-line AC voltage can only reach ~86.6% of the DC bus voltage. This means a 540V DC bus can only supply ~330V RMS to the motor, which is not enough to run a standard 380V or 400V motor at its full power and speed.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the main limitation of using SPWM?</li>
+                            <li>If an inverter has a 800V DC bus, what is the max peak L-L voltage with SPWM?</li>
+                            <li>By what percentage is 330V lower than the required 380V?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: SVM -->
+        <section id="svm-inverter" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">2-Level Inverter with Space Vector Modulation (SVM)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Maximizing Voltage Output</h3>
+                    <p class="mb-4">SVM intelligently adds a 3rd harmonic component to the phase voltages.</p>
+                    <div class="p-4 bg-white border border-slate-300 rounded-lg text-left mb-4">
+                        <p>This 3rd harmonic is a zero-sequence component, so it cancels out in the line-to-line voltages, which the motor sees. This allows the fundamental voltage to be boosted.</p>
+                    </div>
+                     <div class="formula bg-slate-200 text-slate-900 p-4 rounded-lg inline-block text-left">
+                       V<sub>L-L, peak</sub> = V<sub>DC</sub><br>
+                       V<sub>L-L, rms</sub> = 0.707 &times; V<sub>DC</sub>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Space Vector Modulation (SVM) is an advanced PWM technique that overcomes the voltage limitation of SPWM. It works by strategically adding a 3rd harmonic component to the desired sinusoidal waveform. Since this is a "zero-sequence" signal, it doesn't appear in the line-to-line voltages applied to the motor. This trick lowers the peak voltage required for each phase, allowing the fundamental component to be increased by ~15.5%. This enables full utilization of a 380V motor.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>How does SVM increase the maximum output voltage?</li>
+                            <li>Why does the added 3rd harmonic not affect the motor?</li>
+                            <li>With a 540V DC bus, what is the max RMS L-L voltage from SVM? Is this enough for a 380V motor?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all slide sections and navigation links
+            const sections = document.querySelectorAll('.slide-section');
+            const navLinks = document.querySelectorAll('nav a');
+
+            if (!sections.length || !navLinks.length) {
+                console.warn('Observer script: Could not find sections or nav links.');
+                return;
+            }
+
+            const observerOptions = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0.4 // Trigger when 40% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // When a section is 40% visible
+                    if (entry.isIntersecting) {
+                        // Get the ID of the visible section
+                        const visibleSectionId = entry.target.id;
+
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+
+                        // Find the corresponding nav link and add the 'active' class
+                        const activeLink = document.querySelector(`nav a[href="#${visibleSectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each slide section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

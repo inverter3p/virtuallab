@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Infrastructure & V2X Technology</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Configure Tailwind to use the 'Inter' font family */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Style for the active navigation link, set by JavaScript */
+        nav a.active {
+            @apply bg-orange-600 text-white font-semibold;
+        }
+
+        /* Custom styles for code/formula blocks */
+        .formula {
+            font-family: 'Roboto Mono', monospace;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-full lg:w-72 lg:fixed lg:top-0 lg:left-0 lg:h-full bg-slate-800 text-white p-5 shadow-lg overflow-y-auto">
+        <h1 class="text-2xl font-bold mb-6 pb-4 border-b border-orange-500">
+            EV Infrastructure
+        </h1>
+        <ul class="space-y-2">
+            <li><a href="#intro" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Introduction & Market</a></li>
+            <li><a href="#architecture" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">EV Powertrain Architecture</a></li>
+            <li><a href="#standards-evolution" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Charging Standards Evolution</a></li>
+            <li><a href="#ac-charging" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">AC Charging Standards</a></li>
+            <li><a href="#dc-charging" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">DC Charging Standards</a></li>
+            <li><a href="#topologies" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Charger Topologies</a></li>
+            <li><a href="#modularity" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Modularity in Chargers</a></li>
+            <li><a href="#safety" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Safety & Standardization</a></li>
+            <li><a href="#v2x-intro" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Intro to V2X</a></li>
+            <li><a href="#v2x-types" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Types of V2X</a></li>
+            <li><a href="#bidirectional" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">Bidirectional Charging</a></li>
+            <li><a href="#v2g-protocols" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">V2G Protocols</a></li>
+            <li><a href="#der" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">EVs as DERs</a></li>
+            <li><a href="#v2v-comm" class="block py-2 px-4 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors duration-200">V2V/V2I Communication</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="lg:ml-72 p-6 md:p-10">
+
+        <!-- Slide 1: Introduction & Market -->
+        <section id="intro" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Introduction & Market Overview</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Rise of Electric Mobility</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>Rapid Expansion:</strong> The global EV fleet is expanding rapidly, driven by energy transition goals and climate change mitigation.</li>
+                            <li><strong>Market Leaders:</strong> China is the world's largest EV market, followed by Europe and the US. Norway leads in market share per capita.</li>
+                            <li><strong>Adoption Rate:</strong> While growing, EVs were only 2.6% of new car sales in 2019. Projections indicate this could rise to 58% by 2040.</li>
+                             <li><strong>Key Challenge:</strong> Publicly accessible, fast, and affordable charging infrastructure remains a major barrier to widespread adoption.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Electric mobility is at the forefront of the energy transition, expanding at an unprecedented pace. While global leaders like China and Norway showcase the potential, overall EV adoption is still in its early stages. The growth from a niche market to a projected majority by 2040 is fueled by government incentives, automotive industry investment, and continuous technological advancement. However, the single most critical factor for future success is the development of a robust, reliable, and user-friendly charging infrastructure to meet consumer expectations for speed and convenience.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is identified as a primary barrier to mass EV adoption?</li>
+                            <li>Which country has the highest market share of EVs among all vehicles sold?</li>
+                            <li>If the global fleet was 100 million cars in 2019 and 1% were EVs, how many EVs were on the road?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 2: EV Powertrain Architecture -->
+        <section id="architecture" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">EV Powertrain Architecture</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Core Components</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>High-Voltage Battery:</strong> The main energy storage, operating at high voltage (400V-800V) to keep currents manageable.</li>
+                            <li><strong>BMS (Battery Management System):</strong> The "brain" that monitors and protects the battery.</li>
+                            <li><strong>OBC (On-Board Charger):</strong> Converts AC power from the grid to DC power to charge the battery.</li>
+                            <li><strong>Drive Inverter:</strong> Converts the battery's DC power to AC power to run the electric motor.</li>
+                            <li><strong>DC-DC Converters:</strong> Step down the high battery voltage to power auxiliary systems (lights, infotainment) on a low-voltage (e.g., 12V) bus.</li>
+                            <li><strong>Thermal Management:</strong> Cooling loops to maintain optimal temperatures for the battery and power electronics.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">A modern EV's powertrain is a complex, integrated system. At its heart is the high-voltage battery, managed by a sophisticated BMS. For AC charging, the On-Board Charger is a critical component. For driving, the drive inverter delivers power to the motor. Various DC-DC converters are needed to power the car's conventional low-voltage systems. Crucially, all these high-power components generate heat and require an active thermal management system, often with multiple liquid cooling loops operating at different temperatures to ensure efficiency and longevity.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the function of the On-Board Charger (OBC)?</li>
+                            <li>Why does an EV still need a low-voltage system (e.g., 12V)?</li>
+                            <li>If a drive inverter is 95% efficient and delivering 100 kW to the motor, how much power is it dissipating as heat?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Slide 3: Charging Standards Evolution -->
+        <section id="standards-evolution" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Charging Standards Evolution</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Race for Power</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                         <ul class="list-disc list-inside ml-4 space-y-2">
+                            <li><strong>CHAdeMO:</strong> Promoted by Japanese automakers. Started at 50kW, evolved to 400kW (v2.0), with future plans for 900kW.</li>
+                            <li><strong>CCS (Combined Charging System):</strong> An open standard promoted in Europe/US. Evolved from ~50kW to 400kW, with heavy-duty versions planned.</li>
+                            <li><strong>GB/T (Guobiao):</strong> The Chinese national standard. Evolved to support up to 950V and 250A. Is now co-developing the next generation ("ChaoJi") with CHAdeMO.</li>
+                            <li><strong>Tesla:</strong> A proprietary standard that was the first to deploy a large-scale fast-charging network. Has evolved from ~120kW to 250kW (V3), with 350kW planned.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The history of DC fast charging has been a fragmented but rapid evolution. Early standards like CHAdeMO started around 50kW, which was sufficient for smaller batteries but quickly became a bottleneck. In response, all major standards have undergone significant upgrades. The CCS standard emerged as an open platform to unify AC and DC charging. China developed its own powerful GB/T standard. Now, we are seeing a trend towards consolidation, with CHAdeMO and GB/T collaborating on a new ultra-high-power standard called ChaoJi, aiming for up to 900kW to drastically reduce charging times.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Which two standards organizations are collaborating on the "ChaoJi" standard?</li>
+                            <li>What was the primary motivation for upgrading standards from their original 50kW power levels?</li>
+                            <li>Charging a 60 kWh battery from 10-80% requires 42 kWh. How much faster is this on a 150kW charger compared to a 50kW charger, in minutes? (Time = Energy / Power)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: AC Charging Standards -->
+        <section id="ac-charging" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">AC Charging Standards (On-Board)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Global Comparison</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-100">
+                                <tr><th class="p-2 text-left">Standard</th><th class="p-2 text-left">Region</th><th class="p-2 text-left">Connector</th><th class="p-2 text-left">Max Power</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t"><td class="p-2 font-semibold">SAE J1772</td><td class="p-2">North America</td><td class="p-2">Type 1</td><td class="p-2">19.2 kW</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">IEC 62196</td><td class="p-2">Europe, Thailand</td><td class="p-2">Type 2</td><td class="p-2">~22 kW (3-phase)</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">GB/T 20234.2</td><td class="p-2">China</td><td class="p-2">GB/T (AC)</td><td class="p-2">~7 kW</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">Tesla</td><td class="p-2">Global</td><td class="p-2">Proprietary/NACS</td><td class="p-2">~11.5 kW</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">AC charging standards are largely defined by regional grid characteristics and connector types. In North America, the SAE J1772 standard with its <strong>Type 1</strong> connector is dominant. In Europe, Thailand, and much of the world, the IEC standard with the more capable three-phase <strong>Type 2</strong> connector is the norm. China uses its own national GB/T standard. Tesla historically used its own proprietary connector but is now transitioning to a design called the North American Charging Standard (NACS) and using standard connectors like Type 2 in other regions to increase compatibility.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the main physical difference between the US (SAE) and European (IEC) AC charging standards?</li>
+                            <li>Why can the IEC standard generally support higher power levels for AC charging than the SAE standard?</li>
+                            <li>How has Tesla's approach to connectors changed over time?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: DC Charging Standards -->
+        <section id="dc-charging" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">DC Charging Standards (Off-Board)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Global Comparison</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                         <table class="w-full text-sm">
+                            <thead class="bg-slate-100">
+                                <tr><th class="p-2 text-left">Standard</th><th class="p-2 text-left">Region</th><th class="p-2 text-left">Communication</th><th class="p-2 text-left">Max Power</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t"><td class="p-2 font-semibold">CCS-1</td><td class="p-2">North America</td><td class="p-2">PLC</td><td class="p-2">350 kW</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">CCS-2</td><td class="p-2">Europe, Thailand</td><td class="p-2">PLC</td><td class="p-2">350 kW</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">CHAdeMO</td><td class="p-2">Japan, Global</td><td class="p-2">CAN</td><td class="p-2">400 kW</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">GB/T</td><td class="p-2">China</td><td class="p-2">CAN</td><td class="p-2">~240 kW</td></tr>
+                                <tr class="border-t"><td class="p-2 font-semibold">Tesla</td><td class="p-2">Global</td><td class="p-2">CAN</td><td class="p-2">250 kW</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">DC fast charging standards differ not only in their physical connectors but also in their communication protocols. The <strong>CCS</strong> standards use Power Line Communication (PLC) for advanced, digital "high-level" communication. In contrast, <strong>CHAdeMO</strong>, <strong>GB/T</strong>, and <strong>Tesla</strong> traditionally use the robust Controller Area Network (CAN) bus, a common communication protocol within vehicles. The physical plug for CCS-1 (North America) is based on the Type 1 AC plug, while CCS-2 (Europe/Thailand) is based on the Type 2 AC plug, highlighting the "combined" nature of the system.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the main difference in communication protocol between CCS and CHAdeMO?</li>
+                            <li>What does the "2" in CCS-2 refer to?</li>
+                            <li>A Porsche Taycan has an 800V battery. To charge at 270 kW, what is the minimum current the charging station must provide? (Current = Power / Voltage)</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Charger Topologies -->
+        <section id="topologies" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Charger Topologies</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Circuit Design Approaches</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                         <ul class="list-disc list-inside ml-4 space-y-2">
+                           <li><strong>Dedicated On-Board Charger (OBC):</strong> A separate, self-contained unit inside the car solely for AC charging (e.g., GM Volt). Usually two-stage: an AC-DC PFC stage and a DC-DC converter stage.</li>
+                           <li><strong>Integrated Charger:</strong> Re-uses parts of the electric drive system (motor windings, inverter) to perform AC-DC conversion, saving weight and cost (e.g., Renault Chameleon). Can achieve higher power than dedicated OBCs.</li>
+                           <li><strong>Off-Board DC Charger:</strong> All power conversion happens outside the car. These are complex, high-power systems, often using modular designs to achieve high power levels and reliability.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">The internal circuit design, or "topology," of chargers varies significantly based on their application. A <strong>dedicated OBC</strong> is the traditional approach, but its power is limited by its size and weight. To overcome this, automakers developed <strong>integrated chargers</strong>. These clever designs reconfigure the powerful motor and inverter—which are idle during charging—to act as parts of the charger, allowing for much faster AC charging (up to 43kW in some cases) without adding much extra hardware. <strong>Off-board DC chargers</strong> are the most powerful, using sophisticated multi-stage power electronics to convert high-voltage AC from the grid directly to high-current DC for the battery.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the main advantage of an integrated charger over a dedicated OBC?</li>
+                            <li>What components of the powertrain are typically re-used in an integrated charger?</li>
+                            <li>Why do dedicated OBCs almost always include galvanic isolation?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Modularity -->
+        <section id="modularity" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Modularity in Chargers</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Building Block Approach</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>High-power DC chargers are often built from smaller, identical modules called Power Electronic Building Blocks (PEBBs).</p>
+                        <ul class="list-disc list-inside ml-4 space-y-2 mt-2">
+                           <li><strong>Scalability:</strong> Higher power stations can be built by simply adding more modules.</li>
+                           <li><strong>Reliability:</strong> If one module fails, the station can continue to operate at reduced power.</li>
+                           <li><strong>Efficiency:</strong> The system can activate only the number of modules needed for a given charge, allowing each to run closer to its peak efficiency point.</li>
+                           <li><strong>Flexibility:</strong> Allows for easier support of different voltage architectures (e.g., 400V and 800V).</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed"><strong>Modularity</strong> has become the key design principle for modern high-power DC fast chargers. Instead of designing one massive 350kW converter, manufacturers design smaller, standardized modules (e.g., 50kW PEBBs). These modules can be paralleled to scale up the power output as needed. This approach offers huge benefits, including economies of scale in manufacturing, improved reliability through redundancy, and higher overall efficiency, as the charger can dynamically adjust the number of active modules to match the car's power request, keeping the active modules operating in their most efficient range.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What are the three main benefits of a modular charger design?</li>
+                             <li>An ABB Terra HP charger is built from 50kW modules. How many modules are needed to build a 150kW station?</li>
+                             <li>How does modularity improve the efficiency of a charger when charging a car that can only accept low power?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Safety & Standardization -->
+        <section id="safety" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Safety & Standardization</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Ensuring a Safe Connection</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                           <li><strong>Role of Standards (IEC 61851):</strong> Define the complete charging procedure, communication signals (handshake), contactor states, and safety checks.</li>
+                           <li><strong>Galvanic Isolation:</strong> Almost all DC chargers physically isolate the vehicle's battery from the grid to prevent ground faults and minimize touch currents.</li>
+                           <li><strong>Continuous Monitoring:</strong> Both the vehicle (BMS) and the charger continuously monitor voltage, current, temperature, and isolation integrity.</li>
+                           <li><strong>Failsafes:</strong> In case of any error (e.g., control pilot interruption), the system must react in milliseconds to safely shut down the power transfer.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">Safety is the most important aspect of EV charging. International standards like <strong>IEC 61851</strong> meticulously define every step of the process, from the initial "handshake" to the final disconnection. A cornerstone of DC charger safety is <strong>galvanic isolation</strong>, which creates an electrical break between the grid and the car, protecting users from potential faults. During charging, the car's BMS is in constant communication with the charger, acting as the master controller. Both systems continuously monitor for any anomalies, and if a fault is detected, contactors will open within milliseconds to safely stop the flow of energy.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is the primary purpose of galvanic isolation in a DC charger?</li>
+                            <li>During DC charging, which component is the "master" that commands the voltage and current: the charger or the car's BMS?</li>
+                            <li>What is the "handshake" in the context of EV charging?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: V2X Intro -->
+        <section id="v2x-intro" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Introduction to V2X (Vehicle-to-Everything)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The EV as a Mobile Battery</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>V2X is an umbrella term for technologies that allow an electric vehicle's battery to be used for purposes other than just driving.</p>
+                        <p class="mt-2">It transforms the car from a simple consumer of electricity into a versatile, mobile energy resource.</p>
+                        <p class="mt-2">This capability requires a <strong>bidirectional charger</strong> that can both draw power from the grid (charge) and push power out from the battery (discharge).</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed"><strong>Vehicle-to-Everything (V2X)</strong> represents a paradigm shift in how we view electric vehicles. Instead of being just a mode of transportation, an EV with V2X capabilities becomes a large, mobile battery pack that can interact with its environment. The core enabling technology for this is <strong>bidirectional charging</strong>, which allows energy to flow not only *into* the car's battery but also *out* of it. This opens up a world of possibilities for using the stored energy to power devices, homes, and even support the electrical grid itself.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What does "V2X" stand for?</li>
+                            <li>What is the core hardware requirement for any V2X application?</li>
+                            <li>How does V2X change the fundamental role of an EV in the energy ecosystem?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: V2X Types -->
+        <section id="v2x-types" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Types of V2X</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Different Use Cases</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <ul class="list-disc list-inside ml-4 space-y-2">
+                           <li><strong>V2L (Vehicle-to-Load):</strong> The simplest form. Use the EV to power appliances and tools via a standard outlet on the car.</li>
+                           <li><strong>V2H/V2B (Vehicle-to-Home/Building):</strong> Use the EV's battery to power an entire house or building during a power outage or to save money during peak electricity price hours.</li>
+                           <li><strong>V2G (Vehicle-to-Grid):</strong> Send power from the EV back to the electrical grid to help stabilize it, support renewable energy integration, or earn revenue.</li>
+                           <li><strong>V2V (Vehicle-to-Vehicle):</strong> Use one EV to transfer power directly to another EV, acting as a mobile emergency charger.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">V2X encompasses several distinct applications. <strong>Vehicle-to-Load (V2L)</strong> is becoming a popular feature, turning the car into a giant power bank for camping or worksites. <strong>Vehicle-to-Home (V2H)</strong> offers energy independence and backup power. The most ambitious application is <strong>Vehicle-to-Grid (V2G)</strong>, where a large fleet of EVs could act as a massive distributed battery, helping utility companies balance supply and demand. Finally, <strong>Vehicle-to-Vehicle (V2V)</strong> charging provides a way for one EV to help another that has run out of charge.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What is the difference between V2L and V2H?</li>
+                             <li>Which V2X technology involves selling power back to the utility company?</li>
+                             <li>A Ford F-150 Lightning can output 9.6 kW via V2L. How many 1.2 kW power tools can it run simultaneously?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Bidirectional Charging -->
+        <section id="bidirectional" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">Bidirectional Charging: The Enabler</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">Hardware and Vehicle Support</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>Bidirectional charging requires both a capable vehicle and a compatible charger.</p>
+                        <p class="mt-2 font-semibold">V2G-Enabled Vehicles:</p>
+                        <ul class="list-disc list-inside ml-4">
+                            <li>Ford F-150 Lightning</li>
+                            <li>Nissan LEAF</li>
+                            <li>Mitsubishi Outlander PHEV</li>
+                            <li>Volkswagen ID. series (in select markets)</li>
+                        </ul>
+                         <p class="mt-2 font-semibold">Required Hardware:</p>
+                         <p>A specialized bidirectional home charger (e.g., Wallbox Quasar) or public DC charger that supports the V2G communication protocol.</p>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">While the concept of V2X is powerful, its implementation is still in the early stages. It requires both the vehicle and the charging equipment to be specifically designed for bidirectional power flow. Only a handful of vehicle models on the market currently support true V2G, such as the Nissan LEAF and Ford F-150 Lightning. Furthermore, a standard unidirectional home charger cannot be used for this purpose. A specialized bidirectional charger is required, which contains the necessary power electronics to safely convert the car's DC battery power back into grid-compliant AC power.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Name two vehicles that are currently capable of V2G.</li>
+                            <li>Can a standard Level 2 home charger be used for V2H? Why or why not?</li>
+                            <li>What is the main technical difference between a unidirectional and a bidirectional charger?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 12: V2G Protocols -->
+        <section id="v2g-protocols" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">V2G Protocols & Standards</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Communication Challenge</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>Currently, only the <strong>CHAdeMO</strong> charging protocol has mature, widespread support for V2G.</p>
+                        <p class="mt-2">The <strong>CCS</strong> standard is expected to fully support V2G by 2025 via the <strong>ISO 15118</strong> protocol.</p>
+                         <p class="mt-2 font-semibold">Key Communication Layers:</p>
+                         <ul class="list-disc list-inside ml-4">
+                            <li><strong>EV to Charger (Front-end):</strong> Handled by ISO 15118.</li>
+                            <li><strong>Charger to Grid (Back-end):</strong> Handled by protocols like IEEE 2030.5 or OpenADR.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">One of the biggest hurdles for widespread V2G adoption is standardization. Historically, the <strong>CHAdeMO</strong> protocol has been the only standard with built-in V2G capability, which is why the Nissan LEAF was a pioneer in this space. The globally dominant <strong>CCS</strong> standard is catching up, with the <strong>ISO 15118</strong> protocol defining the complex digital handshake required for bidirectional energy flow. This communication happens in two parts: a "front-end" conversation between the car and the charger, and a "back-end" conversation between the charger and the utility grid operator to coordinate the energy transfer.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>Which DC charging protocol has historically supported V2G?</li>
+                            <li>What is the name of the new protocol that will enable V2G for CCS chargers?</li>
+                            <li>What is the difference between "front-end" and "back-end" communication in a V2G system?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 13: EVs as DERs -->
+        <section id="der" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">EVs as Distributed Energy Resources (DERs)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">A Virtual Power Plant</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p>With V2G, a large fleet of connected EVs can be aggregated to act as a single, massive battery for the grid. This is known as a Virtual Power Plant (VPP).</p>
+                         <p class="mt-2 font-semibold">Grid Services Provided by EVs:</p>
+                         <ul class="list-disc list-inside ml-4">
+                            <li><strong>Peak Shaving:</strong> Discharging during periods of high demand to reduce stress on the grid.</li>
+                            <li><strong>Load Shifting:</strong> Charging during periods of low demand / high renewable generation (e.g., midday solar).</li>
+                            <li><strong>Frequency Regulation:</strong> Rapidly absorbing or injecting power to stabilize grid frequency.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">When an EV participates in V2G, it becomes a <strong>Distributed Energy Resource (DER)</strong>. This means it's a small-scale energy source connected to the distribution grid. When thousands of these DERs are aggregated and controlled by a central platform, they form a <strong>Virtual Power Plant (VPP)</strong>. This VPP can be instructed by the utility to provide critical grid services. For example, during an evening peak, the VPP could command thousands of EVs to discharge a small amount of energy, collectively reducing the need to turn on expensive and polluting "peaker" power plants.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                            <li>What is a Distributed Energy Resource (DER)?</li>
+                            <li>What is "peak shaving" and how can EVs help achieve it?</li>
+                            <li>If 10,000 EVs each discharge at 5 kW for 1 hour, how much total energy (in MWh) have they provided to the grid?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: V2V/V2I Communication -->
+        <section id="v2v-comm" class="slide-section bg-white rounded-xl shadow-lg mb-10 overflow-hidden">
+            <div class="p-8 border-b border-slate-200">
+                <h2 class="text-3xl font-bold text-slate-900">V2V & V2I Communication (Data Transfer)</h2>
+            </div>
+            <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="slide-visual bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-600 mb-4">The Connected Car</h3>
+                    <div class="text-left p-4 bg-white rounded-md border border-slate-300">
+                        <p class="font-semibold">This is about data, not power.</p>
+                        <p class="mt-2"><strong>V2V (Vehicle-to-Vehicle):</strong> Cars wirelessly share real-time data like speed, location, and braking status to prevent collisions and improve traffic flow.</p>
+                        <p class="mt-2"><strong>V2I (Vehicle-to-Infrastructure):</strong> Cars communicate with roadside infrastructure like traffic lights, which can optimize signal timing based on real-time traffic.</p>
+                         <p class="mt-2 font-semibold">Technologies:</p>
+                         <ul class="list-disc list-inside ml-4">
+                            <li><strong>DSRC:</strong> Fast, short-range, WiFi-like communication.</li>
+                            <li><strong>C-V2X:</strong> Longer-range, uses cellular networks.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="script-container space-y-4">
+                    <p class="text-lg leading-relaxed">It's important to distinguish the energy-focused "V2X" from the data-focused communication technologies that also use the V2X acronym. <strong>Vehicle-to-Vehicle (V2V)</strong> and <strong>Vehicle-to-Infrastructure (V2I)</strong> communication are about the wireless exchange of information to improve safety and traffic efficiency. Using technologies like DSRC or C-V2X, cars can warn each other of sudden braking ahead or receive information from traffic lights about when they will turn green. These systems are foundational for the development of advanced driver-assistance systems (ADAS) and future fully autonomous vehicles.</p>
+                    <div class="questions bg-orange-50 border-l-4 border-orange-500 p-5 rounded-r-lg">
+                        <h3 class="font-bold text-slate-800 mb-2">Key Questions:</h3>
+                        <ol class="list-decimal list-inside space-y-1">
+                             <li>What is the key difference between V2G and V2V communication?</li>
+                             <li>How can V2I communication help reduce traffic congestion?</li>
+                             <li>What are the two competing wireless technologies for V2V communication?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all slide sections and navigation links
+            const sections = document.querySelectorAll('.slide-section');
+            const navLinks = document.querySelectorAll('nav a');
+
+            if (!sections.length || !navLinks.length) {
+                console.warn('Observer script: Could not find sections or nav links.');
+                return;
+            }
+
+            const observerOptions = {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0.4 // Trigger when 40% of the section is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // When a section is 40% visible
+                    if (entry.isIntersecting) {
+                        // Get the ID of the visible section
+                        const visibleSectionId = entry.target.id;
+
+                        // Remove 'active' class from all nav links
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+
+                        // Find the corresponding nav link and add the 'active' class
+                        const activeLink = document.querySelector(`nav a[href="#${visibleSectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe each slide section
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
