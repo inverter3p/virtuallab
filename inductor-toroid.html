@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toroidal Inductor Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        copper: {
+                            400: '#C17C5D',
+                            500: '#B87333',
+                            600: '#A0551E',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #4F46E5;
+            margin-top: -6px;
+            cursor: pointer;
+            box-shadow: 0 0 0 2px white, 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #E5E7EB;
+            border-radius: 2px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                        <i class="fa-solid fa-ring"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-slate-900 tracking-tight">Toroid Architect</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="openHelp()" class="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors px-3 py-2 rounded-lg hover:bg-slate-50" title="View Equations">
+                        <i class="fa-solid fa-function"></i>
+                        <span class="hidden sm:inline text-sm font-medium">Equations</span>
+                    </button>
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    <button onclick="window.print()" class="text-slate-500 hover:text-indigo-600 transition-colors">
+                        <i class="fa-solid fa-print text-lg"></i>
+                    </button>
+                    <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">v1.2</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Inputs -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- Core Physical Dimensions -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-slate-900"><i class="fa-solid fa-ruler-combined text-indigo-500 mr-2"></i>Core Dimensions</h2>
+                        <span class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded">mm</span>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Outer Dia (OD)</label>
+                                <input type="number" id="od" value="25.0" step="0.1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow" oninput="calculate()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Inner Dia (ID)</label>
+                                <input type="number" id="id" value="15.0" step="0.1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow" oninput="calculate()">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Height (Ht)</label>
+                            <input type="number" id="ht" value="10.0" step="0.1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow" oninput="calculate()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Inductance Factor (A<sub>L</sub>)</label>
+                            <div class="relative">
+                                <input type="number" id="al" value="1000" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow pr-16" oninput="calculate()">
+                                <span class="absolute right-3 top-2 text-xs text-slate-400 pointer-events-none">nH/N²</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Electrical Specs -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-4"><i class="fa-solid fa-bolt text-yellow-500 mr-2"></i>Winding Specs</h2>
+                    
+                    <div class="space-y-5">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase">Number of Turns (N)</label>
+                                <span id="turns-val" class="text-sm font-bold text-indigo-600">20</span>
+                            </div>
+                            <input type="range" id="turns" min="1" max="200" value="20" class="w-full" oninput="calculate()">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Peak Current (I<sub>pk</sub>)</label>
+                            <div class="relative">
+                                <input type="number" id="current" value="2.0" step="0.1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow pr-12" oninput="calculate()">
+                                <span class="absolute right-3 top-2 text-xs text-slate-400 pointer-events-none">Amps</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Wire Size (AWG)</label>
+                            <select id="awg" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" onchange="calculate()">
+                                <!-- Populated by JS -->
+                            </select>
+                            <div id="wire-dia-display" class="text-xs text-slate-400 mt-1 text-right">Dia: 0.00 mm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Visualization & Results -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- Main Results Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Inductance Card -->
+                    <div class="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg shadow-indigo-200 transform transition hover:-translate-y-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-indigo-200 text-xs font-semibold uppercase tracking-wider">Inductance</span>
+                            <i class="fa-solid fa-wave-square text-indigo-300 opacity-50"></i>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span id="res-inductance" class="text-3xl font-bold">0.00</span>
+                            <span class="text-lg text-indigo-200">µH</span>
+                        </div>
+                        <p class="text-xs text-indigo-300 mt-2">$$L = A_L \cdot N^2$$</p>
+                    </div>
+
+                    <!-- Flux Density Card -->
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+                        <div class="flex items-center justify-between mb-2 relative z-10">
+                            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Flux Density (B)</span>
+                            <i class="fa-solid fa-magnet text-emerald-500"></i>
+                        </div>
+                        <div class="flex items-baseline gap-1 relative z-10">
+                            <span id="res-flux" class="text-3xl font-bold text-slate-800">0.00</span>
+                            <span class="text-lg text-slate-500">mT</span>
+                        </div>
+                         <!-- Saturation Warning -->
+                         <div id="sat-warning" class="hidden mt-2 flex items-center gap-1 text-xs text-red-500 font-medium">
+                            <i class="fa-solid fa-triangle-exclamation"></i> High Saturation Risk
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2">At I<sub>pk</sub></p>
+                    </div>
+
+                    <!-- Fill Factor Card -->
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Window Fill</span>
+                            <i class="fa-solid fa-circle-notch text-orange-500"></i>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span id="res-fill" class="text-3xl font-bold text-slate-800">0.0</span>
+                            <span class="text-lg text-slate-500">%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-1.5 mt-3 rounded-full overflow-hidden">
+                            <div id="fill-bar" class="bg-orange-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization Panel -->
+                <div class="bg-slate-900 rounded-2xl shadow-lg border border-slate-800 p-1 overflow-hidden relative min-h-[400px]">
+                    <div class="absolute top-4 left-4 z-10">
+                        <span class="text-slate-400 text-xs uppercase font-semibold tracking-wider">Real-time Preview</span>
+                    </div>
+                    
+                    <!-- Canvas -->
+                    <div class="w-full h-full flex items-center justify-center bg-slate-900 rounded-xl" id="canvas-container">
+                        <canvas id="inductorCanvas"></canvas>
+                    </div>
+
+                    <!-- Legend Overlay -->
+                    <div class="absolute bottom-4 right-4 bg-slate-800/90 backdrop-blur px-3 py-2 rounded-lg border border-slate-700 text-xs text-slate-300">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="w-3 h-3 rounded-full bg-gray-600 block"></span> Core
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-copper-500 block"></span> Copper
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secondary Stats -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs text-slate-500 mb-1">Eff. Area (Ae)</div>
+                        <div class="font-semibold text-slate-800"><span id="res-ae">0</span> mm²</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs text-slate-500 mb-1">Path Length (le)</div>
+                        <div class="font-semibold text-slate-800"><span id="res-le">0</span> mm</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs text-slate-500 mb-1">Wire Length</div>
+                        <div class="font-semibold text-slate-800"><span id="res-wirelen">0</span> m</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs text-slate-500 mb-1">DC Resistance</div>
+                        <div class="font-semibold text-slate-800"><span id="res-dcr">0</span> Ω</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- HELP MODAL -->
+    <div id="help-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm transition-opacity" onclick="closeHelp()"></div>
+        
+        <!-- Panel -->
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl border border-slate-200">
+                    
+                    <!-- Header -->
+                    <div class="bg-indigo-600 px-6 py-4 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold leading-6 text-white" id="modal-title">Design Physics & Equations</h3>
+                            <p class="text-indigo-200 text-xs mt-1">Derivations for toroidal inductors</p>
+                        </div>
+                        <button onclick="closeHelp()" class="text-indigo-200 hover:text-white transition-colors bg-white/10 hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="px-6 py-8 max-h-[80vh] overflow-y-auto bg-slate-50">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            
+                            <!-- Left: Geometry Visuals -->
+                            <div class="space-y-6">
+                                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                                    <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Core Geometry</h4>
+                                    
+                                    <!-- SVG Illustration -->
+                                    <svg viewBox="0 0 400 220" class="w-full h-auto">
+                                        <!-- Definitions for markers -->
+                                        <defs>
+                                            <marker id="arrow" markerWidth="6" markerHeight="6" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+                                                <path d="M0,0 L0,6 L6,3 z" fill="#64748b" />
+                                            </marker>
+                                            <marker id="arrow-start" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+                                                <path d="M6,0 L6,6 L0,3 z" fill="#64748b" />
+                                            </marker>
+                                        </defs>
+
+                                        <!-- Top View -->
+                                        <g transform="translate(100, 110)">
+                                            <!-- Outer Circle -->
+                                            <circle cx="0" cy="0" r="80" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2" />
+                                            <!-- Inner Circle -->
+                                            <circle cx="0" cy="0" r="40" fill="#f8fafc" stroke="#94a3b8" stroke-width="2" />
+                                            <!-- Path Length le -->
+                                            <circle cx="0" cy="0" r="60" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,3" />
+                                            
+                                            <!-- Labels -->
+                                            <text x="0" y="-85" text-anchor="middle" class="text-[10px] fill-slate-500">OD</text>
+                                            <text x="0" y="-25" text-anchor="middle" class="text-[10px] fill-slate-500">ID</text>
+                                            <text x="0" y="55" text-anchor="middle" class="text-[10px] fill-indigo-600 font-bold">le (Path)</text>
+                                        </g>
+
+                                        <!-- Cross Section View (Side cut) -->
+                                        <g transform="translate(250, 70)">
+                                            <rect x="0" y="0" width="80" height="80" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2" />
+                                            <!-- Hatching for Area -->
+                                            <defs>
+                                                <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                                                    <rect width="2" height="8" transform="translate(0,0)" fill="#cbd5e1"></rect>
+                                                </pattern>
+                                            </defs>
+                                            <rect x="0" y="0" width="80" height="80" fill="url(#hatch)" />
+                                            
+                                            <!-- Dimensions -->
+                                            <line x1="-10" y1="0" x2="-10" y2="80" stroke="#64748b" marker-start="url(#arrow-start)" marker-end="url(#arrow)" />
+                                            <text x="-25" y="45" text-anchor="middle" class="text-[12px] fill-slate-600">h</text>
+
+                                            <line x1="0" y1="95" x2="80" y2="95" stroke="#64748b" marker-start="url(#arrow-start)" marker-end="url(#arrow)" />
+                                            <text x="40" y="115" text-anchor="middle" class="text-[12px] fill-slate-600">(OD-ID)/2</text>
+                                            
+                                            <text x="40" y="45" text-anchor="middle" class="text-[14px] font-bold fill-slate-700 bg-white">Ae</text>
+                                        </g>
+                                    </svg>
+                                    <div class="text-xs text-slate-500 mt-2 text-center">
+                                        <span class="font-semibold">Ae:</span> Effective Cross-section Area &nbsp;|&nbsp; <span class="font-semibold text-indigo-600">le:</span> Mean Magnetic Path Length
+                                    </div>
+                                </div>
+
+                                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                                    <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">Geometric Formulas</h4>
+                                    <div class="space-y-4 text-sm text-slate-700">
+                                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                                            <span>Magnetic Path Length:</span>
+                                            <span>$$l_e = \frac{\pi \cdot (OD + ID)}{2}$$</span>
+                                        </div>
+                                        <div class="flex items-center justify-between pt-2">
+                                            <span>Effective Area:</span>
+                                            <span>$$A_e = h \cdot \frac{(OD - ID)}{2}$$</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Physics Derivations -->
+                            <div class="space-y-6">
+                                
+                                <!-- Inductance Section -->
+                                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-50 rounded-bl-full"></div>
+                                    <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">1. From Permeability to A<sub>L</sub></h4>
+                                    
+                                    <div class="space-y-4 text-sm text-slate-600">
+                                        <p>The fundamental inductance formula for a toroid using permeability ($\mu$):</p>
+                                        <div class="my-3 text-lg text-slate-800 bg-slate-50 py-3 rounded-lg border border-slate-100 flex justify-center overflow-x-auto">
+                                            $$L = \frac{\mu_0 \mu_r N^2 A_e}{l_e}$$
+                                        </div>
+                                        
+                                        <p>To simplify calculations, manufacturers group the material properties ($\mu$) and core geometry ($Ae, le$) into a single constant called the <strong>Inductance Factor (A<sub>L</sub>)</strong>.</p>
+                                        
+                                        <div class="my-3 text-lg text-slate-800 flex justify-center overflow-x-auto items-center gap-2">
+                                            $$A_L = \frac{\mu_0 \mu_r A_e}{l_e}$$
+                                            <span class="text-xs text-slate-400 font-sans">(nH/N²)</span>
+                                        </div>
+
+                                        <p>This gives us the simplified practical formula used in this tool:</p>
+                                        <div class="my-2 text-xl font-bold text-indigo-700 flex justify-center">
+                                            $$L = A_L \cdot N^2$$
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Flux Density Section -->
+                                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 w-16 h-16 bg-emerald-50 rounded-bl-full"></div>
+                                    <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">2. Flux Density (B)</h4>
+                                    
+                                    <div class="space-y-4 text-sm text-slate-600">
+                                        <p>Ampere's Law ($\oint H \cdot dl = NI$) gives us the Magnetic Field Strength ($H$):</p>
+                                        <div class="my-2 text-base text-slate-800 flex justify-center">
+                                            $$H = \frac{N \cdot I}{l_e}$$
+                                        </div>
+
+                                        <p>Flux Density ($B$) is related to Field Strength by Permeability ($B = \mu H$):</p>
+                                        <div class="my-2 text-base text-slate-800 flex justify-center">
+                                            $$B = \mu \cdot \frac{N \cdot I}{l_e}$$
+                                        </div>
+
+                                        <p>Substituting $\mu$ derived from the Inductance formula ($\mu = \frac{L \cdot l_e}{N^2 \cdot A_e}$), we get the final equation used here, which depends only on measurable L:</p>
+                                        
+                                        <div class="my-3 text-lg font-bold text-emerald-700 bg-emerald-50 py-3 rounded-lg border border-emerald-100 flex justify-center overflow-x-auto">
+                                            $$B_{peak} = \frac{L \cdot I_{pk}}{N \cdot A_e}$$
+                                        </div>
+                                        <p class="text-xs text-center text-slate-400">Where L is in Henrys, Area in m²</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="bg-slate-50 px-6 py-4 flex justify-end">
+                        <button type="button" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:w-auto transition-colors" onclick="closeHelp()">Got it</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Modal Logic ---
+        function openHelp() {
+            const modal = document.getElementById('help-modal');
+            modal.classList.remove('hidden');
+            // Prevent body scrolling
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeHelp() {
+            const modal = document.getElementById('help-modal');
+            modal.classList.add('hidden');
+            // Restore body scrolling
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeHelp();
+            }
+        });
+
+        // --- AWG Data Table (Approximate) ---
+        // AWG: [Diameter (mm), Resistance (Ohm/m)]
+        const awgData = {
+            10: [2.588, 0.00327],
+            12: [2.053, 0.00521],
+            14: [1.628, 0.00828],
+            16: [1.291, 0.01317],
+            18: [1.024, 0.02095],
+            20: [0.812, 0.03331],
+            22: [0.644, 0.05296],
+            24: [0.511, 0.08421],
+            26: [0.405, 0.1339],
+            28: [0.321, 0.2129],
+            30: [0.255, 0.3386],
+            32: [0.202, 0.5383]
+        };
+
+        // --- Initialization ---
+        function init() {
+            const awgSelect = document.getElementById('awg');
+            for (let gauge in awgData) {
+                let option = document.createElement('option');
+                option.value = gauge;
+                option.text = `AWG ${gauge}`;
+                if (gauge === "20") option.selected = true;
+                awgSelect.appendChild(option);
+            }
+            
+            // Resize canvas
+            resizeCanvas();
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                calculate();
+            });
+
+            calculate();
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            const canvas = document.getElementById('inductorCanvas');
+            canvas.width = container.clientWidth;
+            canvas.height = 400; // Fixed height for consistency
+        }
+
+        // --- Core Calculation Logic ---
+        function calculate() {
+            // 1. Get Inputs
+            const od_mm = parseFloat(document.getElementById('od').value) || 0;
+            const id_mm = parseFloat(document.getElementById('id').value) || 0;
+            const ht_mm = parseFloat(document.getElementById('ht').value) || 0;
+            const al_val = parseFloat(document.getElementById('al').value) || 0; // nH/N^2
+            const turns = parseInt(document.getElementById('turns').value) || 0;
+            const current = parseFloat(document.getElementById('current').value) || 0;
+            const awg = document.getElementById('awg').value;
+
+            // Update UI Labels
+            document.getElementById('turns-val').innerText = turns;
+            
+            // Wire Properties
+            const wireDia_mm = awgData[awg][0];
+            const wireRes_per_m = awgData[awg][1];
+            document.getElementById('wire-dia-display').innerText = `Dia: ${wireDia_mm.toFixed(3)} mm`;
+
+            // 2. Geometry Calculations
+            // Effective Area (Ae) - Standard rectangular cross section approx: H * (OD-ID)/2
+            // Convert to meters for physics calcs
+            const od_m = od_mm / 1000;
+            const id_m = id_mm / 1000;
+            const ht_m = ht_mm / 1000;
+            
+            const Ae_m2 = ht_m * (od_m - id_m) / 2;
+            const Ae_mm2 = Ae_m2 * 1e6;
+
+            // Effective Path Length (le) - Arithmetic mean path length
+            const le_m = (Math.PI * (od_m + id_m)) / 2;
+            const le_mm = le_m * 1000;
+
+            // 3. Inductance Calculation
+            // L = AL * N^2 (Result in nH)
+            const L_nH = al_val * Math.pow(turns, 2);
+            const L_uH = L_nH / 1000;
+
+            // 4. Flux Density Calculation
+            // B = (L * I) / (N * Ae)
+            // L in Henrys, I in Amps, Ae in m^2 -> B in Tesla
+            let B_tesla = 0;
+            if (turns > 0 && Ae_m2 > 0) {
+                const L_H = L_nH * 1e-9;
+                B_tesla = (L_H * current) / (turns * Ae_m2);
+            }
+            const B_mT = B_tesla * 1000;
+
+            // 5. Winding Calculations
+            // Wire Length approx: N * (Perimeter of cross section)
+            // Perimeter ≈ 2*H + 2*(OD-ID)/2 = 2H + (OD-ID)
+            const turnLength_m = 2*ht_m + (od_m - id_m) + (wireDia_mm/1000 * 4); // Added slack
+            const totalWireLen_m = turns * turnLength_m;
+            const dcResistance = totalWireLen_m * wireRes_per_m;
+
+            // Fill Factor
+            // Inner Window Area
+            const windowRadius_mm = id_mm / 2;
+            const windowArea_mm2 = Math.PI * Math.pow(windowRadius_mm, 2);
+            
+            // Copper Area
+            // Simple approximation: N * wire_cross_section
+            // In reality, packing factor means you can't fill 100%. 
+            // Usually 40% is practical limit for hand winding.
+            const wireArea_mm2 = Math.PI * Math.pow(wireDia_mm/2, 2);
+            const totalCopperArea = turns * wireArea_mm2;
+            
+            let fillFactor = 0;
+            if (windowArea_mm2 > 0) {
+                fillFactor = (totalCopperArea / windowArea_mm2) * 100;
+            }
+
+            // 6. Update UI
+            document.getElementById('res-inductance').innerText = L_uH.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('res-flux').innerText = B_mT.toFixed(1);
+            document.getElementById('res-ae').innerText = Ae_mm2.toFixed(1);
+            document.getElementById('res-le').innerText = le_mm.toFixed(1);
+            document.getElementById('res-wirelen').innerText = totalWireLen_m.toFixed(2);
+            document.getElementById('res-dcr').innerText = dcResistance.toFixed(3);
+            
+            const fillElem = document.getElementById('res-fill');
+            const fillBar = document.getElementById('fill-bar');
+            fillElem.innerText = fillFactor.toFixed(1);
+            
+            // Fill Factor Styling
+            let barColor = 'bg-emerald-500';
+            if(fillFactor > 30) barColor = 'bg-yellow-500';
+            if(fillFactor > 50) barColor = 'bg-red-500';
+            
+            fillBar.className = `h-full rounded-full transition-all duration-500 ${barColor}`;
+            fillBar.style.width = `${Math.min(fillFactor, 100)}%`;
+
+            // Saturation Warning (Generic typical ferrite limit ~350-400mT)
+            const satWarning = document.getElementById('sat-warning');
+            if (B_mT > 350) {
+                satWarning.classList.remove('hidden');
+            } else {
+                satWarning.classList.add('hidden');
+            }
+
+            // Draw
+            draw(od_mm, id_mm, turns, wireDia_mm);
+        }
+
+        // --- Visualization Logic ---
+        function draw(od, id, turns, wireDia) {
+            const canvas = document.getElementById('inductorCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Scaling: Fit the inductor into the canvas with padding
+            // Max available size is usually min(width, height) - padding
+            const padding = 40;
+            const maxDimension = Math.min(width, height) - padding * 2;
+            const scale = maxDimension / od;
+
+            const radiusOuter = (od / 2) * scale;
+            const radiusInner = (id / 2) * scale;
+
+            // Calculate wire thickness in pixels based on scale
+            // Ensure minimum visibility of 1px
+            const wireThickPx = Math.max(1, (wireDia || 0.5) * scale);
+
+            // 1. Draw Core Body (Top Down View)
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 15;
+            
+            // Outer Circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radiusOuter, 0, 2 * Math.PI);
+            ctx.fillStyle = '#475569'; // Slate-600
+            ctx.fill();
+
+            // Inner Circle (Hole)
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radiusInner, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Reset Composite
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.shadowBlur = 0;
+
+            // Inner Shadow effect for hole
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radiusInner, 0, 2 * Math.PI);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#334155';
+            ctx.stroke();
+
+            // Outer highlight
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radiusOuter, 0, 2 * Math.PI);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#64748b';
+            ctx.stroke();
+
+            // 2. Draw Windings
+            if (turns > 0) {
+                ctx.strokeStyle = '#B87333'; // Copper
+                ctx.lineWidth = wireThickPx;
+                ctx.lineCap = 'round';
+
+                const step = (2 * Math.PI) / turns;
+                const wireExtension = 5; // Visual overhang
+
+                // Two passes: Bottom part of wire (behind core somewhat visually) and top part
+                // Since this is 2D top-down, we draw radial lines.
+                // To make it look "wrapped", we can offset the start and end angles slightly.
+
+                for (let i = 0; i < turns; i++) {
+                    const angle = i * step;
+                    
+                    // Simple radial representation
+                    const startX = centerX + (radiusInner - 2) * Math.cos(angle);
+                    const startY = centerY + (radiusInner - 2) * Math.sin(angle);
+                    const endX = centerX + (radiusOuter + 2) * Math.cos(angle);
+                    const endY = centerY + (radiusOuter + 2) * Math.sin(angle);
+
+                    // Add a slight curve or twist for realism
+                    // Start point (Inner)
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    
+                    // Bezier for 3D effect? Keep it simple for performant rendering
+                    // Let's create a slight diagonal offset to simulate spiral pitch
+                    const twist = 0.05; // radians
+                    const endX_twist = centerX + (radiusOuter + 2) * Math.cos(angle + twist);
+                    const endY_twist = centerY + (radiusOuter + 2) * Math.sin(angle + twist);
+
+                    ctx.lineTo(endX_twist, endY_twist);
+                    
+                    // Wire Gradient
+                    const gradient = ctx.createLinearGradient(startX, startY, endX_twist, endY_twist);
+                    gradient.addColorStop(0, '#8B4513');
+                    gradient.addColorStop(0.5, '#F4A460');
+                    gradient.addColorStop(1, '#8B4513');
+                    ctx.strokeStyle = gradient;
+                    
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Run Init
+        init();
+
+    </script>
+</body>
+</html>
