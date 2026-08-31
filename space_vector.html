@@ -1,3 +1,364 @@
+Pasted code.html
+File
+@
+Notion
+ 
+@
+GitHub
+ 
+@
+Google Drive
+ แก้ไขพร้อมเพิ่มกราฟฟิกใน notion และนี่เป็น animation ของ rmf
+รูปนี้ผิด
+
+ใช่ครับ รูปเดิมผิด ผมเปลี่ยนใน หน้า Notion แล้ว โดยแก้ดังนี้:
+
+ภาพซ้ายเป็นแกนขดลวดแบบสองขั้ว \(a-a', b-b', c-c'\) ไม่ใช่เวกเตอร์ MMF ขนาดเท่ากัน
+จัดตำแหน่ง \(b=+120^\circ\) และ \(c=-120^\circ\) ให้ตรงกับสมการ
+
+กราฟกลางใช้
+
+$$ i_a=I_m\cos\theta_e,\quad i_b=I_m\cos(\theta_e-120^\circ),\quad i_c=I_m\cos(\theta_e+120^\circ) $$
+
+พร้อมสีตรงกับแต่ละเฟส
+
+ภาพขวาแสดงที่ \(\theta_e=0^\circ\):
+
+$$ F_a=F_m,\qquad F_b=F_c=-0.5F_m $$
+
+และผลรวม
+
+$$ F_\Sigma=1.5F_m $$
+แสดงทิศหมุน CCW ของปลายเวกเตอร์ลัพธ์อย่างถูกต้อง
+แก้ตัวห้อย \(b,c\) ไม่ให้กลายเป็นอักษรกรีก \(\beta\)
+
+ตรวจกลับแล้ว รูปเวอร์ชันเก่าถูกแทนที่เรียบร้อยครับ
+
+แปลง python ด้านล่าง เป็น html เพื่อให้รันง่ายขึ้น keep plot style close to python as possible. use mathjax for beautiful latex render of equation.
+import numpy as np
+import streamlit as st
+import matplotlib.pyplot as plt
+# from google.colab import files
+from matplotlib import gridspec
+
+A = [1, 0]  # A-axis
+B = [-0.5, 0.866] #B-axis
+C = [-0.5, -0.866] # C-axis
+
+def checkii(xpos,ypos):
+  if i==0:
+    a = plt.text(xpos, ypos, '$\omega t = 0$')
+  elif i==1:
+    a = plt.text(xpos, ypos, '$\omega t = \pi /6$')
+  elif i==6 :
+    a = plt.text(xpos, ypos, '$\omega t = \pi$')
+  elif i==12 :
+    a = plt.text(xpos, ypos, '$\omega t = 2\pi$')
+  else:
+    a = plt.text(xpos, ypos, '$\omega t =$ '+str(i)+'$\pi /6$')
+  return a
+
+def plotvec(org,vx,vy,pos,nol):
+  ax1 = fig.add_subplot(pos)
+  org_x =  org[0]
+  org_y =  org[1]
+  if np.size(vx)<4:
+    
+    if np.size(vx)>2 and nol !='Y' :
+      Q = plt.quiver(org_x, org_y, vx, vy, angles='xy', scale_units='xy', color=['r','b','black'], scale=1)
+      plt.text(vx[0],vy[0],'A')
+      plt.text(vx[1],vy[1],'B')
+      plt.text(vx[2],vy[2],'C')
+    elif np.size(vx)>2 and nol =='Y' :
+      Q = plt.quiver(org_x, org_y, vx, vy, angles='xy', scale_units='xy', color=['r','b','g'], scale=1)
+      plt.text(vx[0],vy[0],'$\\alpha $')
+      plt.text(vx[2],vy[2],'$\\beta$')  
+    else:
+      Q = plt.quiver(org_x, org_y, vx, vy, angles='xy', scale_units='xy', color=['r','b'], scale=1)
+      plt.text(vx[0],vy[0],'$\\alpha $')
+      plt.text(vx[1],vy[1],'$\\beta$')
+  else :
+    Q = plt.quiver(org_x, org_y, vx, vy, angles='xy', scale_units='xy', color=['r','b','black','g'], scale=1)
+    plt.text(vx[0],vy[0],'A')
+    plt.text(org_x[2],org_y[2],'B')
+    plt.text(vx[3],vy[3],'C')
+
+  plt.xlim(-1.5*amp, 1.5*amp)
+  plt.ylim(-1.5*amp, 1.5*amp)
+  ax1.set_aspect('equal', adjustable='box')  
+  
+  checkii(-1.43,1.3)
+  return ax
+
+
+
+def ABC2ab(abc,scaling):
+  alpha = scaling*(abc[0]*1-abc[1]*0.5-abc[2]*0.5)
+  beta = scaling*(abc[0]*0+abc[1]*0.866-abc[2]*0.866)
+  return [alpha,beta]
+
+def calVec(ph,amp,wt):
+  if ph =='A':
+    return amp*np.sin(wt)
+  if ph =='B':
+    return amp*np.sin(wt+ 2*pii/3)
+  if ph =='C':
+    return amp*np.sin(wt- 2*pii/3)
+  
+##########################๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒๒#######################
+#############                                  ####################################
+###################################################################################
+st.set_page_config(
+    page_title="Space Vector Transformation",
+    page_icon="😵",
+    # layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+st.info('## ABC Reference Frame')
+i = st.slider('Step',0,12,step=1) 
+st.sidebar.info('** Set amplitude**')
+ 
+
+ampA = st.sidebar.slider('Phase A Amplitude',1,10,1,step=1)
+ampB = st.sidebar.slider('Phase B Amplitude',1,10,1,step=1)
+ampC = st.sidebar.slider('Phase C Amplitude',1,10,1,step=1)
+
+amp = max(ampA,ampB,ampC)
+step = 13
+pii = np.pi
+wt = np.linspace(0,2*pii,step)
+# Vec_A = ampA*np.sin(wt)
+Vec_A = calVec('A',ampA,wt)
+Vec_B = calVec('B',ampB,wt)
+Vec_C = calVec('C',ampC,wt)
+
+a = 'A(t) = '+ str(ampA)+'\sin(\omega t)'
+b = 'B(t) = '+ str(ampB)+'\sin(\omega t + 2\pi/3)'
+c = 'C(t) = '+ str(ampC)+'\sin(\omega t - 2\pi/3)'
+st.sidebar.latex(a)
+st.sidebar.latex(b)
+st.sidebar.latex(c)
+#########################################
+#   Plot sine wave ABC
+#########################################
+
+
+wt2 = np.linspace(0,2*pii,101)
+sinA = ampA*np.sin(wt2)
+sinB = ampB*np.sin(wt2 + 2*pii/3)
+sinC = ampC*np.sin(wt2 -2*pii/3)
+
+plt.style.use('ggplot')
+
+abc_plot = plt.figure(figsize=[10,4])
+ax = abc_plot.add_subplot(111)
+plt.plot(wt2,sinA,'r',label='A')
+plt.plot(wt2,sinB,'b',label='B')
+plt.plot(wt2,sinC,'black',label='C')
+plt.xlabel('$\omega t$')
+plt.fill_between(wt2,sinA,alpha=0.1,color='red')
+plt.fill_between(wt2,sinB,alpha=0.1,color='blue')
+plt.fill_between(wt2,sinC,alpha=0.1,color='black')
+plt.xlim(0, 2*pii)
+plt.ylim(-amp*1.5, amp*1.5)
+plt.title('Three-Phase Waveforms')
+plt.legend(frameon=False, loc='lower center', ncol=3)\
+
+
+grid_x_ticks_major = np.arange(0, 2*pii+pii/3, pii/3 )
+ax.set_xticks(grid_x_ticks_major)
+ax.set_xticklabels(['0', '$\pi /3$', '$2\pi /3$', '$\pi$', '$4\pi /3$','$5\pi /3$','$2\pi$'])
+# ax.grid(which='major', linestyle='--')
+
+arrow_loc = i*2*pii/(step-1)
+
+plt.arrow(arrow_loc,0,0,np.sin(arrow_loc)*ampA,color='red',width=0.04,length_includes_head=True)
+plt.plot(arrow_loc,np.sin(arrow_loc)*ampA,'r+',markersize= 15)
+plt.arrow(arrow_loc,0,0,np.sin(arrow_loc+2*pii/3)*ampB,color='blue',width=0.04,length_includes_head=True)
+plt.plot(arrow_loc,np.sin(arrow_loc+2*pii/3)*ampB,'b+',markersize= 15)
+plt.arrow(arrow_loc,0,0,np.sin(arrow_loc-2*pii/3)*ampC,color='black',width=0.04,length_includes_head=True)
+plt.plot(arrow_loc,np.sin(arrow_loc-2*pii/3)*ampC,'k+',markersize= 15)
+
+
+plt.axvline(arrow_loc, -1.5, 1.5,color='grey')
+checkii(i*2*pii/(step-1)+0.1,1.3)
+
+
+#########################################
+#   Plot Vector ABC
+#########################################
+
+
+
+#########  Plot ABC Vectors  #############
+abc = [Vec_A[i],Vec_B[i],Vec_C[i]]
+Vec_xabc = [A[0]*abc[0],B[0]*abc[1],C[0]*abc[2]]
+Vec_yabc = [A[1]*abc[0],B[1]*abc[1],C[1]*abc[2]]
+Org = [[0]*np.size(Vec_xabc),[0]*np.size(Vec_yabc)]
+fig = plt.figure(figsize=[10,5])
+# ax1 = fig.add_subplot(121)
+plotvec(Org,Vec_xabc,Vec_yabc,121,'N')
+plt.title('Space Vector ABC')
+
+#########  Plot Sum ABC Vectors  #############
+Vec_sumxabc = Vec_xabc+[Vec_xabc[0]+Vec_xabc[1]+Vec_xabc[2]]
+Vec_sumyabc = Vec_yabc+[Vec_yabc[0]+Vec_yabc[1]+Vec_yabc[2]]
+Org_x = [0, Vec_xabc[0], Vec_xabc[0]+Vec_xabc[1],0]
+Org_y = [0, Vec_yabc[0], Vec_yabc[0]+Vec_yabc[1],0]
+Org = [Org_x,Org_y]
+plotvec(Org,Vec_sumxabc,Vec_sumyabc,122,'N')
+plt.title('Sum of Space Vector ABC')
+
+#############################################3
+
+
+
+st.write(abc_plot)
+col1,col2,col3 = st.columns(3)
+vec_a = '\\vec{A} = '+ str(round(np.sin(arrow_loc)*ampA,3))+'\\angle{0^\circ}'
+vec_b = '\\vec{B} = '+ str(round(np.sin(arrow_loc+2*pii/3)*ampB,3))+'\\angle{120^\circ}'
+vec_c = '\\vec{C} = '+ str(round(np.sin(arrow_loc-2*pii/3)*ampC,3))+'\\angle{240^\circ}'
+col1.latex(vec_a)
+col2.latex(vec_b)
+col3.latex(vec_c)
+
+with st.expander('See ABC  Space Vector'):
+    st.write(fig)
+# fname="Vector_abc_step"+str(i)+".png"
+# plt.savefig(fname)
+# files.download(fname) 
+
+#################################################
+#########  Plot alpha beta Vectors  #############
+#################################################
+st.info('## Alpha Beta Reference Frame')
+with st.expander('Clarke\'s Transformation'):
+    st.latex('\\begin{bmatrix} F_{\\alpha} \\\ F_{\\beta} \\\ F_{0} \end{bmatrix} = \
+    C\\begin{bmatrix} 1 & -\\frac{1}{2} & -\\frac{1}{2} \\\ 0 & \\frac{\sqrt{3}}{2} & -\\frac{\sqrt{3}}{2} \\\ \
+    \\frac{1}{2} & \\frac{1}{2} & \\frac{1}{2}    \end{bmatrix} \\begin{bmatrix} F_{A} \\\ F_{B} \\\ F_{C} \end{bmatrix}  ')
+
+scaling=1.0
+sf = st.radio('Scaling Factor (C)', ('1','2/3','sqrt{2/3}'))
+if sf =='1':
+  scaling = 1.0
+elif sf == '2/3':
+  scaling = 2/3
+else:
+  scaling = np.sqrt(2/3)
+
+sin_ab= ABC2ab([sinA,sinB,sinC],scaling)
+ab = ABC2ab(abc,scaling)  ### ABC to alpha beta Tranformation 
+ab_plot = plt.figure(figsize=[10,4])
+ax = ab_plot.add_subplot(111)
+
+
+plt.plot(wt2,sin_ab[0],'r',label='$\\alpha$')
+plt.plot(wt2,sin_ab[1],'b',label='$\\beta$')
+plt.fill_between(wt2,sin_ab[0],alpha=0.1,color='red')
+plt.fill_between(wt2,sin_ab[1],alpha=0.1,color='blue')
+plt.xlim(0, 2*pii)
+plt.ylim(-amp*1.8, amp*1.8)
+plt.title('Equivalent $\\alpha \\beta$-Reference Frame Waveforms')
+plt.xlabel('$\omega t$')
+plt.legend(frameon=False, loc='lower center', ncol=3)
+grid_x_ticks_major = np.arange(0, 2*pii+pii/3, pii/3 )
+ax.set_xticks(grid_x_ticks_major)
+ax.set_xticklabels(['0', '$\pi /3$', '$2\pi /3$', '$\pi$', '$4\pi /3$','$5\pi /3$','$2\pi$'])
+# ax.grid(which='major', linestyle='--')
+plt.plot(arrow_loc,ab[0],'r+',markersize= 15)
+plt.plot(arrow_loc,ab[1],'b+',markersize= 15)
+
+
+plt.axvline(i*2*pii/(step-1), -15, 15,color='grey')
+checkii(i*2*pii/(step-1)+0.1,1.3)
+
+######################################################
+fig = plt.figure(figsize=[10,5])
+ab = ABC2ab(abc,scaling)  ### ABC to alpha beta Tranformation 
+Vec_xab = [ab[0],0]
+Vec_yab = [0,ab[1]]
+plotvec([[0,0],[0,0]],Vec_xab,Vec_yab,121,'N')
+plt.title('Space Vector $\\alpha \\beta$')
+
+#########  Plot sum alpha beta Vectors  #############
+Vec_sumxab = Vec_xab+[Vec_xab[0]+Vec_xab[1]]
+Vec_sumyab = Vec_yab+[Vec_yab[0]+Vec_yab[1]]
+Org_x = [0, Vec_xab[0], 0]
+Org_y = [0, Vec_yab[0], 0]
+Org = [Org_x,Org_y]
+plotvec(Org,Vec_sumxab,Vec_sumyab,122,'Y')
+plt.title('Sum of Space Vector $\\alpha \\beta$')
+# fname="Vector_ab_step"+str(i)+".png"
+# plt.savefig(fname)
+# files.download(fname) 
+
+
+
+st.write(ab_plot)
+
+vec_alpha = '\\vec{\\alpha} = '+ str(round(ab[0],3))+'\\angle{0^\circ}'
+vec_beta = '\\vec{\\beta} = '+ str(round(ab[1],3))+'\\angle{90^\circ}'
+
+amp_alpha = max(sin_ab[0])
+amp_beta = max(sin_ab[1])
+alpha = '\\alpha(t) = '+str(round(amp_alpha,3))+'\sin(\omega t)'
+beta = '\\beta(t)= '+ str(round(amp_beta,3))+'\sin(\omega t + \pi/2)'
+
+
+st.sidebar.info('** Clarke Transformation **')
+st.sidebar.write('Scaling = ',sf)
+st.sidebar.latex(alpha)
+st.sidebar.latex(beta)
+col1,col2,col3 = st.columns([10,1,10])
+col1.latex(alpha)
+col3.latex(beta)
+col1.latex(vec_alpha)
+col3.latex(vec_beta)
+
+with st.expander('See alpha beta  Vector'):
+    st.write(fig)
+    
+
+# print(theta*180/pii)
+
+สร้าง HTML แบบ interactive เรียบร้อยแล้ว:
+
+space-vector-transformation.html
+
+คุณสมบัติหลัก:
+
+เปิดด้วย browser ได้โดยตรง ไม่ต้องติดตั้ง Python/Streamlit
+รูปแบบกราฟใกล้เคียง Matplotlib ggplot
+ปรับ amplitude ของ A, B และ C ได้
+เลื่อน Step ตั้งแต่ \(0\) ถึง \(2\pi\)
+แสดง ABC vectors ทั้งแบบออกจากจุดกำเนิดและต่อหัว–ท้าย
+เลือก Clarke scaling \(1,\ 2/3,\ \sqrt{2/3}\)
+แสดงกราฟและเวกเตอร์ \(\alpha\beta\) แบบทันที
+ใช้ MathJax แสดงสมการและค่าที่คำนวณได้
+รองรับหน้าจอคอมพิวเตอร์และมือถือ
+
+ตัวกราฟไม่พึ่ง plotting library ภายนอก ส่วน MathJax จะโหลดผ่านอินเทอร์เน็ตเมื่อเปิดไฟล์ครับ
+
+space-vector-transformation.html
+HTML
+Today 6:13 PM
+create animation to show how dq reference frame is attached to sum of space vector and rotating and make the sum vector appear constant
+
+Updated the same HTML file:
+
+space-vector-transformation.html
+
+Added a new animated \(dq\) section showing:
+
+In the stationary \(\alpha\beta\) frame, \(\vec F_s\) and the attached \(dq\) axes rotate together.
+From the rotating \(dq\) frame, the vector appears stationary.
+
+The transformed components remain:
+
+$$ F_d=F_s,\qquad F_q=0 $$
+Start, Pause, Reset, and animation-speed controls.
+Rotating stationary \(\alpha\beta\) axes in the \(dq\)-observer view to clarify the change of reference frame.
 <!doctype html>
 <html lang="en">
 <head>
@@ -149,6 +510,36 @@
       font-size: 14px;
     }
     .math-dynamic { min-height: 28px; }
+    .dq-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .dq-controls button {
+      min-height: 38px;
+      padding: 7px 15px;
+      border: 0;
+      border-radius: 6px;
+      color: #fff;
+      background: #2878a5;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .dq-controls button:nth-child(2) { background: #a63b36; }
+    .dq-controls button:nth-child(3) { color: var(--text); background: #dfe5ea; }
+    .dq-speed { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .dq-speed input { width: 150px; }
+    .dq-readout {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 22px;
+      margin-top: 12px;
+      font-variant-numeric: tabular-nums;
+    }
     @media (max-width: 850px) {
       .app { grid-template-columns: 1fr; }
       aside { border-right: 0; border-bottom: 1px solid var(--border); }
@@ -159,6 +550,8 @@
       .vector-grid, .value-grid, .value-grid.two { grid-template-columns: 1fr; }
       .page-title { font-size: 25px; }
       .current-state { flex-direction: column; gap: 4px; }
+      .dq-speed { width: 100%; margin-left: 0; }
+      .dq-speed input { flex: 1; }
     }
   </style>
 </head>
@@ -254,6 +647,43 @@
           <div class="vector-panel"><h3>Sum of Space Vector \(\alpha\beta\)</h3><canvas id="abSum" role="img" aria-label="Head-to-tail alpha beta vectors and resultant"></canvas></div>
         </div>
       </details>
+
+      <div class="section-banner">Rotating \(dq\) Reference Frame</div>
+      <div class="card">
+        <p style="margin-top:0">The \(d\)-axis is attached to the resultant space vector and rotates at the same electrical angle \(\theta_e\). The left panel shows this motion from the stationary \(\alpha\beta\) frame. The right panel rotates with \(dq\), so the same vector appears constant.</p>
+        <div style="overflow-x:auto">
+          \[
+          \begin{bmatrix}F_d\\F_q\end{bmatrix}
+          =
+          \begin{bmatrix}
+          \cos\theta_e&\sin\theta_e\\
+          -\sin\theta_e&\cos\theta_e
+          \end{bmatrix}
+          \begin{bmatrix}F_\alpha\\F_\beta\end{bmatrix}
+          =
+          \begin{bmatrix}F_s\\0\end{bmatrix}.
+          \]
+        </div>
+        <div class="dq-controls">
+          <button id="dqStart" type="button">Start</button>
+          <button id="dqPause" type="button">Pause</button>
+          <button id="dqReset" type="button">Reset</button>
+          <label class="dq-speed" for="dqSpeed">Animation speed
+            <input id="dqSpeed" type="range" min="0.25" max="2.5" step="0.25" value="1">
+            <output id="dqSpeedOut">1.00×</output>
+          </label>
+        </div>
+        <div class="vector-grid">
+          <div class="vector-panel"><h3>Stationary \(\alpha\beta\) observer</h3><canvas id="dqStationary" role="img" aria-label="Resultant vector and dq axes rotating in the stationary alpha beta frame"></canvas></div>
+          <div class="vector-panel"><h3>Observer attached to rotating \(dq\) frame</h3><canvas id="dqRotating" role="img" aria-label="The same resultant vector appearing constant in the rotating dq frame"></canvas></div>
+        </div>
+        <div class="dq-readout" aria-live="polite">
+          <span id="dqAngleOut">θₑ = 0.0°</span>
+          <span>\(F_d=F_s\)</span>
+          <span>\(F_q=0\)</span>
+          <span>\(|\vec F_s|=\text{constant}\)</span>
+        </div>
+      </div>
     </main>
   </div>
 
@@ -270,6 +700,8 @@
       const el = id => document.getElementById(id);
       const state = { step: 0, ampA: 1, ampB: 1, ampC: 1, scalingKey: '1', scaling: 1 };
       const canvases = ['abcPlot', 'abcVectors', 'abcSum', 'abPlot', 'abVectors', 'abSum'].map(el);
+      const dqCanvases = [el('dqStationary'), el('dqRotating')];
+      const dqState = { angle: 0, running: !window.matchMedia('(prefers-reduced-motion: reduce)').matches, speed: 1, lastTime: 0, frame: 0 };
       let mathTimer = null;
 
       function gcd(a, b) { while (b) [a, b] = [b, a % b]; return Math.abs(a); }
@@ -419,6 +851,61 @@
           ctx.fillStyle = colors.sum; ctx.font = '600 14px Arial'; ctx.fillText('Σ', cx + resultant[0] * unit + 5, cy - resultant[1] * unit - 5);
         }
       }
+      function drawRotatingFrame(canvas, rotatingObserver) {
+        const { ctx, W, H } = prepareCanvas(canvas, 1.18);
+        ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#e5e5e5'; ctx.fillRect(0, 0, W, H);
+        const cx = W / 2, cy = H / 2, radius = Math.min(W, H) * 0.34;
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2;
+        for (let k = -3; k <= 3; k++) {
+          const p = k * radius / 3;
+          ctx.beginPath(); ctx.moveTo(cx + p, 14); ctx.lineTo(cx + p, H - 14); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(14, cy + p); ctx.lineTo(W - 14, cy + p); ctx.stroke();
+        }
+        ctx.save(); ctx.translate(cx, cy);
+        const theta = dqState.angle;
+        if (!rotatingObserver) {
+          ctx.strokeStyle = '#717b84'; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.moveTo(-radius * 1.15, 0); ctx.lineTo(radius * 1.15, 0); ctx.moveTo(0, -radius * 1.15); ctx.lineTo(0, radius * 1.15); ctx.stroke();
+          ctx.fillStyle = '#505a62'; ctx.font = '600 14px Arial'; ctx.fillText('α', radius * 1.08, -7); ctx.fillText('β', 7, -radius * 1.08);
+          ctx.strokeStyle = '#d9b85d'; ctx.lineWidth = 2; ctx.setLineDash([7, 6]); ctx.beginPath(); ctx.arc(0, 0, radius, 0, 2 * PI); ctx.stroke(); ctx.setLineDash([]);
+          const dx = Math.cos(theta), dy = -Math.sin(theta), qx = -Math.sin(theta), qy = -Math.cos(theta);
+          ctx.strokeStyle = '#d17d13'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(-dx * radius * 1.1, -dy * radius * 1.1); ctx.lineTo(dx * radius * 1.1, dy * radius * 1.1); ctx.stroke();
+          ctx.strokeStyle = '#1f77b4'; ctx.beginPath(); ctx.moveTo(-qx * radius * 1.1, -qy * radius * 1.1); ctx.lineTo(qx * radius * 1.1, qy * radius * 1.1); ctx.stroke();
+          ctx.fillStyle = '#b86609'; ctx.font = '600 15px Arial'; ctx.fillText('d', dx * radius * 1.08 + 5, dy * radius * 1.08 - 5);
+          ctx.fillStyle = '#1f77b4'; ctx.fillText('q', qx * radius * 1.08 + 5, qy * radius * 1.08 - 5);
+          drawArrow(ctx, 0, 0, dx * radius, dy * radius, '#2ca02c', 5);
+          ctx.fillStyle = '#237d23'; ctx.fillText('Fₛ', dx * radius * 0.68 + 7, dy * radius * 0.68 - 7);
+        } else {
+          ctx.strokeStyle = '#d17d13'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(-radius * 1.15, 0); ctx.lineTo(radius * 1.15, 0); ctx.stroke();
+          ctx.strokeStyle = '#1f77b4'; ctx.beginPath(); ctx.moveTo(0, -radius * 1.15); ctx.lineTo(0, radius * 1.15); ctx.stroke();
+          ctx.fillStyle = '#b86609'; ctx.font = '600 15px Arial'; ctx.fillText('d', radius * 1.08, -7);
+          ctx.fillStyle = '#1f77b4'; ctx.fillText('q', 7, -radius * 1.08);
+          const ax = Math.cos(-theta), ay = -Math.sin(-theta), bx = -Math.sin(-theta), by = -Math.cos(-theta);
+          ctx.strokeStyle = '#89939b'; ctx.lineWidth = 1.4; ctx.setLineDash([6, 5]);
+          ctx.beginPath(); ctx.moveTo(-ax * radius, -ay * radius); ctx.lineTo(ax * radius, ay * radius); ctx.moveTo(-bx * radius, -by * radius); ctx.lineTo(bx * radius, by * radius); ctx.stroke(); ctx.setLineDash([]);
+          ctx.fillStyle = '#606a72'; ctx.font = '13px Arial'; ctx.fillText('α', ax * radius + 5, ay * radius - 5); ctx.fillText('β', bx * radius + 5, by * radius - 5);
+          drawArrow(ctx, 0, 0, radius, 0, '#2ca02c', 5);
+          ctx.fillStyle = '#237d23'; ctx.font = '600 15px Arial'; ctx.fillText('Fₛ = constant', radius * 0.45, -12);
+          ctx.fillStyle = '#444'; ctx.font = '13px Arial'; ctx.fillText('Fq = 0', 8, -10); ctx.fillText('Fd = Fs', radius * 0.45, 18);
+        }
+        ctx.restore();
+      }
+      function drawDQ() {
+        drawRotatingFrame(el('dqStationary'), false);
+        drawRotatingFrame(el('dqRotating'), true);
+        el('dqAngleOut').textContent = `θₑ = ${((dqState.angle * 180 / PI) % 360).toFixed(1)}°`;
+        el('dqSpeedOut').value = `${dqState.speed.toFixed(2)}×`;
+      }
+      function dqLoop(timestamp) {
+        if (!dqState.lastTime) dqState.lastTime = timestamp;
+        const dt = Math.min(0.05, (timestamp - dqState.lastTime) / 1000);
+        dqState.lastTime = timestamp;
+        if (dqState.running) {
+          dqState.angle = (dqState.angle + dt * 0.9 * dqState.speed) % (2 * PI);
+          drawDQ();
+        }
+        dqState.frame = requestAnimationFrame(dqLoop);
+      }
       function updateMath(abc, ab, theta) {
         el('ampAOut').value = state.ampA; el('ampBOut').value = state.ampB; el('ampCOut').value = state.ampC; el('stepOut').value = state.step;
         latex('angleMath', angleLatex(state.step));
@@ -482,8 +969,16 @@
       ['step', 'ampA', 'ampB', 'ampC'].forEach(id => el(id).addEventListener('input', syncControls));
       document.querySelectorAll('input[name="scaling"]').forEach(r => r.addEventListener('change', syncControls));
       const ro = new ResizeObserver(() => render()); canvases.forEach(c => ro.observe(c.parentElement));
+      const dqRO = new ResizeObserver(() => drawDQ()); dqCanvases.forEach(c => dqRO.observe(c.parentElement));
+      el('dqStart').addEventListener('click', () => { dqState.running = true; dqState.lastTime = 0; });
+      el('dqPause').addEventListener('click', () => { dqState.running = false; });
+      el('dqReset').addEventListener('click', () => { dqState.running = false; dqState.angle = 0; drawDQ(); });
+      el('dqSpeed').addEventListener('input', () => { dqState.speed = Number(el('dqSpeed').value); drawDQ(); });
       window.addEventListener('load', render); syncControls();
+      drawDQ(); dqState.frame = requestAnimationFrame(dqLoop);
     })();
   </script>
 </body>
 </html>
+space-vector-transformation.html
+HTML
