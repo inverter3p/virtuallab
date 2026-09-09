@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Verification Decoder — Instructor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>body{font-family:'Sarabun',sans-serif}</style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+<div class="max-w-3xl mx-auto my-10 p-6 sm:p-10 bg-white rounded-2xl shadow-xl">
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900">ตัวตรวจรหัสยืนยัน Quiz — สำหรับอาจารย์</h1>
+    <p class="mt-2 text-slate-600">วางรหัส QZ1... ที่นิสิตส่งมา แล้วใส่ Teacher Key เพื่อถอดข้อมูลและตรวจลายเซ็น</p>
+  </header>
+
+  <div class="space-y-5">
+    <div>
+      <label class="block font-semibold mb-2" for="teacher-key">Teacher Key</label>
+      <input id="teacher-key" type="password" class="w-full p-3 border rounded-lg" placeholder="ใส่ Teacher Key">
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2" for="code-input">Verification Code</label>
+      <textarea id="code-input" class="w-full min-h-[150px] p-3 border rounded-lg font-mono text-sm" placeholder="QZ1...."></textarea>
+    </div>
+
+    <button id="decode-btn" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg">
+      ตรวจและถอดรหัส
+    </button>
+
+    <div id="result" class="hidden p-5 rounded-xl border"></div>
+  </div>
+</div>
+
+<script>
+function fnv1a64(str) {
+    const FNV_PRIME_64 = 0x100000001b3n;
+    let hash = 0xcbf29ce484222325n;
+    for (let i = 0; i < str.length; i++) {
+        hash ^= BigInt(str.charCodeAt(i));
+        hash = BigInt.asUintN(64, hash * FNV_PRIME_64);
+    }
+    return hash.toString(16).padStart(16, '0');
+}
+function base64UrlToUtf8(b64url) {
+    let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    const binary = atob(b64);
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+}
+function keyMaterialFromTeacherKey(key) {
+    return fnv1a64(key + '|01205201|DMM-QUIZ-v1').slice(0, 16);
+}
+function verifyAndDecode(code, teacherKey) {
+    const parts = code.trim().split('.');
+    if (parts.length !== 3 || parts[0] !== 'QZ1') throw new Error('รูปแบบรหัสไม่ถูกต้อง');
+    const encoded = parts[1];
+    const supplied = parts[2].toLowerCase();
+    const expected = fnv1a64(keyMaterialFromTeacherKey(teacherKey) + '|' + encoded).slice(-12);
+    if (supplied !== expected) throw new Error('ลายเซ็นไม่ตรง: Teacher Key ผิด หรือรหัสถูกแก้ไข');
+    return JSON.parse(base64UrlToUtf8(encoded));
+}
+
+document.getElementById('decode-btn').addEventListener('click', () => {
+    const key = document.getElementById('teacher-key').value.trim();
+    const code = document.getElementById('code-input').value.trim();
+    const box = document.getElementById('result');
+    box.classList.remove('hidden','bg-green-50','border-green-300','bg-red-50','border-red-300');
+    try {
+        if (!key) throw new Error('กรุณาใส่ Teacher Key');
+        const p = verifyAndDecode(code,key);
+        const dt = new Date(p.completedAt);
+        const local = dt.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'medium'});
+        box.classList.add('bg-green-50','border-green-300');
+        box.innerHTML = `
+          <div class="font-bold text-green-800 text-lg mb-3">รหัสถูกต้อง</div>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div><span class="font-semibold">รหัสนิสิต:</span> ${p.studentId ?? '-'}</div>
+            <div><span class="font-semibold">หมู่เรียน:</span> ${p.section ?? '-'}</div>
+            <div><span class="font-semibold">วันเวลาที่ทำ:</span> ${local}</div>
+            <div><span class="font-semibold">คะแนน:</span> ${p.score}/${p.total}</div>
+          </div>`;
+    } catch (e) {
+        box.classList.add('bg-red-50','border-red-300');
+        box.innerHTML = `<div class="font-bold text-red-800">ตรวจไม่ผ่าน</div><div class="mt-2">${e.message}</div>`;
+    }
+});
+</script>
+</body>
+</html>

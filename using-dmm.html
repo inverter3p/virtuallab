@@ -40,11 +40,80 @@
         .resistor-bar .band-2 { margin-left: 0.25rem; /* ml-1 */ }
         .resistor-bar .band-3 { margin-left: 0.25rem; /* ml-1 */ }
         .resistor-bar .band-4 { margin-left: 1.5rem; /* ml-6 */ }
+
+
+        /* Language toggle */
+        .lang-toggle-wrap {
+            position: sticky;
+            top: 0.75rem;
+            z-index: 40;
+            display: flex;
+            justify-content: flex-end;
+            pointer-events: none;
+            margin-bottom: 0.75rem;
+        }
+        .lang-toggle {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.55rem 0.9rem;
+            border: 1px solid #bfdbfe;
+            border-radius: 9999px;
+            background: rgba(255,255,255,0.96);
+            color: #1e3a8a;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10);
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+        }
+        .lang-toggle:hover { background: #eff6ff; border-color: #60a5fa; }
+        .lang-toggle .lang-state {
+            min-width: 2.25rem;
+            text-align: center;
+            color: #2563eb;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
     <div class="max-w-4xl mx-auto my-10 p-6 sm:p-10 bg-white rounded-2xl shadow-xl">
+        <div class="lang-toggle-wrap">
+            <button type="button" id="lang-toggle" class="lang-toggle" aria-label="Toggle language between English and Thai">
+                <span aria-hidden="true">🌐</span>
+                <span id="lang-toggle-label">แปลเป็นไทย</span>
+                <span class="lang-state" id="lang-state">EN</span>
+            </button>
+        </div>
+
+        <section id="student-info" class="mb-8 bg-blue-50 border border-blue-200 rounded-xl p-5 sm:p-6">
+            <h2 class="text-xl sm:text-2xl font-semibold text-blue-800 mb-4">Student Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="student-name" class="block font-semibold text-gray-700 mb-1">Name</label>
+                    <input id="student-name" type="text" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500" placeholder="Enter your full name">
+                </div>
+                <div>
+                    <label for="student-id" class="block font-semibold text-gray-700 mb-1">Student ID</label>
+                    <input id="student-id" type="text" inputmode="numeric" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500" placeholder="Enter student ID">
+                </div>
+                <div>
+                    <label for="student-section" class="block font-semibold text-gray-700 mb-1">Section</label>
+                    <select id="student-section" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select section</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="250">250</option>
+                        <option value="251">251</option>
+                        <option value="252">252</option>
+                        <option value="253">253</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
         <header class="text-center mb-10">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Using the Digital Multimeter in Simulation</h1>
             <p class="text-lg text-gray-600 mt-2">Nodal Voltage Analysis Circuit - จำลองวงจรไฟฟ้าออนไลน์ | DCACLab</p>
@@ -289,6 +358,48 @@
             </ol>
         </section>
 
+        <div class="section-divider"></div>
+
+        <!-- Part 8: Screenshot Evidence -->
+        <section class="mb-8" id="screenshot-evidence">
+            <h2 class="text-2xl font-semibold text-blue-700 border-b-2 border-gray-200 pb-2 mb-4">Part 8: Screenshot Evidence of DMM Measurements</h2>
+            <p class="mb-4 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg"><strong>Submission Evidence:</strong> Capture the simulation screen while the DMM is connected and displaying the measurement. Attach screenshots that clearly show the circuit connection, probe positions, DMM setting, and measured value.</p>
+
+            <div class="grid md:grid-cols-3 gap-5">
+                <div class="border rounded-xl p-4 bg-gray-50">
+                    <h3 class="font-semibold text-gray-900 mb-2">Resistance Measurement</h3>
+                    <p class="text-sm text-gray-600 mb-3">Attach a screenshot showing the DMM connected for resistance measurement.</p>
+                    <input type="file" id="shot-resistance-input" accept="image/*" class="block w-full text-sm text-gray-600 mb-3">
+                    <div id="shot-resistance-preview-wrap" class="hidden">
+                        <img id="shot-resistance-preview" alt="Resistance measurement screenshot preview" class="w-full h-48 object-contain bg-white border rounded-lg">
+                        <button type="button" id="shot-resistance-remove" class="mt-2 w-full bg-red-50 hover:bg-red-100 text-red-700 font-semibold py-2 px-3 rounded-lg">Remove Screenshot</button>
+                    </div>
+                </div>
+
+                <div class="border rounded-xl p-4 bg-gray-50">
+                    <h3 class="font-semibold text-gray-900 mb-2">Voltage Measurement</h3>
+                    <p class="text-sm text-gray-600 mb-3">Attach a screenshot showing the DMM connected in parallel and displaying voltage.</p>
+                    <input type="file" id="shot-voltage-input" accept="image/*" class="block w-full text-sm text-gray-600 mb-3">
+                    <div id="shot-voltage-preview-wrap" class="hidden">
+                        <img id="shot-voltage-preview" alt="Voltage measurement screenshot preview" class="w-full h-48 object-contain bg-white border rounded-lg">
+                        <button type="button" id="shot-voltage-remove" class="mt-2 w-full bg-red-50 hover:bg-red-100 text-red-700 font-semibold py-2 px-3 rounded-lg">Remove Screenshot</button>
+                    </div>
+                </div>
+
+                <div class="border rounded-xl p-4 bg-gray-50">
+                    <h3 class="font-semibold text-gray-900 mb-2">Current Measurement</h3>
+                    <p class="text-sm text-gray-600 mb-3">Attach a screenshot showing the DMM inserted in series and displaying current.</p>
+                    <input type="file" id="shot-current-input" accept="image/*" class="block w-full text-sm text-gray-600 mb-3">
+                    <div id="shot-current-preview-wrap" class="hidden">
+                        <img id="shot-current-preview" alt="Current measurement screenshot preview" class="w-full h-48 object-contain bg-white border rounded-lg">
+                        <button type="button" id="shot-current-remove" class="mt-2 w-full bg-red-50 hover:bg-red-100 text-red-700 font-semibold py-2 px-3 rounded-lg">Remove Screenshot</button>
+                    </div>
+                </div>
+            </div>
+
+            <p class="mt-4 text-sm text-gray-500">Tip: Crop the screenshot so the circuit, probe connection, selector setting, and DMM reading are all visible in the same image.</p>
+        </section>
+
         <div class="flex flex-col sm:flex-row gap-3 items-center mt-8 pt-6 border-t">
             <div class="flex-grow"></div>
             <button id="btn-save" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">Save Data</button>
@@ -297,11 +408,123 @@
         </div>
     </div>
 
+
+<script>
+(function () {
+    const translations = {"Student Information": "ข้อมูลนิสิต", "Name": "ชื่อ-นามสกุล", "Student ID": "รหัสนิสิต", "Section": "หมู่เรียน", "Select section": "เลือกหมู่เรียน", "DMM Circuit Analysis Worksheet": "ใบงานวิเคราะห์วงจรด้วยดิจิทัลมัลติมิเตอร์", "Using the Digital Multimeter in Simulation": "การใช้ดิจิทัลมัลติมิเตอร์ในการจำลองวงจร", "Nodal Voltage Analysis Circuit - จำลองวงจรไฟฟ้าออนไลน์ | DCACLab": "วงจรวิเคราะห์แรงดันโหนด - จำลองวงจรไฟฟ้าออนไลน์ | DCACLab", "Objective": "วัตถุประสงค์", "To accurately measure Resistance (R), Voltage (V), and Current (I) in the provided simulated circuit using a Digital Multimeter (DMM), and to understand the correct procedures for each type of measurement.": "เพื่อฝึกวัดค่าความต้านทาน (R) แรงดันไฟฟ้า (V) และกระแสไฟฟ้า (I) ในวงจรจำลองที่กำหนดโดยใช้ดิจิทัลมัลติมิเตอร์ (DMM) อย่างถูกต้อง และเข้าใจขั้นตอนที่เหมาะสมสำหรับการวัดแต่ละชนิด", "Materials": "อุปกรณ์และสื่อที่ใช้", "Access to the circuit simulation environment (as depicted in the image)": "เข้าใช้งานสภาพแวดล้อมจำลองวงจรตามที่แสดงในภาพ", "Go to:": "เข้าไปที่:", "Part 1 & 2: DMM Familiarization and Guidelines": "ส่วนที่ 1 และ 2: ทำความรู้จัก DMM และแนวทางการใช้งาน", "Simulated DMM Components": "ส่วนประกอบของ DMM ในโปรแกรมจำลอง", "Display:": "หน้าจอแสดงผล:", "Where measurement results appear.": "ใช้แสดงค่าที่วัดได้", "Rotary Switch:": "สวิตช์หมุน:", "Selects the measurement type and range.": "ใช้เลือกชนิดและช่วงการวัด", "Input Jacks:": "ช่องเสียบสายวัด:", "COM (Black):": "COM (สีดำ):", "For the black test lead.": "สำหรับสายวัดสีดำ", "VΩmA (Red):": "VΩmA (สีแดง):", "For Voltage, Resistance, and small currents.": "สำหรับวัดแรงดัน ความต้านทาน และกระแสขนาดเล็ก", "10A (Red):": "10A (สีแดง):", "For large currents.": "สำหรับวัดกระแสขนาดสูง", "General Guidelines": "แนวทางทั่วไป", "Connecting Leads:": "การต่อสายวัด:", "Drag probes to circuit points.": "ลากปลายโพรบไปยังจุดที่ต้องการวัดในวงจร", "Changing Function:": "การเปลี่ยนฟังก์ชัน:", "Click the rotary switch.": "คลิกสวิตช์หมุนเพื่อเลือกฟังก์ชัน", "Power:": "สถานะการจ่ายไฟ:", "Assume the circuit is \"live\" unless specified.": "ให้ถือว่าวงจรมีการจ่ายไฟอยู่ เว้นแต่โจทย์จะระบุเป็นอย่างอื่น", "Part 3: Measuring Resistance (R)": "ส่วนที่ 3: การวัดความต้านทาน (R)", "Key Principle:": "หลักสำคัญ:", "Resistance is measured across a component. The component": "การวัดความต้านทานต้องวัดคร่อมอุปกรณ์ และอุปกรณ์นั้น", "MUST BE ISOLATED": "ต้องแยกออกจากแหล่งจ่ายไฟ", "from any power source.": "ก่อนทำการวัด", "Your Steps for Measuring Resistance:": "ขั้นตอนที่ใช้ในการวัดความต้านทาน:", "Explain the general steps you followed to measure resistance in the simulation:": "อธิบายขั้นตอนโดยสรุปที่ใช้วัดความต้านทานในโปรแกรมจำลอง:", "Resistance Measurement Table": "ตารางบันทึกการวัดความต้านทาน", "Component": "อุปกรณ์", "Resistor Color Code (Hint)": "รหัสสีตัวต้านทาน (คำใบ้)", "Theoretical Resistance": "ค่าความต้านทานตามทฤษฎี", "Measured Resistance (Simulation)": "ค่าความต้านทานที่วัดได้ (Simulation)", "Part 4: Measuring Voltage (V)": "ส่วนที่ 4: การวัดแรงดันไฟฟ้า (V)", "Voltage is measured in": "การวัดแรงดันต้องต่อมิเตอร์แบบ", "parallel": "ขนาน", "with a component. The circuit": "กับอุปกรณ์ และวงจร", "MUST BE POWERED ON": "ต้องมีการจ่ายไฟ", "Calculating Expected Voltages (KVL/KCL)": "การคำนวณค่าแรงดันที่คาดหมาย (KVL/KCL)", "Before measuring, use Kirchhoff's Voltage Law (KVL) and Kirchhoff's Current Law (KCL) to calculate the theoretical voltage values for each point in the table. Show your work in the space below. This will help you verify your simulation measurements.": "ก่อนทำการวัด ให้ใช้กฎแรงดันของเคอร์ชอฟฟ์ (KVL) และกฎกระแสของเคอร์ชอฟฟ์ (KCL) คำนวณค่าแรงดันตามทฤษฎีของแต่ละจุดในตาราง พร้อมแสดงวิธีทำด้านล่าง เพื่อใช้ตรวจสอบผลที่วัดได้จากโปรแกรมจำลอง", "Your Steps for Measuring Voltage:": "ขั้นตอนที่ใช้ในการวัดแรงดัน:", "Explain the general steps you followed to measure voltage in the simulation:": "อธิบายขั้นตอนโดยสรุปที่ใช้วัดแรงดันในโปรแกรมจำลอง:", "Voltage Measurement Table": "ตารางบันทึกการวัดแรงดัน", "Measurement Point": "จุดที่วัด", "Expected Value (Calculated)": "ค่าที่คาดหมาย (จากการคำนวณ)", "Measured Voltage (Simulation)": "แรงดันที่วัดได้ (Simulation)", "Across 10V Battery": "คร่อมแบตเตอรี่ 10 V", "Across R1": "คร่อม R1", "At Node Va (relative to V0)": "ที่โหนด Va เทียบกับ V0", "At Node Vb (relative to V0)": "ที่โหนด Vb เทียบกับ V0", "Across R2": "คร่อม R2", "At Node Vc (relative to V0)": "ที่โหนด Vc เทียบกับ V0", "Across R3": "คร่อม R3", "Across 20V Battery": "คร่อมแบตเตอรี่ 20 V", "Part 5: Measuring Current (I)": "ส่วนที่ 5: การวัดกระแสไฟฟ้า (I)", "Current is measured in": "การวัดกระแสต้องต่อมิเตอร์แบบ", "series": "อนุกรม", "with the circuit. You must": "กับวงจร โดยต้อง", "BREAK THE CIRCUIT": "เปิดวงจร", "to insert the DMM. The circuit": "เพื่อแทรก DMM เข้าไปในทางเดินกระแส และวงจร", "Your Steps for Measuring Current:": "ขั้นตอนที่ใช้ในการวัดกระแส:", "Explain the general steps you followed to measure current in the simulation:": "อธิบายขั้นตอนโดยสรุปที่ใช้วัดกระแสในโปรแกรมจำลอง:", "Current Measurement Table": "ตารางบันทึกการวัดกระแส", "Current Path": "ทางเดินกระแส", "Expected Value": "ค่าที่คาดหมาย", "Measured Current (Simulation)": "กระแสที่วัดได้ (Simulation)", "Part 6: Reflection Questions": "ส่วนที่ 6: คำถามสะท้อนความเข้าใจ", "1. Describe a situation where a negative voltage reading is obtained. What does it mean?": "1. อธิบายกรณีที่มิเตอร์อ่านค่าแรงดันเป็นลบ และค่าลบนั้นหมายถึงอะไร", "2. Why is it crucial to disconnect power before measuring resistance?": "2. เพราะเหตุใดจึงต้องตัดแหล่งจ่ายไฟก่อนวัดความต้านทาน", "3. What could happen if you tried to measure a current using the red probe from VΩmA (Red) input?": "3. อาจเกิดอะไรขึ้นหากพยายามวัดกระแสโดยเสียบสายวัดสีแดงไว้ที่ช่อง VΩmA", "4. Compare your measured values to the expected/theoretical values. Were there any discrepancies?": "4. เปรียบเทียบค่าที่วัดได้กับค่าที่คำนวณ/ค่าทฤษฎี มีความแตกต่างหรือไม่ เพราะเหตุใด", "Part 7: DMM Reset and Cleanup": "ส่วนที่ 7: การรีเซ็ต DMM และเก็บอุปกรณ์", "Once all measurements are complete, turn off the DMM (set the rotary switch to OFF).": "เมื่อวัดครบแล้ว ให้ปิด DMM โดยหมุนสวิตช์ไปที่ตำแหน่ง OFF", "Remove the test leads from the circuit and return the red lead to the VΩmA jack.": "ถอดสายวัดออกจากวงจร และย้ายสายวัดสีแดงกลับไปที่ช่อง VΩmA", "Save Data": "บันทึกข้อมูล", "Load Data": "โหลดข้อมูล", "Part 8: Screenshot Evidence of DMM Measurements": "ส่วนที่ 8: หลักฐานภาพหน้าจอขณะใช้ DMM", "Submission Evidence:": "หลักฐานประกอบการส่งงาน:", "Capture the simulation screen while the DMM is connected and displaying the measurement. Attach screenshots that clearly show the circuit connection, probe positions, DMM setting, and measured value.": "จับภาพหน้าจอขณะที่ DMM ต่ออยู่กับวงจรและแสดงค่าที่วัดได้ โดยภาพต้องเห็นการต่อวงจร ตำแหน่งโพรบ การตั้งย่าน/ฟังก์ชันของ DMM และค่าที่อ่านได้อย่างชัดเจน", "Resistance Measurement": "การวัดความต้านทาน", "Attach a screenshot showing the DMM connected for resistance measurement.": "แนบภาพหน้าจอที่แสดงการต่อ DMM สำหรับวัดความต้านทาน", "Voltage Measurement": "การวัดแรงดัน", "Attach a screenshot showing the DMM connected in parallel and displaying voltage.": "แนบภาพหน้าจอที่แสดง DMM ต่อแบบขนานและกำลังแสดงค่าแรงดัน", "Current Measurement": "การวัดกระแส", "Attach a screenshot showing the DMM inserted in series and displaying current.": "แนบภาพหน้าจอที่แสดง DMM แทรกแบบอนุกรมและกำลังแสดงค่ากระแส", "Remove Screenshot": "ลบภาพหน้าจอ", "Tip: Crop the screenshot so the circuit, probe connection, selector setting, and DMM reading are all visible in the same image.": "คำแนะนำ: ครอปภาพให้เห็นวงจร การต่อโพรบ ตำแหน่งสวิตช์เลือกย่าน และค่าที่ DMM อ่านได้ครบในภาพเดียว"};
+    const placeholders = {"Enter your full name": "กรอกชื่อ-นามสกุล", "Enter student ID": "กรอกรหัสนิสิต", "1. Disconnect the component...": "1. แยกอุปกรณ์ออกจากแหล่งจ่ายไฟ...", "Show your KVL/KCL loop and node equations here...": "เขียนสมการ KVL/KCL ของลูปและโหนดที่นี่...", "1. Set DMM to DC Voltage...": "1. ตั้ง DMM ไปที่การวัดแรงดัน DC...", "1. Break the circuit path...": "1. เปิดทางเดินกระแสของวงจร...", "Type your answer here...": "พิมพ์คำตอบที่นี่..."};
+    const reverseTranslations = Object.fromEntries(Object.entries(translations).map(([en, th]) => [th, en]));
+    const reversePlaceholders = Object.fromEntries(Object.entries(placeholders).map(([en, th]) => [th, en]));
+
+    function replacePreservingWhitespace(node, replacement) {
+        const raw = node.nodeValue;
+        const leading = raw.match(/^\s*/)?.[0] || '';
+        const trailing = raw.match(/\s*$/)?.[0] || '';
+        node.nodeValue = leading + replacement + trailing;
+    }
+
+    function translateTextNodes(root, toThai) {
+        const map = toThai ? translations : reverseTranslations;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode(node) {
+                const p = node.parentElement;
+                if (!p || ['SCRIPT','STYLE','TEXTAREA'].includes(p.tagName)) return NodeFilter.FILTER_REJECT;
+                const value = node.nodeValue.trim();
+                if (!value) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        nodes.forEach(node => {
+            const key = node.nodeValue.trim();
+            if (map[key]) replacePreservingWhitespace(node, map[key]);
+        });
+    }
+
+    function translatePlaceholders(toThai) {
+        const map = toThai ? placeholders : reversePlaceholders;
+        document.querySelectorAll('textarea[placeholder], input[placeholder]').forEach(el => {
+            const key = el.getAttribute('placeholder');
+            if (map[key]) el.setAttribute('placeholder', map[key]);
+        });
+    }
+
+    function setLanguage(lang) {
+        const toThai = lang === 'th';
+        translateTextNodes(document.body, toThai);
+        translatePlaceholders(toThai);
+        document.documentElement.lang = toThai ? 'th' : 'en';
+        const label = document.getElementById('lang-toggle-label');
+        const state = document.getElementById('lang-state');
+        if (label) label.textContent = toThai ? 'English' : 'แปลเป็นไทย';
+        if (state) state.textContent = toThai ? 'TH' : 'EN';
+        localStorage.setItem('dmmWorksheetLanguage', lang);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('lang-toggle');
+        let currentLang = 'en';
+        btn?.addEventListener('click', () => {
+            currentLang = currentLang === 'en' ? 'th' : 'en';
+            setLanguage(currentLang);
+        });
+        const saved = localStorage.getItem('dmmWorksheetLanguage');
+        if (saved === 'th') {
+            currentLang = 'th';
+            setLanguage('th');
+        }
+    });
+})();
+</script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const saveBtn = document.getElementById('btn-save');
             const loadBtn = document.getElementById('btn-load');
             const fileInput = document.getElementById('file-input');
+
+            // Screenshot evidence (stored as data URLs so Save/Load keeps the images)
+            const screenshotData = { resistance: '', voltage: '', current: '' };
+            const setupScreenshotInput = (key) => {
+                const input = document.getElementById(`shot-${key}-input`);
+                const preview = document.getElementById(`shot-${key}-preview`);
+                const wrap = document.getElementById(`shot-${key}-preview-wrap`);
+                const removeBtn = document.getElementById(`shot-${key}-remove`);
+                if (!input || !preview || !wrap || !removeBtn) return;
+
+                const showImage = (dataUrl) => {
+                    screenshotData[key] = dataUrl || '';
+                    if (dataUrl) {
+                        preview.src = dataUrl;
+                        wrap.classList.remove('hidden');
+                    } else {
+                        preview.removeAttribute('src');
+                        wrap.classList.add('hidden');
+                        input.value = '';
+                    }
+                };
+
+                input.addEventListener('change', () => {
+                    const file = input.files && input.files[0];
+                    if (!file) return;
+                    if (!file.type.startsWith('image/')) {
+                        alert('Please select an image file.');
+                        input.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = e => showImage(e.target.result);
+                    reader.readAsDataURL(file);
+                });
+                removeBtn.addEventListener('click', () => showImage(''));
+                return showImage;
+            };
+            const screenshotSetters = {
+                resistance: setupScreenshotInput('resistance'),
+                voltage: setupScreenshotInput('voltage'),
+                current: setupScreenshotInput('current')
+            };
 
             // Helper function to get table data, preserving contenteditable attributes
             const getTableData = (tbodyId) => {
@@ -343,6 +566,11 @@
             // --- Save Data functionality ---
             saveBtn.addEventListener('click', () => {
                 const dataToSave = {
+                    studentInfo: {
+                        name: document.getElementById('student-name')?.value || '',
+                        studentId: document.getElementById('student-id')?.value || '',
+                        section: document.getElementById('student-section')?.value || ''
+                    },
                     textareas: {
                         resistance_steps: document.getElementById('resistance_steps').value,
                         kvl_kcl_steps: document.getElementById('kvl_kcl_steps').value,
@@ -357,7 +585,8 @@
                         resistance: getTableData('resistance_table_body'),
                         voltage: getTableData('voltage_table_body'),
                         current: getTableData('current_table_body'),
-                    }
+                    },
+                    screenshots: { ...screenshotData }
                 };
 
                 try {
@@ -366,7 +595,8 @@
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'dmm-worksheet-data.json';
+                    const sid = (document.getElementById('student-id')?.value || '').trim();
+                    a.download = sid ? `dmm-worksheet-${sid}.json` : 'dmm-worksheet-data.json';
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -391,6 +621,16 @@
                     try {
                         const loadedData = JSON.parse(e.target.result);
 
+                        // Restore student information
+                        if (loadedData.studentInfo) {
+                            const nameEl = document.getElementById('student-name');
+                            const idEl = document.getElementById('student-id');
+                            const sectionEl = document.getElementById('student-section');
+                            if (nameEl) nameEl.value = loadedData.studentInfo.name || '';
+                            if (idEl) idEl.value = loadedData.studentInfo.studentId || '';
+                            if (sectionEl) sectionEl.value = loadedData.studentInfo.section || '';
+                        }
+
                         // Populate textareas
                         if (loadedData.textareas) {
                             for (const [id, value] of Object.entries(loadedData.textareas)) {
@@ -406,6 +646,13 @@
                                 setTableData(tbodyId, data);
                             }
                         }
+
+                        // Restore screenshot evidence, if included in the saved file
+                        if (loadedData.screenshots) {
+                            for (const key of ['resistance', 'voltage', 'current']) {
+                                if (screenshotSetters[key]) screenshotSetters[key](loadedData.screenshots[key] || '');
+                            }
+                        }
                         
                     } catch (error) {
                         console.error("Error parsing JSON:", error);
@@ -419,5 +666,4 @@
     </script>
 </body>
 </html>
-
 
