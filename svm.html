@@ -1,741 +1,827 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Space Vector Modulation (SVM) Tutorial</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .control-panel label {
-            font-weight: 500;
-        }
-        .output-box {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            font-family: monospace;
-            white-space: pre-wrap; /* Allows text to wrap */
-            word-break: break-all; /* Breaks long words */
-            line-height: 1.6;
-        }
-        .info-card {
-            background: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            padding: 1.5rem;
-        }
-        canvas {
-            cursor: crosshair;
-            width: 100%;
-            display: block;
-        }
-        .vector-table th, .vector-table td {
-            border: 1px solid #e2e8f0;
-            padding: 0.5rem;
-            text-align: center;
-        }
-        .vector-table th {
-            background-color: #f8fafc;
-        }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vdq → SVPWM Explorer v6</title>
+<style>
 
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Interactive Space Vector Modulation (SVM)</h1>
-            <p class="text-lg text-gray-600 mt-2">Visualize SVM concepts, calculate timings, and see the PWM sequences in real-time.</p>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Column: Visualization -->
-            <div class="lg:col-span-2 info-card">
-                <h2 class="text-xl font-semibold mb-4 text-center">SVM Hexagon & Vector Synthesis</h2>
-                <div class="aspect-w-1 aspect-h-1">
-                    <canvas id="svmCanvas"></canvas>
-                </div>
-                 <div class="text-xs text-center text-gray-500 mt-2">
-                    <span class="text-yellow-500">●</span> SVM Limit &nbsp;
-                    <span class="text-blue-500">●</span> SPWM Limit. Click diagram to set Vref.
-                </div>
-            </div>
-
-            <!-- Right Column: Controls and Outputs -->
-            <div class="info-card space-y-6">
-                <div class="control-panel space-y-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-xl font-semibold">Controls</h2>
-                        <button id="helpBtn" class="bg-blue-500 text-white rounded-full h-7 w-7 flex items-center justify-center text-md font-bold hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75">?</button>
-                    </div>
-                    <div>
-                        <label for="vrefMag" class="block mb-1 text-sm text-gray-700">Vref Magnitude (0 to 1)</label>
-                        <div class="flex items-center space-x-2">
-                            <input type="range" id="vrefMag" min="0" max="1" step="0.01" value="0.8" class="w-full">
-                            <span id="vrefMagValue" class="font-mono text-sm w-12 text-right">0.80</span>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="vrefAngle" class="block mb-1 text-sm text-gray-700">Vref Angle (degrees)</label>
-                         <div class="flex items-center space-x-2">
-                            <input type="range" id="vrefAngle" min="0" max="360" step="1" value="30" class="w-full">
-                            <span id="vrefAngleValue" class="font-mono text-sm w-12 text-right">30°</span>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="ts" class="block mb-1 text-sm text-gray-700">Sampling Time Ts (μs)</label>
-                        <input type="number" id="ts" value="100" class="w-full p-2 border border-gray-300 rounded-md">
-                    </div>
-                     <div>
-                        <label for="vdc" class="block mb-1 text-sm text-gray-700">DC Link Voltage Vdc (V)</label>
-                        <input type="number" id="vdc" value="400" class="w-full p-2 border border-gray-300 rounded-md">
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <h2 class="text-xl font-semibold mb-2">Calculated Outputs</h2>
-                    <div id="output" class="output-box text-sm"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- PWM Waveforms -->
-        <div class="info-card mt-8">
-            <h2 class="text-xl font-semibold mb-4 text-center">Resulting PWM Gate Signals (Saturated)</h2>
-            <canvas id="pwmCanvas" height="200"></canvas>
-        </div>
-        
-        <!-- Vector State Table -->
-        <div class="info-card mt-8">
-            <h2 class="text-xl font-semibold mb-4 text-center">Inverter Switching States & Voltages</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm vector-table">
-                    <thead>
-                        <tr>
-                            <th rowspan="2">Vector</th>
-                            <th colspan="3">Switching State</th>
-                            <th colspan="3">Phase Voltage</th>
-                            <th rowspan="2">Vector Magnitude & Angle</th>
-                        </tr>
-                        <tr>
-                            <th>S1 (A)</th>
-                            <th>S3 (B)</th>
-                            <th>S5 (C)</th>
-                            <th>Van</th>
-                            <th>Vbn</th>
-                            <th>Vcn</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        <tr><td>V0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-                        <tr><td>V1</td><td>1</td><td>0</td><td>0</td><td>2Vdc/3</td><td>-Vdc/3</td><td>-Vdc/3</td><td>(2/3)Vdc ∠0°</td></tr>
-                        <tr><td>V2</td><td>1</td><td>1</td><td>0</td><td>Vdc/3</td><td>Vdc/3</td><td>-2Vdc/3</td><td>(2/3)Vdc ∠60°</td></tr>
-                        <tr><td>V3</td><td>0</td><td>1</td><td>0</td><td>-Vdc/3</td><td>2Vdc/3</td><td>-Vdc/3</td><td>(2/3)Vdc ∠120°</td></tr>
-                        <tr><td>V4</td><td>0</td><td>1</td><td>1</td><td>-2Vdc/3</td><td>Vdc/3</td><td>Vdc/3</td><td>(2/3)Vdc ∠180°</td></tr>
-                        <tr><td>V5</td><td>0</td><td>0</td><td>1</td><td>-Vdc/3</td><td>-Vdc/3</td><td>2Vdc/3</td><td>(2/3)Vdc ∠240°</td></tr>
-                        <tr><td>V6</td><td>1</td><td>0</td><td>1</td><td>Vdc/3</td><td>-2Vdc/3</td><td>Vdc/3</td><td>(2/3)Vdc ∠300°</td></tr>
-                        <tr><td>V7</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- Code Explanation -->
-        <div class="info-card mt-8">
-            <h2 class="text-xl font-semibold mb-4">How the Switching Sequence is Coded</h2>
-            <p class="mb-4 text-gray-600">The core logic involves identifying the sector, calculating the time durations for the adjacent vectors (T1, T2) and the zero vector (T0), and then distributing these times across the sampling period (Ts) to generate the PWM signals for each phase.</p>
-            <div class="bg-gray-900 text-white p-4 rounded-lg overflow-x-auto">
-                <pre><code class="language-js">// This is a simplified version of the calculation logic.
-// Full code is in the script tag of this HTML file.
-function calculateSvm(vrefMag, vrefAngleDeg, ts, vdc) {
-    const m_a = vrefMag;
-    const angleRad = vrefAngleDeg * Math.PI / 180;
-
-    let sector = Math.floor(vrefAngleDeg / 60) + 1;
-    const angleInSectorRad = angleRad - (sector - 1) * (Math.PI / 3);
-
-    // Calculate time durations T1, T2 for the two active vectors
-    const T1 = ts * m_a * Math.sin(Math.PI / 3 - angleInSectorRad) * (2 / Math.sqrt(3));
-    const T2 = ts * m_a * Math.sin(angleInSectorRad) * (2 / Math.sqrt(3));
-    let T0 = ts - T1 - T2; // This can now be negative
-    
-    // For actual PWM generation, T0 would be clamped at 0 and T1/T2 scaled down.
-    let T1_pwm = T1;
-    let T2_pwm = T2;
-    if (T0 < 0) {
-        const total_T = T1 + T2;
-        T1_pwm = T1 * (ts / total_T);
-        T2_pwm = T2 * (ts / total_T);
-    }
-    const t0_half = Math.max(0, T0) / 2;
-
-    switch (sector) {
-        case 1: Ta = t0_half + T1_pwm + T2_pwm; Tb = t0_half + T2_pwm; Tc = t0_half; break;
-        // ... other sectors
-    }
-    return { sector, T1, T2, T0, overmodulated: T0 < 0 };
+:root{
+  --bg:#f7f8fa; --card:#ffffff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+  --blue:#2f6fed; --green:#2f9560; --orange:#d97832; --purple:#7667bd;
+  --cyan:#168fa0; --pink:#cf4f82; --amber:#d39a2c;
 }
-                </code></pre>
-            </div>
-        </div>
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:1220px;margin:0 auto;padding:24px 20px 38px}
+.hero h1{margin:0;font-size:clamp(25px,3vw,35px);letter-spacing:-.03em;font-weight:760}
+.hero p{margin:5px 0 0;color:var(--muted);font-size:14px}
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:16px 0 14px}
+.flow span{font-size:12px;font-weight:680;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 9px}
+.flow i{font-style:normal;color:#9ca3af;font-size:12px}
+.grid{display:grid;gap:14px}
+.topGrid{grid-template-columns:340px minmax(0,1fr)}
+.svmGrid{grid-template-columns:minmax(0,1.62fr) minmax(285px,.68fr);align-items:start}
+.timingGrid{grid-template-columns:minmax(310px,.78fr) minmax(0,1.22fr);align-items:start}
+@media(max-width:920px){.topGrid,.svmGrid,.timingGrid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.sectionCard{margin-top:14px}
+.head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:11px}
+.head h2{font-size:16.5px;line-height:1.25;margin:0;font-weight:730;letter-spacing:-.01em}
+.small{font-size:12.5px;color:var(--muted);line-height:1.45}
+.help{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;font-weight:800;cursor:pointer;color:#4b5563}
+.help:hover{background:#f3f4f6}
+.inputs{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+label{display:block;font-size:12px;color:var(--muted)}
+input[type=number]{width:100%;margin-top:5px;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font-size:15px;background:#fff;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.angleRow{margin-top:12px}.angleTop{display:flex;justify-content:space-between}.angleValue{font-size:13px;font-weight:750}
+.btnrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+button.pill{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 10px;font-size:12.5px;cursor:pointer;color:var(--ink)}
+button.primary{background:#eef4ff;border-color:#cad9fb;color:#2557b2;font-weight:700}
+button.play{background:#eff9f2;border-color:#cfe8d6;color:#247247;font-weight:700}
+button.stop{background:#fff5eb;border-color:#fed7aa;color:#9a3412;font-weight:700}
+.warning{min-height:18px;margin-top:7px;font-size:12px;color:#a95b10}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}
+.metrics.two{grid-template-columns:repeat(2,1fr)}
+.metrics.three{grid-template-columns:repeat(3,1fr)}
+@media(max-width:680px){.metrics,.metrics.two,.metrics.three{grid-template-columns:repeat(2,1fr)}}
+.metric{background:#fbfcfd;border:1px solid #eceef2;border-radius:10px;padding:8px 9px;min-width:0}
+.metric .k{font-size:11px;color:var(--muted)}
+.metric .v{margin-top:2px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;font-weight:760;overflow-wrap:anywhere}
+svg{display:block;width:100%;height:auto}
+.mathBox{background:#fbfcfd;border:1px solid #eceef2;border-radius:10px;padding:8px 10px;text-align:center;overflow-x:auto}
+.mathBox mjx-container{font-size:82%!important;margin:.15em 0!important}
+.mathBox.compact mjx-container{font-size:78%!important}
+.helpMath mjx-container{font-size:88%!important}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:5px;font-size:11.5px;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.vectorGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vectorChip{border:1px solid var(--line);border-radius:9px;padding:7px 5px;text-align:center;font-size:11.5px;background:#fafafa}
+.vectorChip b{font-size:12.5px}.vectorChip.activeA{background:#eef8f1;border-color:#b8ddc4}.vectorChip.activeB{background:#fff5ed;border-color:#f0c39f}
+.zeroRow{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.zeroChip{border:1px dashed #cfd4dc;border-radius:9px;padding:6px;text-align:center;font-size:11.5px;color:#6b7280;background:#fcfcfd}
+.limitRow{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.limitBox{border:1px solid #eceef2;border-radius:9px;padding:7px 8px;background:#fbfcfd}
+.limitBox b{display:block;font-size:10.5px;color:var(--muted);font-weight:600}.limitBox span{font:700 12.5px ui-monospace,monospace}
+.note{margin-top:9px;border-left:3px solid #b5bdc8;background:#fafbfc;border-radius:7px;padding:7px 9px;font-size:12px;line-height:1.45;color:#4b5563}
+.sequence{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:700;color:#374151}
+.timingStrip{display:flex;height:38px;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:9px;background:#f8fafc}
+.timingPart{display:flex;align-items:center;justify-content:center;min-width:0;border-right:1px solid rgba(255,255,255,.72);font:700 10.5px ui-monospace,monospace}
+.timingPart.zero{background:#e9edf3;color:#64748b}.timingPart.active{background:#dce9fb;color:#31598e}
+.nowGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:7px}
+@media(max-width:680px){.nowGrid{grid-template-columns:repeat(2,1fr)}}
+.now{border:1px solid #eceef2;border-radius:9px;padding:7px 8px;background:#fbfcfd}
+.now .k{font-size:10.5px;color:var(--muted)}.now .v{font:750 12px ui-monospace,monospace}
+.pulseWrap{overflow-x:auto}#pulseSvg{min-width:720px}
+details{margin-top:10px;border-top:1px solid #edf0f3;padding-top:9px}
+summary{cursor:pointer;font-size:12.5px;font-weight:680;color:#4b5563}
+.tableWrap{overflow-x:auto;margin-top:8px}
+.table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:650px}
+.table th,.table td{border-bottom:1px solid #edf0f3;padding:6px 7px;text-align:left;white-space:nowrap}
+.table th{color:#6b7280;font-weight:650;background:#fbfcfd}
+.stateRowActive{background:#e8f7fa!important;outline:1px solid #85cfdb;outline-offset:-1px}
+.footerMetrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+@media(max-width:680px){.footerMetrics{grid-template-columns:repeat(2,1fr)}}
+dialog{border:none;border-radius:14px;padding:0;max-width:610px;width:calc(100% - 28px);box-shadow:0 20px 60px rgba(0,0,0,.2)}
+dialog::backdrop{background:rgba(15,23,42,.35)}
+.dialogIn{padding:18px}.dialogHead{display:flex;justify-content:space-between;gap:10px}.dialogHead h3{margin:0;font-size:17px}.close{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 9px;cursor:pointer}
 
+</style>
+<script>
+window.MathJax={
+  tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},
+  chtml:{scale:0.90}
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>V<sub>dq</sub> → αβ → SVPWM Explorer</h1>
+    <p>From FOC voltage command to discrete inverter vectors, dwell times, and gate pulses.</p>
+  </div>
+
+  <div class="flow" aria-label="Learning path">
+    <span>1 · Vd,Vq,θe</span><i>→</i>
+    <span>2 · Vα,Vβ</span><i>→</i>
+    <span>3 · sector + V1…V6</span><i>→</i>
+    <span>4 · T1,T2,T0</span><i>→</i>
+    <span>5 · Sa,Sb,Sc</span>
+  </div>
+
+  <div class="grid topGrid">
+    <section class="card">
+      <div class="head">
+        <div><h2>1. FOC voltage command</h2><div class="small">Set the rotor-frame voltage command and electrical angle.</div></div>
+        <button class="help" data-help="input">?</button>
+      </div>
+      <div class="inputs">
+        <label>Vd [V]<input id="vd" type="number" value="0" step="1"></label>
+        <label>Vq [V]<input id="vq" type="number" value="100" step="1"></label>
+        <label>Vdc [V]<input id="vdc" type="number" value="300" min="1" step="10"></label>
+        <label>fsw [kHz]<input id="fsw" type="number" value="10" min=".1" step=".5"></label>
+      </div>
+      <div class="angleRow">
+        <div class="angleTop"><label for="theta">Electrical angle θe</label><div class="angleValue" id="thetaText">20°</div></div>
+        <input id="theta" type="range" min="0" max="359" step="1" value="20">
+      </div>
+      <div class="btnrow">
+        <button class="pill" id="qPreset">Vd=0, Vq=100</button>
+        <button class="pill" id="dPreset">Vd=100, Vq=0</button>
+        <button class="pill play" id="rotateBtn">▶ Rotate θe</button>
+        <button class="pill primary" id="reset">Reset</button>
+      </div>
+      <div id="warning" class="warning" aria-live="polite"></div>
+      <div class="mathBox compact">
+        \[
+        \begin{aligned}
+        V_\alpha &= V_d\cos\theta_e - V_q\sin\theta_e\\
+        V_\beta  &= V_d\sin\theta_e + V_q\cos\theta_e
+        \end{aligned}
+        \]
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="head">
+        <div><h2>2. Rotating dq frame → stationary αβ</h2><div class="small">The dq axes rotate with the rotor; the αβ axes remain fixed to the stator.</div></div>
+        <button class="help" data-help="dq">?</button>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="k">Vα</div><div class="v" id="valpha">—</div></div>
+        <div class="metric"><div class="k">Vβ</div><div class="v" id="vbeta">—</div></div>
+        <div class="metric"><div class="k">|Vref|</div><div class="v" id="vmag">—</div></div>
+        <div class="metric"><div class="k">∠Vref</div><div class="v" id="vang">—</div></div>
+      </div>
+      <svg id="dqSvg" viewBox="0 0 720 350" aria-label="dq and alpha beta frames">
+        <defs>
+          <marker id="arrBlue" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2f6fed"/></marker>
+          <marker id="arrGreen" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2f9560"/></marker>
+          <marker id="arrOrange" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#d97832"/></marker>
+          <marker id="arrGray" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#7b8494"/></marker>
+          <linearGradient id="pmRed" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ef8b86"/>
+            <stop offset="55%" stop-color="#d85852"/>
+            <stop offset="100%" stop-color="#b63b37"/>
+          </linearGradient>
+          <linearGradient id="pmBlue" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7aa7ef"/>
+            <stop offset="55%" stop-color="#487fd3"/>
+            <stop offset="100%" stop-color="#2f5fab"/>
+          </linearGradient>
+        </defs>
+        <line x1="80" y1="205" x2="650" y2="205" stroke="#aab1bc" stroke-width="1.6" marker-end="url(#arrGray)"/>
+        <line x1="325" y1="325" x2="325" y2="44" stroke="#aab1bc" stroke-width="1.6" marker-end="url(#arrGray)"/>
+        <text x="656" y="200" font-size="13" fill="#7b8494">α</text><text x="334" y="50" font-size="13" fill="#7b8494">β</text>
+        <circle cx="325" cy="205" r="3.3" fill="#4b5563"/>
+
+        <!-- Rotor permanent magnet: +d points from S pole toward N pole -->
+        <g id="pmRotor" transform="rotate(0 325 205)" pointer-events="none">
+          <rect x="251" y="191" width="148" height="28" rx="7" fill="#ffffff" stroke="#454b55" stroke-width="1.6"/>
+          <path d="M258 192 H325 V218 H258 Q252 218 252 212 V198 Q252 192 258 192Z" fill="url(#pmBlue)"/>
+          <path d="M325 192 H392 Q398 192 398 198 V212 Q398 218 392 218 H325Z" fill="url(#pmRed)"/>
+          <line x1="325" y1="192" x2="325" y2="218" stroke="#424852" stroke-width="1.2" opacity=".75"/>
+          <text x="288.5" y="209" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">S</text>
+          <text x="361.5" y="209" text-anchor="middle" font-size="14" font-weight="800" fill="#ffffff">N</text>
+        </g>
+
+        <path id="thetaArc" fill="none" stroke="#7667bd" stroke-width="2.2"/>
+        <text id="thetaLabel" x="390" y="185" font-size="13" fill="#7667bd">θe</text>
+        <line id="dAxis" x1="325" y1="205" x2="500" y2="205" stroke="#2f9560" stroke-width="2.5" marker-end="url(#arrGreen)"/>
+        <line id="qAxis" x1="325" y1="205" x2="325" y2="75" stroke="#d97832" stroke-width="2.5" marker-end="url(#arrOrange)"/>
+        <text id="dText" x="510" y="200" font-size="14" font-weight="700" fill="#2f9560">d</text>
+        <text id="qText" x="334" y="78" font-size="14" font-weight="700" fill="#d97832">q</text>
+        <line id="vLine" x1="325" y1="205" x2="460" y2="110" stroke="#2f6fed" stroke-width="3.8" marker-end="url(#arrBlue)"/>
+        <text id="vText" x="470" y="105" font-size="13" font-weight="700" fill="#2f6fed">Vref</text>
+        <line id="vdComp" x1="325" y1="205" x2="325" y2="205" stroke="#2f9560" stroke-width="5" opacity=".38"/>
+        <line id="vqComp" x1="325" y1="205" x2="325" y2="205" stroke="#d97832" stroke-width="5" opacity=".38"/>
+      </svg>
+      <div class="small" style="text-align:center;margin-top:2px">
+        Rotor PM is locked to the dq frame: <b style="color:#b63b37">N</b> defines +d, <b style="color:#2f5fab">S</b> defines −d; q is +90° electrical from d.
+      </div>
+    </section>
+  </div>
+
+  <section class="card sectionCard">
+    <div class="head">
+      <div><h2>3. Space-vector synthesis</h2><div class="small">The inverter can apply only V1…V6 and the two zero vectors. The requested Vref is their time-weighted average.</div></div>
+      <button class="help" data-help="svm">?</button>
     </div>
 
-    <!-- Help Modal -->
-    <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-auto">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="text-xl font-bold text-gray-800">How Vref Magnitude is Determined</h2>
-                <button id="closeModalBtn" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
-            </div>
-            <div class="text-gray-700">
-                <p class="mb-4">A common task is to determine the required Vref Magnitude (also called modulation index, <strong>m_a</strong>) to achieve a desired output AC voltage from a given DC link voltage (Vdc).</p>
-                <h3 class="font-semibold mb-2 text-gray-800">Example:</h3>
-                <p class="mb-2">Let's say we want to produce a standard <strong>230V (RMS)</strong> line-to-line voltage, and our DC link voltage (Vdc) is <strong>400V</strong>.</p>
-                <p class="mb-2">The relationship between these values in the linear modulation range is:</p>
-                <div class="bg-gray-100 p-3 rounded font-mono text-sm my-2 text-center">V<sub>line_rms</sub> = m_a * (Vdc / √2)</div>
-                <p class="mb-2">To find the required Vref Magnitude (m_a), we rearrange the formula:</p>
-                <div class="bg-gray-100 p-3 rounded font-mono text-sm my-2 text-center">m_a = (V<sub>line_rms</sub> * √2) / Vdc</div>
-                <p class="mb-4">Now, we plug in our values:</p>
-                <div class="bg-gray-100 p-3 rounded font-mono text-sm my-2">
-                    m_a = (230V * 1.414) / 400V<br>
-                    m_a = 325.22 / 400V<br>
-                    <strong class="text-blue-600">m_a ≈ 0.813</strong>
-                </div>
-                <p>So, you would need to set the <strong>Vref Magnitude to 0.813</strong> in the controls to get approximately 230V RMS line-to-line output.</p>
-                <p class="mt-4 text-sm text-gray-600">Note: Since 0.813 is less than the maximum linear modulation index of 0.866 (the edge of the yellow circle), the output waveform will be a clean sine wave with low distortion.</p>
-            </div>
+    <div class="grid svmGrid">
+      <div>
+        <svg id="svmSvg" viewBox="0 0 720 520" aria-label="SVPWM hexagon and vector synthesis">
+          <defs>
+            <marker id="arrBase" markerWidth="4.5" markerHeight="4.5" refX="4" refY="2.25" orient="auto"><path d="M0,0 L4.5,2.25 L0,4.5 Z" fill="#737d8c"/></marker>
+            <marker id="arrReq" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2f6fed"/></marker>
+            <marker id="arrC1" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2f9560"/></marker>
+            <marker id="arrC2" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#d97832"/></marker>
+            <marker id="arrSum" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#7667bd"/></marker>
+            <marker id="arrInst" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#168fa0"/></marker>
+            <marker id="arrAcc" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#cf4f82"/></marker>
+          </defs>
+
+          <path id="sectorShade" fill="#f2f7ff" stroke="none"/>
+          <g id="hexBase"></g>
+
+          <circle id="spwmCircle" cx="360" cy="260" r="151.5" fill="none" stroke="#8bb0ef" stroke-width="1.2" stroke-dasharray="4 7"/>
+          <circle id="svmCircle" cx="360" cy="260" r="175" fill="none" stroke="#d5a145" stroke-width="1.4" stroke-dasharray="7 6"/>
+          <text x="510" y="391" font-size="10.5" fill="#6f91cf">SPWM limit</text>
+          <text x="520" y="410" font-size="10.5" fill="#a87a26">SVPWM limit</text>
+
+          <line id="nearA" x1="360" y1="260" x2="562" y2="260" stroke="#2f9560" stroke-width="7" opacity=".10"/>
+          <line id="nearB" x1="360" y1="260" x2="461" y2="85" stroke="#d97832" stroke-width="7" opacity=".10"/>
+
+          <line id="c1Line" x1="360" y1="260" x2="440" y2="260" stroke="#2f9560" stroke-width="3" marker-end="url(#arrC1)"/>
+          <line id="c2Line" x1="440" y1="260" x2="490" y2="175" stroke="#d97832" stroke-width="3" marker-end="url(#arrC2)"/>
+          <line id="sumLine" x1="360" y1="260" x2="490" y2="175" stroke="#7667bd" stroke-width="2.1" stroke-dasharray="6 5" marker-end="url(#arrSum)"/>
+          <line id="reqLine" x1="360" y1="260" x2="490" y2="175" stroke="#2f6fed" stroke-width="3.6" marker-end="url(#arrReq)"/>
+          <text id="reqText" x="499" y="169" font-size="12" font-weight="700" fill="#2f6fed">Vref</text>
+          <text id="c1Text" x="400" y="247" font-size="10.5" font-weight="650" fill="#26794e"></text>
+          <text id="c2Text" x="468" y="215" font-size="10.5" font-weight="650" fill="#ae5c29"></text>
+
+          <line id="instVector" x1="360" y1="260" x2="360" y2="260" stroke="#168fa0" stroke-width="4.5" marker-end="url(#arrInst)" visibility="hidden"/>
+          <line id="accVector" x1="360" y1="260" x2="360" y2="260" stroke="#cf4f82" stroke-width="3" marker-end="url(#arrAcc)" visibility="hidden"/>
+          <text id="instText" x="372" y="243" font-size="10.5" font-weight="700" fill="#168fa0" visibility="hidden">instantaneous</text>
+          <text id="accText" x="372" y="280" font-size="10.5" font-weight="700" fill="#cf4f82" visibility="hidden">Σ(VΔt)/Ts</text>
+        </svg>
+
+        <div class="legend">
+          <span><span class="dot" style="background:#2f6fed"></span>requested Vref</span>
+          <span><span class="dot" style="background:#2f9560"></span>T1-weighted vector</span>
+          <span><span class="dot" style="background:#d97832"></span>T2-weighted vector</span>
+          <span><span class="dot" style="background:#7667bd"></span>resultant</span>
         </div>
+      </div>
+
+      <div>
+        <div class="small" style="font-weight:700;color:#374151;margin-bottom:7px">Predefined inverter vectors</div>
+        <div class="vectorGrid">
+          <div class="vectorChip" id="chip1"><b>V1</b><br>100 · 0°</div>
+          <div class="vectorChip" id="chip2"><b>V2</b><br>110 · 60°</div>
+          <div class="vectorChip" id="chip3"><b>V3</b><br>010 · 120°</div>
+          <div class="vectorChip" id="chip4"><b>V4</b><br>011 · 180°</div>
+          <div class="vectorChip" id="chip5"><b>V5</b><br>001 · 240°</div>
+          <div class="vectorChip" id="chip6"><b>V6</b><br>101 · 300°</div>
+        </div>
+        <div class="zeroRow">
+          <div class="zeroChip"><b>V0</b> · 000 · zero vector</div>
+          <div class="zeroChip"><b>V7</b> · 111 · zero vector</div>
+        </div>
+
+        <div class="metrics three" style="margin-top:9px">
+          <div class="metric"><div class="k" id="c1Name">Contribution 1</div><div class="v" id="c1Value">—</div></div>
+          <div class="metric"><div class="k" id="c2Name">Contribution 2</div><div class="v" id="c2Value">—</div></div>
+          <div class="metric"><div class="k">|Vavg|</div><div class="v" id="sumValue">—</div></div>
+        </div>
+
+        <div class="mathBox compact" id="vectorEquation">
+          \[
+          \mathbf V_{\mathrm{avg}}
+          = \frac{T_1}{T_s}\mathbf V_k
+          + \frac{T_2}{T_s}\mathbf V_{k+1}
+          \]
+        </div>
+
+        <div class="btnrow">
+          <button class="pill play" id="sumBtn">▶ Vector sum</button>
+          <button class="pill primary" id="playTsBtn">▶ Play one Ts</button>
+        </div>
+
+        <div class="limitRow">
+          <div class="limitBox"><b>SPWM max |Vref|</b><span id="spwmLimitText">—</span></div>
+          <div class="limitBox"><b>SVPWM max |Vref|</b><span id="svmLimitText">—</span></div>
+        </div>
+        <div class="note">SVPWM extends linear DC-bus utilization by <b>15.47%</b> over SPWM.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card sectionCard">
+    <div class="head">
+      <div><h2>4. Dwell times → switching states → PWM</h2><div class="small">The same seven switching segments are shown as timing, inverter state, and gate waveform.</div></div>
+      <button class="help" data-help="dwell">?</button>
     </div>
 
+    <div class="grid timingGrid">
+      <div>
+        <div class="metrics two">
+          <div class="metric"><div class="k">Sector</div><div class="v" id="sector">—</div></div>
+          <div class="metric"><div class="k">φ in sector</div><div class="v" id="phi">—</div></div>
+          <div class="metric"><div class="k">T1</div><div class="v" id="t1">—</div></div>
+          <div class="metric"><div class="k">T2</div><div class="v" id="t2">—</div></div>
+          <div class="metric"><div class="k">T0</div><div class="v" id="t0">—</div></div>
+          <div class="metric"><div class="k">Ts</div><div class="v" id="ts">—</div></div>
+        </div>
 
-    <script>
-        // --- DOM Element References ---
-        const vrefMagSlider = document.getElementById('vrefMag');
-        const vrefAngleSlider = document.getElementById('vrefAngle');
-        const vrefMagValue = document.getElementById('vrefMagValue');
-        const vrefAngleValue = document.getElementById('vrefAngleValue');
-        const tsInput = document.getElementById('ts');
-        const vdcInput = document.getElementById('vdc');
-        const outputDiv = document.getElementById('output');
-        const svmCanvas = document.getElementById('svmCanvas');
-        const pwmCanvas = document.getElementById('pwmCanvas');
-        const svmCtx = svmCanvas.getContext('2d');
-        const pwmCtx = pwmCanvas.getContext('2d');
-        const helpBtn = document.getElementById('helpBtn');
-        const helpModal = document.getElementById('helpModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
+        <div class="mathBox compact">
+          \[
+          \begin{aligned}
+          T_1 &= T_s\frac{\sqrt3\,|\mathbf V_{\mathrm{ref}}|}{V_{dc}}\sin(60^\circ-\phi)\\
+          T_2 &= T_s\frac{\sqrt3\,|\mathbf V_{\mathrm{ref}}|}{V_{dc}}\sin\phi\\
+          T_0 &= T_s-T_1-T_2
+          \end{aligned}
+          \]
+        </div>
 
-        // --- Main Application State ---
-        let state = {
-            vrefMag: 0.8,
-            vrefAngle: 30,
-            ts: 100,
-            vdc: 400,
-        };
-        let svmResults = {};
-        
-        // --- Animation State ---
-        let animationRequestId;
-        let animationStartTime;
-        const animationDuration = 1500; // ms
-        let idealPath = { p0: {}, p1: {}, p2: {} }; // Path to ideal Vref tip
+        <div class="note"><b>Sequence</b><br><span id="sequence" class="sequence"></span></div>
+        <div id="timingStrip" class="timingStrip" aria-label="Seven segment timing strip"></div>
 
-        // --- Core Calculation Logic ---
-        function calculateSvm(vrefMag, vrefAngleDeg, ts) {
-            const m_a = vrefMag;
-            const angleRad = vrefAngleDeg * Math.PI / 180;
-            let sector = Math.floor(vrefAngleDeg / 60) + 1;
-            if (vrefAngleDeg >= 360) sector = 6;
-            if (vrefAngleDeg <= 0) sector = 1;
-            const angleInSectorRad = angleRad - (sector - 1) * (Math.PI / 3);
-            
-            const T1 = ts * m_a * Math.sin(Math.PI / 3 - angleInSectorRad) * (2 / Math.sqrt(3));
-            const T2 = ts * m_a * Math.sin(angleInSectorRad) * (2 / Math.sqrt(3));
-            let T0 = ts - T1 - T2; // T0 can be negative here
+        <details>
+          <summary>Show exact segment timing</summary>
+          <div class="tableWrap">
+            <table class="table">
+              <thead><tr><th>#</th><th>Vector</th><th>Sa Sb Sc</th><th>Formula</th><th>Duration</th><th>Start</th><th>End</th></tr></thead>
+              <tbody id="segmentTable"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
 
-            return { sector, T1, T2, T0, overmodulated: T0 < 0 };
-        }
+      <div>
+        <div class="nowGrid">
+          <div class="now"><div class="k">Time</div><div class="v" id="nowTime">0 µs</div></div>
+          <div class="now"><div class="k">Vector</div><div class="v" id="nowVec">—</div></div>
+          <div class="now"><div class="k">Sa Sb Sc</div><div class="v" id="nowState">—</div></div>
+          <div class="now"><div class="k">Segment</div><div class="v" id="nowSegment">—</div></div>
+        </div>
 
-        // --- Drawing Functions ---
+        <div class="pulseWrap">
+          <svg id="pulseSvg" viewBox="0 0 940 350" aria-label="SVPWM PWM waveforms">
+            <g id="pulseGrid"></g><g id="pulsePaths"></g><g id="pulseLabels"></g>
+            <line id="pulseCursor" x1="90" y1="25" x2="90" y2="300" stroke="#cf4f82" stroke-width="2" visibility="hidden"/>
+          </svg>
+        </div>
 
-        function drawSvmBase() {
-            const width = svmCanvas.width;
-            const height = svmCanvas.height;
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const radius = Math.min(width, height) * 0.4;
+        <div class="metrics three">
+          <div class="metric"><div class="k">Duty A</div><div class="v" id="da">—</div></div>
+          <div class="metric"><div class="k">Duty B</div><div class="v" id="db">—</div></div>
+          <div class="metric"><div class="k">Duty C</div><div class="v" id="dc">—</div></div>
+        </div>
 
-            svmCtx.clearRect(0, 0, width, height);
+        <details>
+          <summary>Show phase voltages for active inverter states</summary>
+          <div class="tableWrap">
+            <table class="table">
+              <thead><tr><th>Vector</th><th>Sa Sb Sc</th><th>Van</th><th>Vbn</th><th>Vcn</th><th>|Vαβ|</th></tr></thead>
+              <tbody id="stateTable"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </div>
 
-            svmCtx.beginPath();
-            svmCtx.strokeStyle = '#cbd5e1';
-            svmCtx.lineWidth = 2;
-            for (let i = 0; i <= 6; i++) {
-                const angle = i * Math.PI / 3;
-                svmCtx.lineTo(centerX + radius * Math.cos(angle), centerY - radius * Math.sin(angle));
-            }
-            svmCtx.stroke();
+    <div class="note"><b>Core idea:</b> the inverter never directly outputs the blue Vref. It switches among V0…V7; their volt-second average over Ts equals Vref.</div>
+  </section>
 
-            svmCtx.beginPath();
-            svmCtx.strokeStyle = '#e2e8f0';
-            svmCtx.lineWidth = 1;
-            for (let i = 0; i < 3; i++) {
-                const angle = i * Math.PI / 3;
-                svmCtx.moveTo(centerX, centerY);
-                svmCtx.lineTo(centerX + radius * Math.cos(angle), centerY - radius * Math.sin(angle));
-                svmCtx.moveTo(centerX, centerY);
-                svmCtx.lineTo(centerX + radius * Math.cos(angle + Math.PI), centerY - radius * Math.sin(angle + Math.PI));
-            }
-            svmCtx.stroke();
-            
-            const svmLimitRadius = radius * (Math.sqrt(3) / 2);
-            svmCtx.beginPath();
-            svmCtx.arc(centerX, centerY, svmLimitRadius, 0, 2 * Math.PI);
-            svmCtx.strokeStyle = '#f59e0b';
-            svmCtx.lineWidth = 1.5;
-            svmCtx.setLineDash([4, 4]);
-            svmCtx.stroke();
+  <section class="card sectionCard">
+    <div class="head">
+      <div><h2>5. Fundamental output-voltage interpretation</h2><div class="small">Useful for connecting the space-vector command back to familiar phase and line RMS quantities.</div></div>
+      <button class="help" data-help="voltage">?</button>
+    </div>
+    <div class="footerMetrics">
+      <div class="metric"><div class="k">Phase peak</div><div class="v" id="phasePeak">—</div></div>
+      <div class="metric"><div class="k">Phase RMS</div><div class="v" id="phaseRms">—</div></div>
+      <div class="metric"><div class="k">Line-line RMS</div><div class="v" id="lineRms">—</div></div>
+      <div class="metric"><div class="k">SVPWM utilization</div><div class="v" id="util">—</div></div>
+    </div>
+  </section>
+</div>
 
-            const spwmLimitRadius = radius * 0.75;
-            svmCtx.beginPath();
-            svmCtx.arc(centerX, centerY, spwmLimitRadius, 0, 2 * Math.PI);
-            svmCtx.strokeStyle = '#3b82f6';
-            svmCtx.lineWidth = 1.5;
-            svmCtx.setLineDash([4, 8]);
-            svmCtx.stroke();
-            
-            svmCtx.setLineDash([]);
+<dialog id="helpDialog">
+  <div class="dialogIn">
+    <div class="dialogHead"><h3 id="helpTitle"></h3><button class="close" id="closeHelp">Close</button></div>
+    <div id="helpBody" class="small helpMath" style="font-size:13px;color:#374151;line-height:1.6;margin-top:10px"></div>
+  </div>
+</dialog>
 
-            const vectors = ["V1(100)", "V2(110)", "V3(010)", "V4(011)", "V5(001)", "V6(101)"];
-             const voltageStates = [
-                "(²/₃,⁻¹/₃,⁻¹/₃)Vdc", "(¹/₃,¹/₃,⁻²/₃)Vdc", "(⁻¹/₃,²/₃,⁻¹/₃)Vdc", 
-                "(⁻²/₃,¹/₃,¹/₃)Vdc", "(⁻¹/₃,⁻¹/₃,²/₃)Vdc", "(¹/₃,⁻²/₃,¹/₃)Vdc"
-            ];
+<script>
 
-            svmCtx.font = '12px Inter';
-            for (let i = 0; i < 6; i++) {
-                const angle = i * Math.PI / 3;
-                const x = centerX + radius * Math.cos(angle);
-                const y = centerY - radius * Math.sin(angle);
-                
-                svmCtx.beginPath();
-                svmCtx.moveTo(centerX, centerY);
-                svmCtx.lineTo(x, y);
-                svmCtx.strokeStyle = '#64748b';
-                svmCtx.lineWidth = 2.5;
-                svmCtx.stroke();
-                
-                const labelX = centerX + (radius + 40) * Math.cos(angle);
-                const labelY = centerY - (radius + 40) * Math.sin(angle);
-                svmCtx.fillStyle = '#475569';
-                svmCtx.textAlign = 'center';
-                svmCtx.textBaseline = 'middle';
-                svmCtx.font = 'bold 13px Inter';
-                svmCtx.fillText(vectors[i], labelX, labelY - 8);
-                svmCtx.font = '11px Monospace';
-                svmCtx.fillText(voltageStates[i], labelX, labelY + 8);
-            }
-        }
+(()=>{
+const $=id=>document.getElementById(id),NS="http://www.w3.org/2000/svg";
+const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI,wrap=d=>((d%360)+360)%360,clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const fmt=(x,n=2)=>Number.isFinite(x)?x.toFixed(n):"—";
+const states={0:[0,0,0],1:[1,0,0],2:[1,1,0],3:[0,1,0],4:[0,1,1],5:[0,0,1],6:[1,0,1],7:[1,1,1]};
+const seqMap={
+  1:{first:1,ft:"T1",second:2,st:"T2"},
+  2:{first:3,ft:"T2",second:2,st:"T1"},
+  3:{first:3,ft:"T1",second:4,st:"T2"},
+  4:{first:5,ft:"T2",second:4,st:"T1"},
+  5:{first:5,ft:"T1",second:6,st:"T2"},
+  6:{first:1,ft:"T2",second:6,st:"T1"}
+};
+let last=null,rotateRAF=null,rotateLast=null,playRAF=null,sumRAF=null,sumProgress=1;
 
-        function drawAnimation(progress) {
-            if (svmResults.overmodulated) {
-                svmCtx.beginPath();
-                svmCtx.moveTo(idealPath.p0.x, idealPath.p0.y);
-                svmCtx.lineTo(idealPath.p1.x, idealPath.p1.y);
-                svmCtx.lineTo(idealPath.p2.x, idealPath.p2.y);
-                svmCtx.strokeStyle = '#d4d4d8';
-                svmCtx.lineWidth = 1.5;
-                svmCtx.setLineDash([2,3]);
-                svmCtx.stroke();
-                svmCtx.setLineDash([]);
-            }
+function svgEl(tag,a={}){const e=document.createElementNS(NS,tag);Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v));return e}
+function line(id,x1,y1,x2,y2){const e=$(id);e.setAttribute("x1",x1);e.setAttribute("y1",y1);e.setAttribute("x2",x2);e.setAttribute("y2",y2)}
+function vectorAngle(k){return (k-1)*60}
 
-            let T1_actual = svmResults.T1;
-            let T2_actual = svmResults.T2;
-            if (svmResults.overmodulated) {
-                const T_total_req = T1_actual + T2_actual;
-                T1_actual = T1_actual * (state.ts / T_total_req);
-                T2_actual = T2_actual * (state.ts / T_total_req);
-            }
+function buildHex(){
+  const g=$("hexBase"),cx=360,cy=260,R=202;g.innerHTML="";
+  const pts=[];
+  for(let i=0;i<6;i++){
+    const a=rad(i*60);
+    pts.push([cx+R*Math.cos(a),cy-R*Math.sin(a)]);
+  }
 
-            const radius = Math.min(svmCanvas.width, svmCanvas.height) * 0.4;
-            const v1_angle = (svmResults.sector - 1) * Math.PI / 3;
-            const v2_angle = svmResults.sector * Math.PI / 3;
+  g.appendChild(svgEl("polygon",{
+    points:pts.map(p=>p.join(",")).join(" "),
+    fill:"#fcfdff",stroke:"#b9c1cd","stroke-width":1.6
+  }));
 
-            const p1_actual_dx = radius * (T1_actual / state.ts) * Math.cos(v1_angle);
-            const p1_actual_dy = radius * (T1_actual / state.ts) * Math.sin(v1_angle);
-            const p1_actual = { x: idealPath.p0.x + p1_actual_dx, y: idealPath.p0.y - p1_actual_dy };
-            
-            const p2_actual_dx = radius * (T2_actual / state.ts) * Math.cos(v2_angle);
-            const p2_actual_dy = radius * (T2_actual / state.ts) * Math.sin(v2_angle);
-            const p2_actual = { x: p1_actual.x + p2_actual_dx, y: p1_actual.y - p2_actual_dy };
+  for(let i=0;i<6;i++){
+    const a=rad(i*60),x=pts[i][0],y=pts[i][1];
 
-            const T_total_actual = T1_actual + T2_actual;
-            if (T_total_actual === 0) return;
-            const t1_ratio = T1_actual / T_total_actual;
+    g.appendChild(svgEl("line",{
+      x1:cx,y1:cy,x2:x,y2:y,
+      stroke:"#e4e7ec","stroke-width":1
+    }));
 
-            let currentX, currentY, label;
-            const vectorNames = ["V1", "V2", "V3", "V4", "V5", "V6"];
-            const firstVecIndex = svmResults.sector - 1;
-            const secondVecIndex = svmResults.sector % 6;
+    const l=svgEl("line",{
+      id:"baseV"+(i+1),x1:cx,y1:cy,x2:x,y2:y,
+      stroke:"#737d8c","stroke-width":1.8,
+      "marker-end":"url(#arrBase)"
+    });
+    g.appendChild(l);
 
-            svmCtx.beginPath();
-            svmCtx.moveTo(idealPath.p0.x, idealPath.p0.y);
+    const labelR=R+30;
+    const lx=cx+labelR*Math.cos(a),ly=cy-labelR*Math.sin(a);
+    const t=svgEl("text",{
+      x:lx,y:ly,
+      "text-anchor":"middle","dominant-baseline":"middle",
+      "font-size":12.5,fill:"#3f4857","font-weight":"700"
+    });
+    t.textContent="V"+(i+1)+"  "+states[i+1].join("");
+    g.appendChild(t);
+  }
 
-            if (progress <= t1_ratio) {
-                const segmentProgress = (progress === 0 && t1_ratio === 0) ? 1 : progress / t1_ratio;
-                currentX = idealPath.p0.x + (p1_actual.x - idealPath.p0.x) * segmentProgress;
-                currentY = idealPath.p0.y + (p1_actual.y - idealPath.p0.y) * segmentProgress;
-                label = vectorNames[firstVecIndex];
-            } else {
-                svmCtx.lineTo(p1_actual.x, p1_actual.y);
-                const segmentProgress = (progress - t1_ratio) / (1 - t1_ratio);
-                currentX = p1_actual.x + (p2_actual.x - p1_actual.x) * segmentProgress;
-                currentY = p1_actual.y + (p2_actual.y - p1_actual.y) * segmentProgress;
-                label = vectorNames[secondVecIndex];
-            }
-            svmCtx.lineTo(currentX, currentY);
-            
-            svmCtx.strokeStyle = '#16a34a';
-            svmCtx.lineWidth = 3;
-            svmCtx.stroke();
+  for(let i=0;i<6;i++){
+    const a=rad(i*60+30);
+    const t=svgEl("text",{
+      x:cx+116*Math.cos(a),y:cy-116*Math.sin(a),
+      "text-anchor":"middle","dominant-baseline":"middle",
+      "font-size":11,fill:"#a0a7b2","font-weight":"650"
+    });
+    t.textContent="S"+(i+1);
+    g.appendChild(t);
+  }
 
-            svmCtx.beginPath();
-            svmCtx.arc(currentX, currentY, 5, 0, 2 * Math.PI);
-            svmCtx.fillStyle = '#16a34a';
-            svmCtx.fill();
+  g.appendChild(svgEl("line",{x1:84,y1:cy,x2:636,y2:cy,stroke:"#edf0f4","stroke-width":1}));
+  g.appendChild(svgEl("line",{x1:cx,y1:35,x2:cx,y2:485,stroke:"#edf0f4","stroke-width":1}));
 
-            svmCtx.font = 'bold 14px Inter';
-            svmCtx.fillStyle = '#15803d';
-            svmCtx.fillText(label, currentX + 10, currentY - 10);
-        }
+  const ta=svgEl("text",{x:642,y:cy-7,"font-size":12,fill:"#8b94a2"});ta.textContent="α";g.appendChild(ta);
+  const tb=svgEl("text",{x:cx+8,y:40,"font-size":12,fill:"#8b94a2"});tb.textContent="β";g.appendChild(tb);
+  g.appendChild(svgEl("circle",{cx,cy,r:3.3,fill:"#4b5563"}));
+}
 
-        function drawVref() {
-            const centerX = idealPath.p0.x;
-            const centerY = idealPath.p0.y;
-            const vrefX = idealPath.p2.x; // The ideal target
-            const vrefY = idealPath.p2.y;
+function stopPlay(){
+  if(playRAF){cancelAnimationFrame(playRAF);playRAF=null}
+  $("pulseCursor").setAttribute("visibility","hidden");
+  ["instVector","accVector","instText","accText"].forEach(id=>$(id).setAttribute("visibility","hidden"));
+  document.querySelectorAll("#stateTable tr").forEach(r=>r.classList.remove("stateRowActive"));
+  $("playTsBtn").textContent="▶ Play one Ts";$("playTsBtn").classList.remove("stop");$("playTsBtn").classList.add("primary");
+}
+function stopRotate(){
+  if(rotateRAF){cancelAnimationFrame(rotateRAF);rotateRAF=null}
+  rotateLast=null;$("rotateBtn").textContent="▶ Rotate θe";$("rotateBtn").classList.remove("stop");$("rotateBtn").classList.add("play");
+}
+function stopSum(){if(sumRAF){cancelAnimationFrame(sumRAF);sumRAF=null}sumProgress=1}
 
-            if (vrefX === undefined || vrefY === undefined) return;
+function calc(){
+  const vd=Number($("vd").value)||0,vq=Number($("vq").value)||0;
+  const vdc=Math.max(1,Number($("vdc").value)||300);
+  const fsw=Math.max(100,1000*(Number($("fsw").value)||10));
+  const theta=Number($("theta").value)||0,th=rad(theta),Ts=1/fsw;
+  const va=vd*Math.cos(th)-vq*Math.sin(th),vb=vd*Math.sin(th)+vq*Math.cos(th);
+  const mag=Math.hypot(va,vb),ang=wrap(deg(Math.atan2(vb,va)));
+  const sector=Math.min(6,Math.floor(ang/60)+1),phiD=ang-(sector-1)*60,phi=rad(phiD);
+  let T1=Ts*Math.sqrt(3)*mag/vdc*Math.sin(Math.PI/3-phi);
+  let T2=Ts*Math.sqrt(3)*mag/vdc*Math.sin(phi);
+  let T0=Ts-T1-T2,over=false;
+  if(T0<0){over=true;const s=Ts/(T1+T2);T1*=s;T2*=s;T0=0}
+  T1=Math.max(0,T1);T2=Math.max(0,T2);T0=Math.max(0,T0);
+  const q=seqMap[sector],fdt=q.ft==="T1"?T1:T2,sdt=q.st==="T1"?T1:T2;
+  const seg=[
+    {vec:0,dt:T0/4,expr:"T0/4"},
+    {vec:q.first,dt:fdt/2,expr:q.ft+"/2"},
+    {vec:q.second,dt:sdt/2,expr:q.st+"/2"},
+    {vec:7,dt:T0/2,expr:"T0/2"},
+    {vec:q.second,dt:sdt/2,expr:q.st+"/2"},
+    {vec:q.first,dt:fdt/2,expr:q.ft+"/2"},
+    {vec:0,dt:T0/4,expr:"T0/4"}
+  ];
+  return {vd,vq,vdc,fsw,theta,Ts,va,vb,mag,ang,sector,phiD,T1,T2,T0,over,q,seg};
+}
 
-            svmCtx.beginPath();
-            svmCtx.moveTo(centerX, centerY);
-            svmCtx.lineTo(vrefX, vrefY);
-            svmCtx.strokeStyle = '#db2777';
-            svmCtx.lineWidth = 3;
-            svmCtx.stroke();
+function drawDq(c){
+  const cx=325,cy=205,L=165,th=rad(c.theta),dx=Math.cos(th),dy=-Math.sin(th),qx=Math.cos(th+Math.PI/2),qy=-Math.sin(th+Math.PI/2);
 
-            const headlen = 10;
-            const angle = Math.atan2(vrefY - centerY, vrefX - centerX);
-            svmCtx.beginPath();
-            svmCtx.moveTo(vrefX, vrefY);
-            svmCtx.lineTo(vrefX - headlen * Math.cos(angle - Math.PI / 6), vrefY - headlen * Math.sin(angle - Math.PI / 6));
-            svmCtx.moveTo(vrefX, vrefY);
-            svmCtx.lineTo(vrefX - headlen * Math.cos(angle + Math.PI / 6), vrefY - headlen * Math.sin(angle + Math.PI / 6));
-            svmCtx.stroke();
-            
-            svmCtx.fillStyle = '#db2777';
-            svmCtx.font = 'bold 14px Inter';
-            const labelAngleRad = state.vrefAngle * Math.PI / 180;
-            svmCtx.fillText('Vref', vrefX + 15 * Math.cos(labelAngleRad), vrefY - 15 * Math.sin(labelAngleRad));
-        }
+  // SVG y-axis points downward, therefore positive electrical angle is rendered with -theta.
+  $("pmRotor").setAttribute("transform",`rotate(${-c.theta} ${cx} ${cy})`);
 
-        function drawPwm(results) {
-            const width = pwmCanvas.width;
-            const height = pwmCanvas.height;
-            const ts = state.ts;
-            
-            let T1_pwm = results.T1;
-            let T2_pwm = results.T2;
+  line("dAxis",cx,cy,cx+L*dx,cy+L*dy);line("qAxis",cx,cy,cx+145*qx,cy+145*qy);
+  $("dText").setAttribute("x",cx+(L+14)*dx);$("dText").setAttribute("y",cy+(L+14)*dy);
+  $("qText").setAttribute("x",cx+160*qx);$("qText").setAttribute("y",cy+160*qy);
+  const max=Math.max(120,Math.hypot(c.vd,c.vq)*1.25),scale=155/max;
+  const dpx=cx+scale*c.vd*dx,dpy=cy+scale*c.vd*dy;
+  const px=dpx+scale*c.vq*qx,py=dpy+scale*c.vq*qy;
+  line("vdComp",cx,cy,dpx,dpy);line("vqComp",dpx,dpy,px,py);line("vLine",cx,cy,px,py);
+  $("vText").setAttribute("x",px+10);$("vText").setAttribute("y",py-8);
+  const r=56,end=rad(c.theta),sx=cx+r,sy=cy,ex=cx+r*Math.cos(end),ey=cy-r*Math.sin(end),large=c.theta>180?1:0;
+  $("thetaArc").setAttribute("d",`M ${sx} ${sy} A ${r} ${r} 0 ${large} 0 ${ex} ${ey}`);
+  const mid=rad(c.theta/2);$("thetaLabel").setAttribute("x",cx+(r+22)*Math.cos(mid));$("thetaLabel").setAttribute("y",cy-(r+22)*Math.sin(mid));$("thetaLabel").textContent="θe = "+fmt(c.theta,0)+"°";
+}
 
-            if (results.overmodulated) {
-                const total_T = results.T1 + results.T2;
-                T1_pwm = results.T1 * (ts / total_T);
-                T2_pwm = results.T2 * (ts / total_T);
-            }
-            
-            const T0_pwm = ts - (T1_pwm + T2_pwm);
-            const t0_half = T0_pwm / 2;
-            let Ta, Tb, Tc;
-            
-            switch (results.sector) {
-                case 1: Ta = t0_half + T1_pwm + T2_pwm; Tb = t0_half + T2_pwm; Tc = t0_half; break;
-                case 2: Ta = t0_half + T1_pwm; Tb = t0_half + T1_pwm + T2_pwm; Tc = t0_half; break;
-                case 3: Ta = t0_half; Tb = t0_half + T1_pwm + T2_pwm; Tc = t0_half + T2_pwm; break;
-                case 4: Ta = t0_half; Tb = t0_half + T1_pwm; Tc = t0_half + T1_pwm + T2_pwm; break;
-                case 5: Ta = t0_half + T2_pwm; Tb = t0_half; Tc = t0_half + T1_pwm + T2_pwm; break;
-                case 6: Ta = t0_half + T1_pwm + T2_pwm; Tb = t0_half; Tc = t0_half + T1_pwm; break;
-            }
+function typesetMath(el){
+  if(window.MathJax && MathJax.typesetPromise){
+    try{ MathJax.typesetClear([el]); }catch(e){}
+    MathJax.typesetPromise([el]).catch(()=>{});
+  }
+}
 
-            pwmCtx.clearRect(0, 0, width, height);
+function drawSvm(c,p=1){
+  const cx=360,cy=260,R=202,activeMag=2*c.vdc/3;
+  const k1=c.sector,k2=c.sector===6?1:c.sector+1;
+  const a1=rad(vectorAngle(k1)),a2=rad(vectorAngle(k2));
 
-            const plotWidth = width * 0.75;
-            const xOffset = (width - plotWidth) / 2;
+  const x1=cx+R*Math.cos(a1),y1=cy-R*Math.sin(a1);
+  const x2=cx+R*Math.cos(a2),y2=cy-R*Math.sin(a2);
+  $("sectorShade").setAttribute("d",`M ${cx} ${cy} L ${x1} ${y1} L ${x2} ${y2} Z`);
 
-            const phaseHeight = height / 3;
-            const colors = ['#3b82f6', '#16a34a', '#ef4444'];
-            const labels = ['Gate A', 'Gate B', 'Gate C'];
-            const onTimes = [Ta, Tb, Tc];
-            for (let i = 0; i < 3; i++) {
-                const yOffset = i * phaseHeight;
-                const onTime = onTimes[i];
-                const t0_half_pwm = (ts - onTime) / 2;
-                const x_start_high = xOffset + (t0_half_pwm / ts) * plotWidth;
-                const x_end_high = xOffset + ((t0_half_pwm + onTime) / ts) * plotWidth;
-                
-                pwmCtx.fillStyle = '#e2e8f0';
-                pwmCtx.fillRect(xOffset, yOffset + phaseHeight * 0.2, plotWidth, phaseHeight * 0.6);
-                
-                pwmCtx.fillStyle = colors[i];
-                pwmCtx.fillRect(x_start_high, yOffset + phaseHeight * 0.2, x_end_high - x_start_high, phaseHeight * 0.6);
-                
-                pwmCtx.fillStyle = '#334155';
-                pwmCtx.font = '14px Inter';
-                pwmCtx.textAlign = 'left';
-                pwmCtx.textBaseline = 'middle';
-                pwmCtx.fillText(labels[i], 10, yOffset + phaseHeight / 2);
-            }
-            
-            const labelY = height - 5;
-            const vectorLabelY = 10;
-            pwmCtx.fillStyle = '#334155';
-            pwmCtx.textAlign = 'center';
-            pwmCtx.font = '10px Inter';
+  for(let i=1;i<=6;i++){
+    $("baseV"+i).setAttribute("stroke","#737d8c");
+    $("baseV"+i).setAttribute("stroke-width","1.8");
+    $("baseV"+i).setAttribute("marker-end","url(#arrBase)");
+    $("chip"+i).classList.remove("activeA","activeB");
+  }
+  $("baseV"+k1).setAttribute("stroke","#2f9560");
+  $("baseV"+k1).setAttribute("stroke-width","3");
+  $("baseV"+k2).setAttribute("stroke","#d97832");
+  $("baseV"+k2).setAttribute("stroke-width","3");
+  $("chip"+k1).classList.add("activeA");
+  $("chip"+k2).classList.add("activeB");
 
-            pwmCtx.strokeStyle = '#94a3b8';
-            pwmCtx.lineWidth = 1;
-            
-            // Main lines (0, Ts/2, Ts)
-            pwmCtx.beginPath();
-            pwmCtx.moveTo(xOffset, 0);
-            pwmCtx.lineTo(xOffset, height - 15);
-            pwmCtx.stroke();
-            pwmCtx.fillText('0µs', xOffset, labelY);
+  line("nearA",cx,cy,x1,y1);
+  line("nearB",cx,cy,x2,y2);
 
-            pwmCtx.beginPath();
-            pwmCtx.moveTo(xOffset + plotWidth / 2, 0);
-            pwmCtx.lineTo(xOffset + plotWidth / 2, height - 15);
-            pwmCtx.stroke();
-            pwmCtx.fillText(`${(ts/2).toFixed(1)}µs`, xOffset + plotWidth/2, labelY);
-            
-            pwmCtx.beginPath();
-            pwmCtx.moveTo(xOffset + plotWidth, 0);
-            pwmCtx.lineTo(xOffset + plotWidth, height - 15);
-            pwmCtx.stroke();
-            pwmCtx.fillText(`${ts.toFixed(1)}µs`, xOffset + plotWidth, labelY);
+  const fullR1=R*(c.T1/c.Ts),fullR2=R*(c.T2/c.Ts);
+  const p1=clamp(p/0.45,0,1),p2=clamp((p-0.45)/0.40,0,1),p3=clamp((p-0.85)/0.15,0,1);
 
-            // Dotted slot lines and vector labels
-            const t0_quarter = T0_pwm / 4;
-            const t1_half = T1_pwm / 2;
-            const t2_half = T2_pwm / 2;
+  const r1=fullR1*p1;
+  const p1x=cx+r1*Math.cos(a1),p1y=cy-r1*Math.sin(a1);
+  const r2=fullR2*p2;
+  const sx=p1x+r2*Math.cos(a2),sy=p1y-r2*Math.sin(a2);
 
-            const slot_times = [
-                0,
-                t0_quarter,
-                t0_quarter + t1_half,
-                t0_quarter + t1_half + t2_half,
-                ts / 2,
-                ts / 2 + t0_quarter,
-                ts / 2 + t0_quarter + t2_half,
-                ts / 2 + t0_quarter + t2_half + t1_half,
-                ts
-            ];
+  line("c1Line",cx,cy,p1x,p1y);
+  line("c2Line",p1x,p1y,sx,sy);
+  $("c1Line").setAttribute("opacity",p1>0?1:0);
+  $("c2Line").setAttribute("opacity",p2>0?1:0);
 
-            const vectorNames = ["V0", "V1", "V2", "V3", "V4", "V5", "V6", "V7"];
-            const firstVecName = vectorNames[results.sector];
-            const secondVecName = vectorNames[(results.sector % 6) + 1];
-            const sequenceLabels = ['V0', firstVecName, secondVecName, 'V7', 'V7', secondVecName, firstVecName, 'V0'];
+  line("sumLine",cx,cy,cx+(sx-cx)*p3,cy+(sy-cy)*p3);
+  $("sumLine").setAttribute("opacity",p3>0?1:0);
 
-            pwmCtx.setLineDash([2, 3]);
-            pwmCtx.strokeStyle = '#a1a1aa';
-            
-            let lastX = -Infinity;
-            for(let i = 1; i < slot_times.length -1; i++) {
-                const time = slot_times[i];
-                const x = xOffset + (time / ts) * plotWidth;
+  const rr=R*clamp(c.mag/activeMag,0,1.14);
+  const ar=rad(c.ang),rx=cx+rr*Math.cos(ar),ry=cy-rr*Math.sin(ar);
+  line("reqLine",cx,cy,rx,ry);
+  $("reqText").setAttribute("x",rx+8);
+  $("reqText").setAttribute("y",ry-8);
 
-                if (time !== ts/2) {
-                    pwmCtx.beginPath();
-                    pwmCtx.moveTo(x, 0);
-                    pwmCtx.lineTo(x, height - 15);
-                    pwmCtx.stroke();
-                }
+  const fp1x=cx+fullR1*Math.cos(a1),fp1y=cy-fullR1*Math.sin(a1);
+  const fsx=fp1x+fullR2*Math.cos(a2),fsy=fp1y-fullR2*Math.sin(a2);
+  $("c1Text").setAttribute("x",(cx+fp1x)/2+3);
+  $("c1Text").setAttribute("y",(cy+fp1y)/2-7);
+  $("c1Text").textContent=`T1/Ts · V${k1}`;
+  $("c2Text").setAttribute("x",(fp1x+fsx)/2+4);
+  $("c2Text").setAttribute("y",(fp1y+fsy)/2-7);
+  $("c2Text").textContent=`T2/Ts · V${k2}`;
 
-                if (x > lastX + 35 && time !== ts/2) { 
-                    pwmCtx.fillText(`${time.toFixed(1)}`, x, labelY);
-                    lastX = x;
-                }
+  const c1mag=(c.T1/c.Ts)*activeMag,c2mag=(c.T2/c.Ts)*activeMag;
+  const sa=c1mag*Math.cos(a1)+c2mag*Math.cos(a2);
+  const sb=c1mag*Math.sin(a1)+c2mag*Math.sin(a2);
+  const sm=Math.hypot(sa,sb);
 
-                // Draw Vector Label
-                const prev_x = xOffset + (slot_times[i-1] / ts) * plotWidth;
-                const mid_x = (prev_x + x) / 2;
-                pwmCtx.fillText(sequenceLabels[i-1], mid_x, vectorLabelY);
-            }
-            // Draw last vector label
-            const last_prev_x = xOffset + (slot_times[slot_times.length - 2] / ts) * plotWidth;
-            const last_x = xOffset + (slot_times[slot_times.length - 1] / ts) * plotWidth;
-            pwmCtx.fillText(sequenceLabels[sequenceLabels.length-1], (last_prev_x + last_x) / 2, vectorLabelY);
+  $("c1Name").textContent=`(T1/Ts) · V${k1}`;
+  $("c2Name").textContent=`(T2/Ts) · V${k2}`;
+  $("c1Value").textContent=fmt(c1mag)+" V";
+  $("c2Value").textContent=fmt(c2mag)+" V";
+  $("sumValue").textContent=fmt(sm)+" V";
 
+  const eq=$("vectorEquation");
+  if(!rotateRAF && !sumRAF){
+    eq.innerHTML=String.raw`
+      \[
+      \mathbf V_{\mathrm{avg}}
+      = \frac{T_1}{T_s}\mathbf V_{${k1}}
+      + \frac{T_2}{T_s}\mathbf V_{${k2}}
+      = \left(${fmt(sa,1)} + j\,${fmt(sb,1)}\right)\,\mathrm V
+      \]`;
+    typesetMath(eq);
+  }
+}
 
-            pwmCtx.setLineDash([]);
-        }
+function phaseVoltages(vec,vdc){
+  const s=states[vec],avg=(s[0]+s[1]+s[2])/3;
+  return s.map(x=>(x-avg)*vdc);
+}
+function renderStateTable(c){
+  const k1=c.sector,k2=c.sector===6?1:c.sector+1,ids=[0,k1,k2,7],tb=$("stateTable");tb.innerHTML="";
+  ids.forEach(v=>{
+    const ph=phaseVoltages(v,c.vdc),mag=(v===0||v===7)?0:2*c.vdc/3;
+    const tr=document.createElement("tr");tr.id="stateRow"+v;
+    tr.innerHTML=`<td><b>V${v}</b></td><td>${states[v].join(" ")}</td><td>${fmt(ph[0],1)} V</td><td>${fmt(ph[1],1)} V</td><td>${fmt(ph[2],1)} V</td><td>${fmt(mag,1)} V</td>`;
+    tb.appendChild(tr);
+  });
+}
 
-        function updateOutput(results) {
-            const { sector, T1, T2, T0, overmodulated } = results;
-            const vdc = state.vdc;
-            const ma = state.vrefMag;
+function drawPulses(c){
+  const grid=$("pulseGrid"),paths=$("pulsePaths"),labels=$("pulseLabels");grid.innerHTML="";paths.innerHTML="";labels.innerHTML="";
+  const x0=90,x1=900,W=x1-x0,base=[96,184,272],amp=40;
+  ["Sa","Sb","Sc"].forEach((n,i)=>{
+    const t=svgEl("text",{x:32,y:base[i]-12,fill:"#475569","font-size":14});t.textContent=n;grid.appendChild(t);
+    grid.appendChild(svgEl("line",{x1:x0,y1:base[i],x2:x1,y2:base[i],stroke:"#d8dee9"}));
+  });
+  let acc=0;
+  c.seg.forEach(s=>{
+    const xa=x0+W*acc/c.Ts,xb=x0+W*(acc+s.dt)/c.Ts;
+    grid.appendChild(svgEl("line",{x1:xa,y1:25,x2:xa,y2:305,stroke:"#d8dee9","stroke-dasharray":"4 5"}));
+    const t=svgEl("text",{x:(xa+xb)/2,y:326,"text-anchor":"middle",fill:"#64748b","font-size":12});t.textContent="V"+s.vec;labels.appendChild(t);
+    acc+=s.dt;
+  });
+  grid.appendChild(svgEl("line",{x1:x1,y1:25,x2:x1,y2:305,stroke:"#d8dee9","stroke-dasharray":"4 5"}));
+  const z=svgEl("text",{x:x0,y:345,fill:"#475569","font-size":12});z.textContent="0";labels.appendChild(z);
+  const te=svgEl("text",{x:x1,y:345,"text-anchor":"end",fill:"#475569","font-size":12});te.textContent="Ts";labels.appendChild(te);
+  const colors=["#16a34a","#ea580c","#f59e0b"];
+  for(let ph=0;ph<3;ph++){
+    let t=0,d="";
+    c.seg.forEach((s,j)=>{
+      const bit=states[s.vec][ph],xa=x0+W*t/c.Ts,xb=x0+W*(t+s.dt)/c.Ts,y=base[ph]-bit*amp;
+      if(j===0)d+=`M ${xa} ${y}`;else d+=` L ${xa} ${y}`;d+=` L ${xb} ${y}`;t+=s.dt;
+    });
+    paths.appendChild(svgEl("path",{d,fill:"none",stroke:colors[ph],"stroke-width":3.5,"stroke-linejoin":"round"}));
+  }
+  const duty=[0,0,0];c.seg.forEach(s=>states[s.vec].forEach((b,i)=>duty[i]+=b*s.dt/c.Ts));
+  $("da").textContent=fmt(duty[0]*100,1)+"%";$("db").textContent=fmt(duty[1]*100,1)+"%";$("dc").textContent=fmt(duty[2]*100,1)+"%";
+}
 
-            const vectorNames = ["V1", "V2", "V3", "V4", "V5", "V6"];
-            const firstVecName = vectorNames[sector - 1];
-            const secondVecName = vectorNames[sector % 6];
+function renderSegments(c){
+  const tb=$("segmentTable");tb.innerHTML="";
+  const strip=$("timingStrip");strip.innerHTML="";
+  let tau=0;
 
-            const V_phase_peak = ma * (vdc / Math.sqrt(3));
-            const V_phase_rms = V_phase_peak / Math.sqrt(2);
-            const V_line_peak = V_phase_peak * Math.sqrt(3);
-            const V_line_rms = V_line_peak / Math.sqrt(2);
+  c.seg.forEach((s,i)=>{
+    const start=tau,end=tau+s.dt;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td><td>V${s.vec}</td><td>${states[s.vec].join(" ")}</td><td>${s.expr}</td><td>${fmt(s.dt*1e6,2)} µs</td><td>${fmt(start*1e6,2)} µs</td><td>${fmt(end*1e6,2)} µs</td>`;
+    tb.appendChild(tr);
 
-            const t0_display = T0.toFixed(2);
-            const t0_html = overmodulated ? `<span class="text-red-600 font-semibold">${t0_display}</span>` : t0_display;
+    const part=document.createElement("div");
+    part.className="timingPart "+((s.vec===0||s.vec===7)?"zero":(i<3||i>3?"active":"zero"));
+    part.style.flexGrow=Math.max(s.dt/c.Ts,0.0001);
+    part.title=`V${s.vec}: ${fmt(s.dt*1e6,2)} µs`;
+    const lab=document.createElement("span");
+    lab.textContent=(s.dt/c.Ts>0.055)?`V${s.vec}`:"";
+    part.appendChild(lab);
+    strip.appendChild(part);
 
-            outputDiv.innerHTML =
-                `Sector       : ${sector} ${overmodulated ? '<span class="text-red-500 font-semibold">(Overmodulated)</span>' : ''}\n` +
-                `T1 (${firstVecName.padEnd(2)})      : ${T1.toFixed(2)} μs\n` +
-                `T2 (${secondVecName.padEnd(2)})      : ${T2.toFixed(2)} μs\n` +
-                `T0 (Zero Vec): ${t0_html} μs\n` +
-                `------------------------\n` +
-                `Output Voltage Estimates:\n` +
-                `Phase Peak   : ${V_phase_peak.toFixed(1)} V\n` +
-                `Phase RMS    : ${V_phase_rms.toFixed(1)} V\n` +
-                `Line Peak    : ${V_line_peak.toFixed(1)} V\n` +
-                `Line RMS     : ${V_line_rms.toFixed(1)} V`;
-        }
+    tau=end;
+  });
+}
 
-        function animationLoop(timestamp) {
-            if (!animationStartTime) animationStartTime = timestamp;
-            const elapsed = timestamp - animationStartTime;
-            let progress = Math.min(elapsed / animationDuration, 1);
+function update(opts={}){
+  if(!opts.keepPlay)stopPlay();
+  last=calc();
+  const c=last;
+  $("thetaText").textContent=fmt(c.theta,0)+"°";$("valpha").textContent=fmt(c.va)+" V";$("vbeta").textContent=fmt(c.vb)+" V";$("vmag").textContent=fmt(c.mag)+" V";$("vang").textContent=fmt(c.ang,1)+"°";
+  $("sector").textContent=c.sector;$("phi").textContent=fmt(c.phiD,1)+"°";$("t1").textContent=fmt(c.T1*1e6,2)+" µs";$("t2").textContent=fmt(c.T2*1e6,2)+" µs";$("t0").textContent=fmt(c.T0*1e6,2)+" µs";$("ts").textContent=fmt(c.Ts*1e6,2)+" µs";
+  $("warning").textContent=c.over?"Overmodulation: requested |Vref| is beyond the linear SVPWM circle; T0 is clamped to zero and the vector is projected to the boundary.":"";
+  drawDq(c);drawSvm(c,sumProgress);renderSegments(c);renderStateTable(c);drawPulses(c);
+  $("sequence").textContent=c.seg.map(s=>"V"+s.vec).join(" → ");
+  $("spwmLimitText").textContent=fmt(c.vdc/2,2)+" V";$("svmLimitText").textContent=fmt(c.vdc/Math.sqrt(3),2)+" V";
+  const phasePeak=c.mag,phaseRms=phasePeak/Math.sqrt(2),lineRms=Math.sqrt(3)*phaseRms,util=100*phasePeak/(c.vdc/Math.sqrt(3));
+  $("phasePeak").textContent=fmt(phasePeak)+" V";$("phaseRms").textContent=fmt(phaseRms)+" V";$("lineRms").textContent=fmt(lineRms)+" V";$("util").textContent=fmt(util,1)+"%";
+  $("nowTime").textContent="0 µs";$("nowVec").textContent="—";$("nowState").textContent="—";$("nowSegment").textContent="—";
+}
 
-            drawSvmBase();
-            drawVref();
-            if (svmResults.T1 + svmResults.T2 > 0) {
-                 drawAnimation(progress);
-            }
+function animateSum(){
+  stopSum();sumProgress=0;
+  if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches){sumProgress=1;drawSvm(last,1);return}
+  const start=performance.now(),dur=1500;
+  const frame=now=>{
+    sumProgress=clamp((now-start)/dur,0,1);drawSvm(last,sumProgress);
+    if(sumProgress<1)sumRAF=requestAnimationFrame(frame);else{sumRAF=null;sumProgress=1}
+  };
+  sumRAF=requestAnimationFrame(frame);
+}
 
-            if (progress < 1) {
-                animationRequestId = requestAnimationFrame(animationLoop);
-            }
-        }
+function vectorComponents(vec,vdc){
+  if(vec===0||vec===7)return [0,0];
+  const mag=2*vdc/3,a=rad(vectorAngle(vec));return [mag*Math.cos(a),mag*Math.sin(a)];
+}
+function playOneTs(){
+  if(playRAF){stopPlay();return}
+  stopRotate();stopSum();sumProgress=1;drawSvm(last,1);
+  const c=last,start=performance.now(),dur=2600;
+  $("playTsBtn").textContent="■ Stop Ts";$("playTsBtn").classList.remove("primary");$("playTsBtn").classList.add("stop");
+  ["instVector","accVector","instText","accText"].forEach(id=>$(id).setAttribute("visibility","visible"));
+  $("pulseCursor").setAttribute("visibility","visible");
+  const frame=now=>{
+    const prog=clamp((now-start)/dur,0,1),t=prog*c.Ts;
+    let cum=0,segIndex=c.seg.length-1,vec=c.seg[segIndex].vec;
+    for(let i=0;i<c.seg.length;i++){if(t<=cum+c.seg[i].dt+1e-15){segIndex=i;vec=c.seg[i].vec;break}cum+=c.seg[i].dt}
+    const cx=360,cy=260,R=202,comp=vectorComponents(vec,c.vdc);
+    if(vec===0||vec===7){line("instVector",cx,cy,cx,cy)}else{
+      const a=rad(vectorAngle(vec));line("instVector",cx,cy,cx+R*Math.cos(a),cy-R*Math.sin(a))
+    }
+    let ia=0,ib=0,elapsed=0;
+    for(let i=0;i<c.seg.length;i++){
+      const dt=Math.max(0,Math.min(c.seg[i].dt,t-elapsed));
+      if(dt>0){const q=vectorComponents(c.seg[i].vec,c.vdc);ia+=q[0]*dt/c.Ts;ib+=q[1]*dt/c.Ts}
+      elapsed+=c.seg[i].dt;if(elapsed>=t)break;
+    }
+    const activeMag=2*c.vdc/3,rx=cx+R*(ia/activeMag),ry=cy-R*(ib/activeMag);line("accVector",cx,cy,rx,ry);
+    $("instText").setAttribute("x",cx+12);$("instText").setAttribute("y",cy-16);$("instText").textContent=`instantaneous V${vec}`;
+    $("accText").setAttribute("x",rx+8);$("accText").setAttribute("y",ry+18);$("accText").textContent="Σ(V·Δt)/Ts";
+    const x=90+(900-90)*prog;$("pulseCursor").setAttribute("x1",x);$("pulseCursor").setAttribute("x2",x);
+    document.querySelectorAll("#stateTable tr").forEach(r=>r.classList.remove("stateRowActive"));
+    const row=$("stateRow"+vec);if(row)row.classList.add("stateRowActive");
+    $("nowTime").textContent=fmt(t*1e6,2)+" µs";$("nowVec").textContent="V"+vec;$("nowState").textContent=states[vec].join("");$("nowSegment").textContent=(segIndex+1)+"/7";
+    if(prog<1)playRAF=requestAnimationFrame(frame);else{playRAF=null;$("playTsBtn").textContent="▶ Play one Ts";$("playTsBtn").classList.remove("stop");$("playTsBtn").classList.add("primary")}
+  };
+  playRAF=requestAnimationFrame(frame);
+}
 
-        function startAnimation() {
-            if (animationRequestId) {
-                cancelAnimationFrame(animationRequestId);
-            }
-            animationStartTime = null;
-            animationRequestId = requestAnimationFrame(animationLoop);
-        }
-        
-        function update() {
-            state.vrefMag = parseFloat(vrefMagSlider.value);
-            state.vrefAngle = parseInt(vrefAngleSlider.value, 10);
-            state.ts = parseFloat(tsInput.value);
-            state.vdc = parseFloat(vdcInput.value);
-            vrefMagValue.textContent = state.vrefMag.toFixed(2);
-            vrefAngleValue.textContent = `${state.vrefAngle}°`;
-            
-            svmResults = calculateSvm(state.vrefMag, state.vrefAngle, state.ts);
-            
-            const width = svmCanvas.width;
-            const height = svmCanvas.height;
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const radius = Math.min(width, height) * 0.4;
-            const { sector, T1, T2 } = svmResults;
-            
-            const v1_angle = (sector - 1) * Math.PI / 3;
-            const v2_angle = sector * Math.PI / 3;
+function toggleRotate(){
+  if(rotateRAF){stopRotate();return}
+  stopPlay();stopSum();$("rotateBtn").textContent="■ Stop θe";$("rotateBtn").classList.remove("play");$("rotateBtn").classList.add("stop");
+  const frame=now=>{
+    if(rotateLast==null)rotateLast=now;const dt=(now-rotateLast)/1000;rotateLast=now;
+    const v=(Number($("theta").value)+40*dt)%360;$("theta").value=v;sumProgress=1;update({keepPlay:true});
+    rotateRAF=requestAnimationFrame(frame);
+  };
+  rotateRAF=requestAnimationFrame(frame);
+}
 
-            idealPath.p0 = { x: centerX, y: centerY };
-            
-            const d1 = T1 / state.ts;
-            const d2 = T2 / state.ts;
+function clickSvm(ev){
+  stopRotate();stopPlay();stopSum();
+  const svg=$("svmSvg"),r=svg.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width*720,y=(ev.clientY-r.top)/r.height*520,cx=360,cy=260,dx=x-cx,dy=-(y-cy);
+  const dist=Math.hypot(dx,dy),R=202;if(dist>R*1.16)return;
+  const c=calc(),activeMag=2*c.vdc/3,mag=dist/R*activeMag,ang=wrap(deg(Math.atan2(dy,dx))),a=rad(ang),th=rad(c.theta);
+  const va=mag*Math.cos(a),vb=mag*Math.sin(a);
+  const vd=va*Math.cos(th)+vb*Math.sin(th),vq=-va*Math.sin(th)+vb*Math.cos(th);
+  $("vd").value=vd.toFixed(2);$("vq").value=vq.toFixed(2);sumProgress=1;update();
+}
 
-            const p1_dx = radius * d1 * Math.cos(v1_angle);
-            const p1_dy = radius * d1 * Math.sin(v1_angle);
-            idealPath.p1 = { x: centerX + p1_dx, y: centerY - p1_dy };
-            
-            const p2_dx = radius * d2 * Math.cos(v2_angle);
-            const p2_dy = radius * d2 * Math.sin(v2_angle);
-            idealPath.p2 = { x: idealPath.p1.x + p2_dx, y: idealPath.p1.y - p2_dy };
+const help={
+ input:{title:"FOC inputs",body:String.raw`<p><b>Vd</b> and <b>Vq</b> are produced by the d- and q-axis current controllers. The inverse Park transform rotates them into the stator αβ frame using rotor electrical angle.</p><p class="eq">\( \theta_e=p\theta_m+\theta_{\mathrm{offset}} \)</p>`},
+ dq:{title:"Two coordinate systems",body:String.raw`<p>The αβ axes are fixed to the stator. The rotor permanent magnet rotates with the dq frame: the <b>N pole marks +d</b>, the S pole lies on −d, and q is 90 electrical degrees ahead of d.</p><p class="eq">\[
+\begin{aligned}
+V_\alpha &= V_d\cos\theta_e-V_q\sin\theta_e\\
+V_\beta &= V_d\sin\theta_e+V_q\cos\theta_e
+\end{aligned}
+\]</p><p>Try Vd=0 and rotate θe. The magnet and dq axes rotate together, while the stationary αβ axes remain fixed.</p>`},
+ svm:{title:"How six fixed vectors create any vector inside the linear region",body:String.raw`<p>The inverter has six active vectors, each with magnitude 2Vdc/3, separated by 60°.</p><p class="eq">\[
+\mathbf V_{\mathrm{avg}}
+=\frac{T_1}{T_s}\mathbf V_k
++\frac{T_2}{T_s}\mathbf V_{k+1}
++\frac{T_0}{T_s}\mathbf 0
+\]</p><p>The blue circle marks the SPWM limit Vdc/2. The amber circle marks the larger SVPWM linear limit Vdc/√3, giving 15.47% more DC-bus utilization.</p><p>Click the hexagon: the selected αβ vector is converted back to Vd,Vq using the current θe.</p>`},
+ dwell:{title:"From T1,T2,T0 to state timing",body:String.raw`<p>φ is measured from the beginning of the current 60° sector.</p><p class="eq">\[
+\begin{aligned}
+T_1&=T_s\frac{\sqrt3|\mathbf V_{\mathrm{ref}}|}{V_{dc}}\sin(60^\circ-\phi)\\
+T_2&=T_s\frac{\sqrt3|\mathbf V_{\mathrm{ref}}|}{V_{dc}}\sin\phi\\
+T_0&=T_s-T_1-T_2
+\end{aligned}
+\]</p><p>The symmetric 7-segment pattern distributes the times as T0/4, Ta/2, Tb/2, T0/2, Tb/2, Ta/2, T0/4. Even sectors reverse the active-vector switching order so only one leg changes at each transition.</p>`},
+ pulse:{title:"What “Play one Ts” demonstrates",body:String.raw`<p>The cyan arrow is the <b>instantaneous inverter voltage vector</b>. It jumps only among V0…V7; there is no continuously adjustable inverter vector.</p><p>The pink arrow is the accumulated volt-second contribution divided by Ts:</p><p class="eq">\[
+\mathbf V_\Sigma(t)=\frac1{T_s}\int_0^t\mathbf v(\tau)\,d\tau
+\]</p><p>At t=Ts it reaches the commanded Vref. The current switch-state table and PWM cursor are synchronized with the same instant.</p>`},
+ voltage:{title:"Voltage interpretation",body:String.raw`<p>For the balanced sinusoidal fundamental represented by the αβ vector:</p><p class="eq">\[
+\begin{aligned}
+V_{\mathrm{phase,pk}}&=|\mathbf V_{\mathrm{ref}}|\\
+V_{\mathrm{phase,rms}}&=\frac{|\mathbf V_{\mathrm{ref}}|}{\sqrt2}\\
+V_{LL,\mathrm{rms}}&=\sqrt{\frac32}\,|\mathbf V_{\mathrm{ref}}|
+\end{aligned}
+\]</p><p>At the SVPWM linear boundary |Vref|=Vdc/√3, therefore VLL,rms,max=Vdc/√2.</p>`}
+};
 
-            drawPwm(svmResults);
-            updateOutput(svmResults);
-            startAnimation();
-        }
+document.querySelectorAll("[data-help]").forEach(b=>b.addEventListener("click",()=>{const h=help[b.dataset.help];$("helpTitle").textContent=h.title;$("helpBody").innerHTML=h.body;$("helpDialog").showModal();typesetMath($("helpBody"))}));
+$("closeHelp").addEventListener("click",()=>$("helpDialog").close());
+["vd","vq","vdc","fsw","theta"].forEach(id=>$(id).addEventListener("input",()=>{stopSum();sumProgress=1;update()}));
+$("qPreset").addEventListener("click",()=>{$("vd").value=0;$("vq").value=100;stopSum();sumProgress=1;update()});
+$("dPreset").addEventListener("click",()=>{$("vd").value=100;$("vq").value=0;stopSum();sumProgress=1;update()});
+$("reset").addEventListener("click",()=>{stopRotate();stopPlay();stopSum();$("vd").value=0;$("vq").value=100;$("vdc").value=300;$("fsw").value=10;$("theta").value=20;sumProgress=1;update()});
+$("rotateBtn").addEventListener("click",toggleRotate);
+$("sumBtn").addEventListener("click",animateSum);
+$("playTsBtn").addEventListener("click",playOneTs);
+$("svmSvg").addEventListener("click",clickSvm);
 
-        function handleCanvasClick(event) {
-            const rect = svmCanvas.getBoundingClientRect();
-            const canvasX = event.clientX - rect.left;
-            const canvasY = event.clientY - rect.top;
-            const centerX = svmCanvas.width / 2;
-            const centerY = svmCanvas.height / 2;
-            const radius = Math.min(svmCanvas.width, svmCanvas.height) * 0.4;
-            const dx = canvasX - centerX;
-            const dy = -(canvasY - centerY);
-            let angle = Math.atan2(dy, dx) * 180 / Math.PI;
-            if (angle < 0) angle += 360;
+buildHex();update();
+if(window.MathJax && MathJax.typesetPromise){MathJax.typesetPromise().catch(()=>{});}
+})();
 
-            const vrefAngleRad = angle * Math.PI / 180;
-            const sectorForClick = Math.floor(angle / 60) + 1;
-            const max_radius_at_angle = radius / (Math.cos(vrefAngleRad - (sectorForClick - 1) * Math.PI / 3));
-            const hexagon_edge_radius = max_radius_at_angle * Math.cos(Math.PI/6);
-            
-            const mag = Math.sqrt(dx*dx + dy*dy) / hexagon_edge_radius;
-
-            vrefAngleSlider.value = angle;
-            vrefMagSlider.value = Math.min(mag, 1.0);
-            update();
-        }
-
-        vrefMagSlider.addEventListener('input', update);
-        vrefAngleSlider.addEventListener('input', update);
-        tsInput.addEventListener('change', update);
-        vdcInput.addEventListener('change', update);
-        svmCanvas.addEventListener('click', handleCanvasClick);
-        
-        helpBtn.addEventListener('click', () => {
-            helpModal.classList.remove('hidden');
-            helpModal.classList.add('flex');
-        });
-
-        closeModalBtn.addEventListener('click', () => {
-            helpModal.classList.add('hidden');
-            helpModal.classList.remove('flex');
-        });
-
-        helpModal.addEventListener('click', (e) => {
-            if (e.target === helpModal) {
-                helpModal.classList.add('hidden');
-                helpModal.classList.remove('flex');
-            }
-        });
-
-        window.addEventListener('resize', () => {
-            const container = svmCanvas.parentElement;
-            const containerWidth = container.clientWidth;
-            svmCanvas.width = containerWidth;
-            svmCanvas.height = containerWidth;
-            const pwmContainer = pwmCanvas.parentElement;
-            pwmCanvas.width = pwmContainer.clientWidth;
-            update();
-        });
-
-        window.dispatchEvent(new Event('resize'));
-    </script>
+</script>
 </body>
 </html>
