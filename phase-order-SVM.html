@@ -1,0 +1,433 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Phase Ordering · Space Vector Lab</title><style>
+:root{--ink:#142a40;--muted:#5f7284;--blue:#2463eb;--line:#dde5ee}*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:var(--ink);font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.65}header{height:80px;padding:0 4%;display:flex;align-items:center;justify-content:space-between;background:white;border-bottom:1px solid var(--line);font-size:14px}.brand{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:800;letter-spacing:1.6px;color:var(--ink);text-decoration:none}.mark{display:grid;place-items:center;background:var(--blue);color:white;font-size:29px;width:36px;height:36px;border-radius:11px}.layout{max-width:1440px;margin:auto;display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 80px)}nav{padding:38px 20px;border-right:1px solid var(--line)}.navlabel{font-size:12px;letter-spacing:1.8px;margin:0 0 22px 12px;color:var(--muted)}nav button{width:100%;text-align:left;display:flex;gap:12px;align-items:center;background:none;color:var(--muted);padding:12px;border-radius:10px;margin-bottom:9px;font-size:14px;font-weight:500}nav button.active{background:#e9efff;color:var(--blue);font-weight:700}.num{border:1px solid var(--line);border-radius:50%;width:27px;height:27px;display:grid;place-items:center;font-size:12px;flex-shrink:0}.active .num{background:var(--blue);color:white;border-color:var(--blue)}.navnote{margin:35px 12px;font-size:13px;color:var(--muted)}main{padding:36px 42px;min-width:0}.eyebrow{color:var(--blue);font-size:12px;font-weight:700;letter-spacing:2px}h1{font-family:Manrope,sans-serif;letter-spacing:-1.1px;font-size:34px;line-height:1.25;margin:12px 0}h2{font-size:18px;margin:0 0 18px}p{margin:12px 0}.lead{color:var(--muted);max-width:740px;margin-bottom:26px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:24px;min-width:0}.plot{background:#fbfcfe}.plot > svg.diagram-svg, .wave > svg.diagram-svg{width:100%;height:auto;display:block}svg text{font-family:'DM Sans',sans-serif;fill:var(--muted);font-size:13px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px}label{display:block;font-size:14px;color:var(--muted)}input[type=number],select{width:100%;padding:11px 12px;margin:7px 0 0;border:1px solid #cbd6e2;border-radius:9px;font:inherit;color:var(--ink);background:white}input[type=range]{width:100%;accent-color:var(--blue);margin:18px 0}.equation{overflow-x:auto;padding:12px 2px;font-size:16px}.equation mjx-container{margin:10px 0!important}.result{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #edf0f5}.result strong{font-weight:600;font-variant-numeric:tabular-nums}.hint{padding:16px 18px;background:#eef4ff;border-left:3px solid var(--blue);border-radius:0 10px 10px 0;margin-top:22px;font-size:14px}.subtle{font-size:14px;color:var(--muted)}button{cursor:pointer;border:0;background:var(--blue);color:white;font:inherit;font-size:14px;font-weight:600;border-radius:9px;padding:12px 20px}button:hover{filter:brightness(.96)}button:focus-visible,input:focus-visible{outline:3px solid #8baafa;outline-offset:3px}button:disabled{opacity:.35;cursor:default}.secondary{background:white;border:1px solid var(--line);color:var(--ink)}.segmented{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}.segmented button{background:#edf1f7;color:var(--muted);padding:8px 14px}.segmented button.selected{background:var(--ink);color:white}footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:22px;margin-top:30px}footer span{font-size:13px;color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.stat{background:white;border:1px solid var(--line);border-radius:12px;padding:14px}.stat small{color:var(--muted);display:block;font-size:13px}.stat strong{font-size:20px}.wide{margin-top:24px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:11px 9px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-weight:500}details{margin-top:18px;font-size:14px}summary{cursor:pointer;color:var(--blue)}.sample{font-size:13px;color:var(--muted);margin-top:16px}@media(max-width:1050px){.layout{grid-template-columns:190px 1fr}main{padding:28px 24px}.grid{gap:16px}.panel{padding:18px}h1{font-size:29px}}@media(max-width:760px){header{height:65px}header>span{display:none}.layout{display:block}nav{display:flex;overflow:auto;gap:5px;padding:12px;border-right:0;border-bottom:1px solid var(--line)}nav button{width:auto;white-space:nowrap;margin:0;padding:8px}.navlabel,.navnote{display:none}nav button:not(.active) .stepname{display:none}main{padding:24px 16px}.grid{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:17px}.equation{font-size:14px}h1{font-size:28px}}
+
+/* Technical drawing sheet: restrained typography, explicit scales, large figures. */
+body{font-family:Arial,Helvetica,sans-serif;background:#f2f4f7;color:#17293c;line-height:1.55}
+header{height:66px;border-bottom:2px solid #263e58}
+.brand{font-family:Arial,Helvetica,sans-serif;letter-spacing:1px}.mark{border-radius:3px;background:#263e58}
+.layout{max-width:1640px;grid-template-columns:195px 1fr}
+main{padding:30px 34px}nav{padding:30px 12px}
+h1{font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:30px;letter-spacing:-.45px}
+h2{font-weight:600;font-size:18px}
+.panel{border-radius:5px;border-color:#c8d2dd;padding:24px;background:white}
+button,input[type=number],select{border-radius:4px}
+.grid{grid-template-columns:minmax(340px,.85fr) minmax(0,1.3fr);gap:24px;align-items:start}
+.plot{padding:20px 22px;background:white}
+.plot>svg{width:100%;height:auto;min-height:390px}
+svg text{font-family:Arial,Helvetica,sans-serif;font-size:16px}
+svg g[data-tex] svg{display:inline!important;min-height:0!important;max-width:none!important}
+.equation{font-size:18px;padding:16px 0;text-align:left}
+.equation mjx-container[display="true"]{text-align:left!important}
+.result{align-items:center;font-size:17px;padding:14px 0}
+.result strong{font-weight:400}
+.hint{border-radius:0;background:#f0f4f9;border-color:#526d8e}
+.subtle,.diagram-note{font-size:15px;color:#4f6377}
+.diagram-note{border-top:1px solid #d4dde6;padding-top:14px}
+.eyebrow{color:#48637f}.navlabel{color:#48637f}
+.stat{border-radius:4px}.stat strong{font-family:Georgia,'Times New Roman',serif}
+.step-3 .grid{display:flex;flex-direction:column}
+.step-3 .plot{order:-1;width:100%;display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:10px 24px}
+.step-3 .plot .segmented{grid-column:1/-1}
+.step-3 .plot>svg{max-height:610px;grid-column:1}
+.step-3 .plot>.subtle{grid-column:2;align-self:center;font-size:16px}
+.step-3 .panel:not(.plot){width:100%}
+.step-3 .panel:not(.plot)>.result{display:inline-flex;min-width:28%;margin-right:4%;gap:25px}
+.step-3 .panel:not(.plot)>.equation{display:block}
+.step-4 .grid{grid-template-columns:minmax(0,1.2fr) minmax(340px,1fr)}
+.wave>svg.diagram-svg{min-height:0;max-width:1050px;margin-inline:auto}.wave>svg.diagram-svg text{font-size:13px}
+@media(max-width:1100px){.layout{grid-template-columns:175px 1fr}main{padding:25px 22px}.grid,.step-4 .grid{grid-template-columns:1fr}.plot>svg{max-height:620px;min-height:400px}.step-0 .plot,.step-1 .plot{order:-1}.step-3 .plot{display:block}}
+@media(max-width:760px){header{height:62px}.layout{display:block}nav{padding:10px}.grid{display:flex;flex-direction:column}.panel{width:100%;padding:18px}main{padding:22px 14px}h1{font-size:26px}.plot>svg{min-height:0;max-height:none}.step-3 .plot>svg{width:100%}.equation{font-size:16px}.step-3 .panel:not(.plot)>.result{display:flex;margin:0}.wave{overflow:auto}.wave>svg{min-width:700px;min-height:0}.result{font-size:16px}}
+/* MathJax owns equation glyph dimensions; only root diagrams fill panels. */
+mjx-container{max-width:100%}
+.plot mjx-container[display="true"]{font-size:100%!important}
+.plot mjx-container:not([display="true"]){display:inline!important}
+.equation{font-size:17px}
+.wave g[data-tex]{pointer-events:none}
+
+.synthesis-figure>.diagram-svg{display:block;width:100%;height:auto;max-width:1000px;margin:auto}
+.synthesis-panel .equation{font-size:17px;padding:7px 0}
+.synthesis-panel .equation mjx-container[display="true"]{text-align:center!important}
+.winding-details>summary{padding:16px 0;font-size:16px}
+@media(max-width:760px){.synthesis-figure{overflow-x:auto}.synthesis-figure>.diagram-svg{min-width:640px}.synthesis-panel .equation{font-size:15px}}
+
+.step-3 .plot>.contribution-summary{grid-column:1/-1;padding:4px 0 12px;border-bottom:1px solid #d4dde6}
+.contribution-summary .equation{font-size:17px;padding:4px 0}
+@media(max-width:760px){.contribution-summary .equation{font-size:15px}}
+
+.rotation-toolbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.rotation-toolbar label{display:flex;align-items:center;gap:10px}
+.rotation-toolbar select{width:auto;margin:0;padding:9px}
+.rotation-toolbar strong{margin-left:auto;font-variant-numeric:tabular-nums;font-size:20px}
+.rotation-heading{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.rotation-heading span{font-family:Georgia,serif;font-size:18px}
+.rotation-vector>.diagram-svg{display:block;width:100%;height:auto;max-width:660px;max-height:440px;margin:auto}
+.step-7 .equation mjx-container[display="true"]{text-align:center!important}
+@media(max-width:760px){.rotation-toolbar{gap:10px}.rotation-toolbar strong{margin-left:0}.rotation-vector>.diagram-svg{max-height:none}.rotation-heading span{font-size:16px}}
+
+.cycle-wave>.diagram-svg{display:block;width:100%;height:auto;max-width:1050px;margin:auto}.cycle-wave>.diagram-svg text{font-size:14px}
+@media(max-width:760px){.cycle-wave{overflow:auto}.cycle-wave>.diagram-svg{min-width:640px}}
+
+</style><script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'none'},startup:{typeset:false,ready(){MathJax.startup.defaultReady();MathJax.startup.promise.then(()=>window.renderMath?.())}}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script></head><body><header><a class="brand" href="#"><span class="mark">∿</span> SPACE VECTOR LAB</a><span>01205357 · Electric Drives</span></header><div class="layout"><nav id="steps" aria-label="Learning steps"></nav><main><div id="content"></div><footer><button id="back" class="secondary">← Previous</button><span id="progress"></span><button id="next">Next step →</button></footer></main></div><script>
+function calculate(d,q,theta,dc,ts){
+ const r=theta*Math.PI/180,alpha=d*Math.cos(r)-q*Math.sin(r),beta=d*Math.sin(r)+q*Math.cos(r);
+ const abc=[alpha,-alpha/2+Math.sqrt(3)*beta/2,-alpha/2-Math.sqrt(3)*beta/2];
+ const order=[0,1,2].sort((a,b)=>abc[b]-abc[a]||a-b),[p,m,n]=order;
+ const gap1=abc[p]-abc[m],gap2=abc[m]-abc[n],tp=ts*gap1/dc,tn=ts*gap2/dc,t0=ts-tp-tn;
+ const s1=[0,0,0],s2=[0,0,0];s1[p]=1;s2[p]=s2[m]=1;
+ const states=[[0,0,0],s1,s2,[1,1,1],s2,s1,[0,0,0]],durations=[t0/4,tp/2,tn/2,t0/2,tn/2,tp/2,t0/4];
+ const bounds=[0];durations.forEach(t=>bounds.push(bounds.at(-1)+t));
+ return {d,q,theta,dc,ts,alpha,beta,abc,order,p,m,n,gap1,gap2,tp,tn,t0,states,durations,bounds,valid:t0>=-1e-9};
+}
+if(typeof module!=='undefined')module.exports={calculate};
+
+const $=s=>document.querySelector(s),names=['a','b','c'],colors=['#2463eb','#009a82','#e48a20'],axes=[[1,0],[-.5,Math.sqrt(3)/2],[-.5,-Math.sqrt(3)/2]];
+const titles=['FOC command','Stationary αβ','Three phases abc','Order & synthesize','Switching states','Dwell times','PWM & voltages','Rotating reference'];
+let step=0,view='three',stateView=0,voltage='pole',phase=0,cursor=30,values={d:120,q:40,theta:30,dc:300,ts:100},C;
+const f=(n,d=2)=>(Math.abs(n)<1e-8?0:n).toFixed(d);
+const eq=s=>'<div class="equation">\\['+s+'\\]</div>';
+const inline=s=>'\\('+s+'\\)';
+const notation=s=>s.replace(/\|Vref\|/g,'|\\vec V_{\\mathrm{ref}}|').replace(/Vα\*/g,'V_\\alpha^*').replace(/Vβ\*/g,'V_\\beta^*').replace(/Vd\*/g,'V_d^*').replace(/Vq\*/g,'V_q^*').replace(/Vdc/g,'V_{\\mathrm{dc}}').replace(/T−n/g,'T_{-n}').replace(/Tp/g,'T_p').replace(/T0/g,'T_0').replace(/Ts/g,'T_s').replace(/ΔVpm/g,'\\Delta V_{pm}').replace(/ΔVmn/g,'\\Delta V_{mn}').replace(/V([abcpmn])/g,'V_{$1}').replace(/vpm/g,'v_{pm}').replace(/vmn/g,'v_{mn}').replace(/μs/g,'\\,\\mu\\mathrm{s}').replace(/ V$/g,'\\,\\mathrm V').replace(/×/g,'\\times').replace(/−/g,'-');
+const row=(a,b)=>'<div class="result"><span>'+(/^[VTvΔ|(]/.test(a)?inline(notation(a)):a)+'</span><strong>'+inline(notation(b))+'</strong></div>';
+const hint=s=>'<div class="hint">'+s+'</div>';
+const panel=(a,plot=false)=>'<section class="panel'+(plot?' plot':'')+'">'+a+'</section>';
+const grid=(a,b)=>'<div class="grid">'+a+b+'</div>';
+let mq=Promise.resolve();
+const mathSvgCache=new Map();
+window.renderMath=()=>{if(window.MathJax?.typesetPromise)mq=mq.then(async()=>{
+ await MathJax.typesetPromise([$('#content')]);
+ renderSvgLabels($('#content'));
+}).catch(e=>console.error('Math rendering:',e));};
+function renderSvgLabels(root){
+ if(!window.MathJax?.tex2svg)return;
+ root.querySelectorAll('g[data-tex]').forEach(g=>{
+  if(!mathSvgCache.has(g.dataset.tex)){
+   const original=MathJax.tex2svg(g.dataset.tex,{display:false}).querySelector('svg');
+   mathSvgCache.set(g.dataset.tex,original);
+  }
+  const out=mathSvgCache.get(g.dataset.tex).cloneNode(true),vb=out.getAttribute('viewBox').split(/\s+/).map(Number),h=Number(g.dataset.size||24),w=h*vb[2]/vb[3];
+  out.setAttribute('width',w);out.setAttribute('height',h);out.setAttribute('x',g.dataset.anchor==='middle'?-w/2:g.dataset.anchor==='end'?-w:0);out.setAttribute('y',-h/2);
+  out.style.width=w+'px';out.style.height=h+'px';out.style.color=g.dataset.color;out.style.overflow='visible';g.replaceChildren(out);
+ });
+}
+function mathLabel(x,y,tex,color='#243549',anchor='start',size=24){
+ const esc=t=>t.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+ return '<g transform="translate('+x+' '+y+')" data-tex="'+esc(tex)+'" data-color="'+color+'" data-anchor="'+anchor+'" data-size="'+size+'">'+text(0,0,tex,color,anchor)+'</g>';
+}
+function input(id,label,unit,min,max){return '<label>'+inline(notation(label==='Electrical angle θe'?'\\theta_e':label==='DC-link voltage'?'Vdc':label==='Switching period Ts'?'Ts':label))+' ('+unit+')<input aria-label="'+label+'" id="'+id+'" type="number" required value="'+values[id]+'" min="'+min+'" max="'+max+'" step="any"></label>';}
+function line(x1,y1,x2,y2,color='#dce4ee',width=1,dash=false){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+color+'" stroke-width="'+width+'"'+(dash?' stroke-dasharray="5 5"':'')+'/>';}
+function text(x,y,t,color='#5f7284',anchor='start'){return '<text x="'+x+'" y="'+y+'" fill="'+color+'" style="fill:'+color+'" text-anchor="'+anchor+'">'+t+'</text>';}
+function svg(s,box='0 0 560 380',label='Voltage vector diagram'){return '<svg class="diagram-svg" viewBox="'+box+'" role="img" aria-label="'+label+'">'+s+'</svg>';}
+function vectors(mode){
+ const ox=380,oy=305,mul=(a,k)=>a.map(x=>x*k),mag=Math.hypot(C.alpha,C.beta);
+ // The same voltage scale is used for the three- and two-vector constructions.
+ const parts=C.abc.map((v,i)=>mul(axes[i],2*v/3)),p=mul(axes[C.p],2*C.gap1/3),n=mul(axes[C.n],-2*C.gap2/3);
+ const candidates=[[C.alpha,C.beta],...parts,p,n,[...parts[0]],[parts[0][0]+parts[1][0],parts[0][1]+parts[1][1]]];
+ const extent=step===7?Math.max(mag*1.2,.001):Math.max(...candidates.map(v=>Math.hypot(...v)),Math.abs(C.d),Math.abs(C.q),.001);
+ const scale=210/extent,pt=v=>[ox+v[0]*scale,oy-v[1]*scale];
+ function arrow(a,b,color,label='',offset=20,dash=false){
+  const A=pt(a),B=pt(b),ang=Math.atan2(B[1]-A[1],B[0]-A[0]),len=Math.hypot(B[0]-A[0],B[1]-A[1]);
+  if(len<.01)return '';
+  let out=line(...A,...B,color,dash?1.7:3,dash);
+  if(!dash)out+='<path d="M '+B[0]+' '+B[1]+' L '+(B[0]-11*Math.cos(ang-.35))+' '+(B[1]-11*Math.sin(ang-.35))+' L '+(B[0]-11*Math.cos(ang+.35))+' '+(B[1]-11*Math.sin(ang+.35))+' Z" fill="'+color+'"/>';
+  if(label){const t=.65,x=A[0]+t*(B[0]-A[0])-Math.sin(ang)*offset,y=A[1]+t*(B[1]-A[1])+Math.cos(ang)*offset;out+=mathLabel(x,y,label,color,'middle',25);}
+  return out;
+ }
+ let back='',front='';
+ if(step===7&&mag>0)back+='<circle cx="'+ox+'" cy="'+oy+'" r="'+(mag*scale)+'" fill="none" stroke="#bdcbd9" stroke-dasharray="5 6"/>';
+ if(mode==='dq'||mode==='ab'){
+  back+=line(80,oy,680,oy,'#a9b6c5',1.2)+line(ox,50,ox,560,'#a9b6c5',1.2);
+  front+=mathLabel(694,oy,'\\alpha')+mathLabel(ox,34,'\\beta','#243549','middle');
+ }else axes.forEach((a,i)=>{back+=line(ox-a[0]*250,oy+a[1]*250,ox+a[0]*250,oy-a[1]*250,'#c4cdd8',1.2);front+=mathLabel(ox+a[0]*275,oy-a[1]*275,'\\vec '+names[i],'#66788c','middle',25)+mathLabel(ox-a[0]*275,oy+a[1]*275,'-\\vec '+names[i],'#66788c','middle',25);});
+ if(mode==='dq'){
+  const r=C.theta*Math.PI/180,d=[Math.cos(r),Math.sin(r)],q=[-Math.sin(r),Math.cos(r)];
+  back+=line(ox-d[0]*265,oy+d[1]*265,ox+d[0]*265,oy-d[1]*265,'#73899e',1.6,true)+line(ox-q[0]*265,oy+q[1]*265,ox+q[0]*265,oy-q[1]*265,'#73899e',1.6,true);
+  front+=mathLabel(ox+d[0]*282,oy-d[1]*282,'d','#243549','middle')+mathLabel(ox+q[0]*282,oy-q[1]*282,'q','#243549','middle');
+  // Engineering schematic: the rotor magnetic north pole points along +d.
+  back+='<g transform="translate('+ox+' '+oy+') rotate('+(-C.theta)+')"><circle r="66" fill="#f4f6f9" stroke="#b6c3d1" stroke-width="1.5"/><rect x="-58" y="-19" width="58" height="38" fill="#2563a6"/><rect x="0" y="-19" width="58" height="38" fill="#be3939"/><rect x="-58" y="-19" width="116" height="38" fill="none" stroke="#34465b"/><text x="-30" y="7" text-anchor="middle" style="fill:white;font:bold 20px Arial">S</text><text x="30" y="7" text-anchor="middle" style="fill:white;font:bold 20px Arial">N</text></g>';
+  const ar=96,rad=((C.theta%360)+360)%360*Math.PI/180;
+  if(rad>1e-8&&rad<Math.PI*2-1e-8)back+='<path d="M '+(ox+ar)+' '+oy+' A '+ar+' '+ar+' 0 '+(rad>Math.PI?1:0)+' 0 '+(ox+ar*Math.cos(rad))+' '+(oy-ar*Math.sin(rad))+'" fill="none" stroke="#71849a" stroke-width="1.5"/>';
+  front+=mathLabel(ox+116*Math.cos(rad/2),oy-116*Math.sin(rad/2),'\\theta_e','#596e84','middle',22);
+  front+=arrow([0,0],mul(d,C.d),colors[0],'V_d^*\\vec d',-23)+arrow(mul(d,C.d),[C.alpha,C.beta],colors[1],'V_q^*\\vec q',-23);
+ }else if(mode==='ab')front+=arrow([0,0],[C.alpha,0],colors[0],'V_\\alpha^*\\vec\\alpha',24)+arrow([C.alpha,0],[C.alpha,C.beta],colors[1],'V_\\beta^*\\vec\\beta',24);
+ else if(mode==='three'){let sum=[0,0];parts.forEach((part,i)=>{let next=sum.map((x,j)=>x+part[j]);front+=arrow([0,0],part,colors[i],'\\tfrac23 V_'+names[i]+'\\vec '+names[i],i===1?28:24)+arrow(sum,next,colors[i],'',0,true);sum=next;});}
+ else front+=arrow([0,0],p,colors[0],'\\tfrac23\\Delta V_{pm}\\vec p',27)+arrow([0,0],n,colors[2],'\\tfrac23\\Delta V_{mn}(-\\vec n)',-29)+arrow(p,[C.alpha,C.beta],colors[2],'',0,true);
+ front+=arrow([0,0],[C.alpha,C.beta],'#18293d');
+ const end=pt([C.alpha,C.beta]);front+=mathLabel(end[0]+(C.alpha>=0?15:-15),end[1]-20,'\\vec V_{\\mathrm{ref}}','#18293d',C.alpha>=0?'start':'end',28);
+ if(mag<1e-9)front+=text(ox+20,oy+40,'Zero command');
+ const bar=100;back+=line(85,560,85+bar,560,'#51667e',2)+line(85,555,85,565,'#51667e',2)+line(185,555,185,565,'#51667e',2);
+ front+=mathLabel(135,584,f(bar/scale)+'\\,\\mathrm{V}','#51667e','middle',20);
+ return svg(back+front,'0 0 760 610','Adaptive-scale voltage vectors with mathematical labels')+(mode==='dq'?'<p class="diagram-note">Rotor magnet: N points along +d. Magnet size is schematic; voltage arrows use the scale bar.</p>':'');
+}
+function contributionSummary(){
+ if(view==='three')return '<div class="contribution-summary">'+eq(C.abc.map((v,i)=>'V_'+names[i]+'='+f(v)+'\\,\\mathrm V').join('\\qquad '))+'</div>';
+ const sorted=C.order.map((i,k)=>'V_'+names[i]+(k<2?(Math.abs(C.abc[i]-C.abc[C.order[k+1]])<1e-9?' = ':' > '):'')).join('');
+ const p=names[C.p],n=names[C.n];
+ return '<div class="contribution-summary">'+eq(sorted+'\\qquad\\vec p=\\vec '+p+',\\quad-\\vec n=-\\vec '+n)+
+ eq('\\begin{aligned}\\vec V_{\\mathrm{ref}}&=\\tfrac23\\big[(V_p-V_m)\\vec p+(V_m-V_n)(-\\vec n)\\big]\\\\&=\\tfrac23\\big['+f(C.gap1)+'\\vec '+p+'+'+f(C.gap2)+'(-\\vec '+n+')\\big]\\,\\mathrm V\\end{aligned}')+'</div>';
+}
+function synthesisDiagram(showTime=false){
+ const full=2*C.dc/3,ratios=[C.gap1/C.dc,C.gap2/C.dc],dirs=[axes[C.p],axes[C.n].map(x=>-x)];
+ const U=dirs.map(d=>d.map(x=>x*full)),R=U.map((v,i)=>v.map(x=>x*ratios[i])),ref=[C.alpha,C.beta];
+ const pts=[[0,0],...U,...R,ref];
+ const xmin=Math.min(...pts.map(v=>v[0])),xmax=Math.max(...pts.map(v=>v[0])),ymin=Math.min(...pts.map(v=>v[1])),ymax=Math.max(...pts.map(v=>v[1]));
+ const scale=Math.min(480/Math.max(xmax-xmin,1e-6),300/Math.max(ymax-ymin,1e-6));
+ const cx=450-(xmin+xmax)*scale/2,cy=270+(ymin+ymax)*scale/2,xy=v=>[cx+v[0]*scale,cy-v[1]*scale];
+ const palette=[colors[0],colors[2]];
+ function arrow(a,b,color,width=3,opacity=1,dashed=false){
+  const A=xy(a),B=xy(b),len=Math.hypot(B[0]-A[0],B[1]-A[1]);if(len<.01)return '';
+  const ang=Math.atan2(B[1]-A[1],B[0]-A[0]),head=width>4?14:10;
+  return '<g opacity="'+opacity+'">'+line(...A,...B,color,width,dashed)+(dashed?'':'<path d="M '+B[0]+' '+B[1]+' L '+(B[0]-head*Math.cos(ang-.4))+' '+(B[1]-head*Math.sin(ang-.4))+' L '+(B[0]-head*Math.cos(ang+.4))+' '+(B[1]-head*Math.sin(ang+.4))+' Z" fill="'+color+'"/>')+'</g>';
+ }
+ let drawing='';
+ U.forEach((u,i)=>{
+  const A=xy([0,0]),B=xy(u),dx=B[0]-A[0],dy=B[1]-A[1],len=Math.hypot(dx,dy),nx=-dy/len,ny=dx/len,sign=i===0?1:-1;
+  drawing+=arrow([0,0],u,palette[i],8,.23);
+  // Labels at the tips identify the actual abc switch state of each full vector.
+  drawing+=mathLabel(B[0]+dx/len*22,B[1]+dy/len*22,(i===0?'\\vec U_p':'\\vec U_{-n}')+'\\;['+C.states[i+1].join('')+']',palette[i],dx>35?'start':dx<-35?'end':'middle',25);
+  drawing+=arrow([0,0],R[i],palette[i],3.5);
+  const midpoint=xy(R[i].map(x=>x*.55));
+  const formula=showTime?(i===0?'\\frac{T_p}{T_s}\\vec U_p':'\\frac{T_{-n}}{T_s}\\vec U_{-n}'):(i===0?'\\frac23 V_{pm}\\vec p':'\\frac23 V_{mn}(-\\vec n)');
+  drawing+=mathLabel(midpoint[0]+nx*sign*34,midpoint[1]+ny*sign*34,formula,palette[i],'middle',26);
+  if(showTime)drawing+=mathLabel(A[0]+dx*.78+nx*sign*32,A[1]+dy*.78+ny*sign*32,f(ratios[i]*100)+'\\%',palette[i],'middle',21);
+ });
+ drawing+=arrow(R[0],ref,palette[1],1.7,.7,true)+arrow(R[1],ref,palette[0],1.7,.7,true)+arrow([0,0],ref,'#17293c',3);
+ const E=xy(ref);drawing+=mathLabel(E[0],E[1]-30,'\\vec V_{\\mathrm{ref}}','#17293c','middle',27);
+ drawing+='<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="#17293c"/>';
+ const magnitude=eq('|\\vec U_p|=|\\vec U_{-n}|=\\frac{2V_{\\mathrm{dc}}}{3}='+f(full)+'\\,\\mathrm V');
+ const relation=showTime
+  ?eq('\\frac{T_p}{T_s}=\\frac{V_{pm}}{V_{\\mathrm{dc}}}='+f(ratios[0],4)+'\\qquad\\frac{T_{-n}}{T_s}=\\frac{V_{mn}}{V_{\\mathrm{dc}}}='+f(ratios[1],4))
+  :eq('V_{pm}=V_p-V_m='+f(C.gap1)+'\\,\\mathrm V\\qquad V_{mn}=V_m-V_n='+f(C.gap2)+'\\,\\mathrm V');
+ return '<section class="panel synthesis-panel"><h2>'+(showTime?'The same vector proportions become time fractions':'Full switching vectors and required contributions')+'</h2><p class="subtle">Pale arrows: full instantaneous inverter vectors. Solid colored arrows: required average contributions. Dashed lines complete their vector sum.</p><div class="synthesis-figure">'+svg(drawing,'0 0 900 530','Full inverter vectors overlaid with required average contributions')+'</div>'+magnitude+relation+
+ (showTime?'<p class="subtle">Each ratio compares one required contribution with its full switching vector. Their dwell times share the same period; '+inline('T_p+T_{-n}\\le T_s')+' is required.</p>':'<p class="subtle">Brackets show '+inline('S_aS_bS_c')+' in physical abc order. '+inline('V_{pm},V_{mn}')+' are reference line-voltage differences; the full instantaneous vectors retain their fixed magnitude.</p>')+
+ (!C.valid?'<p class="hint">This requested vector is outside the linear synthesis region. The displayed proportions are demands; their dwell times cannot fit within Ts.</p>':'')+'</section>';
+}
+function phaseWave(){
+ const X=a=>45+a/360*465,Y=v=>125-v/Math.max(Math.hypot(C.d,C.q),1)*80;let s='';
+ [0,90,180,270,360].forEach(a=>s+=line(X(a),30,X(a),220)+text(X(a)-9,244,a+'°'));s+=line(45,125,510,125);
+ names.forEach((n,i)=>{let pts=[];for(let a=0;a<=360;a+=2)pts.push(X(a)+','+Y(calculate(C.d,C.q,a,C.dc,C.ts).abc[i]));s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+colors[i]+'" stroke-width="2.5"/><circle cx="'+X(C.theta)+'" cy="'+Y(C.abc[i])+'" r="4" fill="'+colors[i]+'"/>';});
+ s+=line(X(C.theta),20,X(C.theta),220,'#142a40',1,true)+text(45,18,'Phase references · peak '+f(Math.hypot(C.d,C.q))+' V')+text(310,270,'Electrical angle θe');
+ return svg(s,'0 0 560 285','Three phase reference waveforms');
+}
+function circuit(){
+ const st=C.states[stateView?2:1];let s=mathLabel(52,22,'+V_{\\mathrm{dc}}','#243549','start',22)+text(158,27,'0')+line(80,40,80,275,colors[2],3)+line(165,40,165,275,'#142a40',3);
+ names.forEach((n,i)=>{let y=75+i*85,x=st[i]?80:165;s+=line(x,y,320,y,colors[i],2.5)+'<circle cx="'+x+'" cy="'+y+'" r="5" fill="'+colors[i]+'"/>'+mathLabel(225,y-18,'S_'+n+'='+st[i],colors[i],'start',21)+ '<rect x="320" y="'+(y-12)+'" width="80" height="24" rx="4" fill="white" stroke="'+colors[i]+'"/>'+text(330,y+5,'winding')+line(400,y,454,y);});
+ s+=line(454,75,454,245)+text(468,165,'N')+text(115,310,'Star-connected windings · floating neutral');return svg(s,'0 0 560 330','Winding connections to DC rails');
+}
+const orderedStates=['000','p00','pm0','pmn','pm0','p00','000'];
+const orderedBits=['000','100','110','111','110','100','000'];
+const intervalTex=['\\frac{T_0}{4}','\\frac{T_p}{2}','\\frac{T_{-n}}{2}','\\frac{T_0}{2}','\\frac{T_{-n}}{2}','\\frac{T_p}{2}','\\frac{T_0}{4}'];
+function outputVoltages(st){return st.map((v,i)=>C.dc*(voltage==='line'?v-st[(i+1)%3]:v));}
+function timing(){
+ const X=t=>70+t/C.ts*760;
+ // Preserve exact time coordinates; only vertical lanes change to prevent collisions.
+ const laneEnds=[],annotations=C.durations.map((duration,i)=>{
+  if(duration<=C.ts*1e-10)return null;
+  const x=X((C.bounds[i]+C.bounds[i+1])/2);
+  let lane=laneEnds.findIndex(end=>x-end>=76);
+  if(lane<0)lane=laneEnds.length;laneEnds[lane]=x;
+  return {x,lane};
+ });
+ const laneCount=Math.max(1,laneEnds.length),topOffset=50+(laneCount-1)*72,bottomAxis=topOffset+500;
+ let s='',head='';
+ for(let lane=0;lane<laneCount;lane++)head+=text(5,32+lane*72,'p,m,n')+text(5,53+lane*72,'a,b,c');
+ C.bounds.forEach((t,i)=>{s+=line(X(t),38,X(t),440);if(i===0||i===7)s+=text(X(t),477,f(t,0),'#5f7284','middle');});
+ // Each column explicitly maps ordered switching logic to physical abc bits.
+ C.states.forEach((st,i)=>{
+  const mark=annotations[i];if(!mark)return;
+  const {x,lane}=mark,y=lane*72;
+  head+='<g data-interval="'+i+'" data-time-mid="'+((C.bounds[i]+C.bounds[i+1])/2)+'">'+text(x,12+y,orderedStates[i],'#243549','middle')+text(x,32+y,orderedBits[i],'#243549','middle')+text(x,53+y,st.join(''),'#5f7284','middle')+line(x,60+y,x,topOffset+30,'#cbd5e1')+'</g>';
+ });
+ function trace(vals,y,amp,color,label,average){let path='';vals.forEach((v,i)=>path+=(i?'L':'M')+' '+X(C.bounds[i])+' '+(y-v*amp)+' L '+X(C.bounds[i+1])+' '+(y-v*amp)+' ');s+=line(70,y,830,y)+'<path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="2.5"/>'+mathLabel(12,y-25,/^S/.test(label)?'S_'+label.slice(1):'v_{'+label.slice(1)+'}',color,'start',16);if(average!==undefined)s+=line(70,y-average*amp,830,y-average*amp,color,1.5,true);}
+ for(let i=0;i<3;i++)trace(C.states.map(st=>st[i]),88+i*64,30,colors[i],'S'+names[i]);
+ const vv=C.states.map(st=>outputVoltages(st)[phase]),avg=vv.reduce((sum,v,i)=>sum+v*C.durations[i]/C.ts,0);
+ const label='v'+names[phase]+(voltage==='line'?names[(phase+1)%3]:'0');
+ trace(vv,355,75/C.dc,colors[phase],label,avg);
+ s+=text(73,442,'Dashed: average = '+f(avg)+' V')+text(540,477,'Time within Ts (μs)')+line(X(cursor*C.ts/100),35,X(cursor*C.ts/100),420,'#142a40',1.5);
+ s+=text(18,285,'+'+f(C.dc,0))+text(44,360,'0')+text(18,433,'−'+f(C.dc,0));
+ let bottom=line(70,bottomAxis,830,bottomAxis,'#8798aa');
+ C.states.forEach((st,i)=>{
+  bottom+=line(X(C.bounds[i]),bottomAxis-4,X(C.bounds[i]),bottomAxis+4,'#8798aa');
+  const mark=annotations[i];if(!mark)return;
+  const {x,lane}=mark,y=bottomAxis+42+lane*72;
+  bottom+='<g data-duration-interval="'+i+'">'+line(x,bottomAxis+5,x,y-17,'#cbd5e1')+
+  mathLabel(x,y,intervalTex[i],'#243549','middle',22)+text(x,y+31,f(C.durations[i])+' μs','#5f7284','middle')+'</g>';
+ });
+ bottom+=line(830,bottomAxis-4,830,bottomAxis+4,'#8798aa');
+ return svg(head+'<g transform="translate(0 '+topOffset+')">'+s+'</g>'+bottom,'0 0 870 '+(bottomAxis+95+(laneCount-1)*72),'Switching states and interval times aligned to the exact midpoint of each PWM segment');
+
+}
+function segment(items,key,current){return '<div class="segmented">'+items.map(([v,label])=>'<button data-'+key+'="'+v+'" class="'+(String(v)===String(current)?'selected':'')+'">'+label+'</button>').join('')+'</div>';}
+let cycleCacheKey='',cycleSamples=[],rotationOpened=false;
+function reconstructedSample(angle){
+ const c=calculate(values.d,values.q,angle,values.dc,values.ts);
+ if(!c.valid)return {angle,valid:false};
+ const leg=[0,1,2].map(x=>c.states.reduce((sum,st,i)=>sum+c.dc*st[x]*c.durations[i]/c.ts,0));
+ const neutral=leg.reduce((a,b)=>a+b,0)/3;
+ return {angle,valid:true,leg,line:leg.map((v,i)=>v-leg[(i+1)%3]),phase:leg.map(v=>v-neutral)};
+}
+function reconstructionPlot(){
+ const key=[values.d,values.q,values.dc,values.ts].join(',');
+ if(key!==cycleCacheKey){cycleSamples=Array.from({length:361},(_,i)=>reconstructedSample(i));cycleCacheKey=key;}
+ const theta=Math.max(0,Math.min(360,values.theta)),samples=cycleSamples.slice(0,Math.floor(theta)+1);
+ if(theta%1>1e-8)samples.push(reconstructedSample(theta));
+ const X=a=>75+a/360*725;let s='';
+ function chart(key,top,range,title){
+  const Y=key==='leg'?v=>top+165-v/values.dc*140:v=>top+95-v/range*70;
+  s+=text(75,top,title,'#243549');
+  (key==='leg'?[0,values.dc/2,values.dc]:[-range,0,range]).forEach(v=>{s+=line(75,Y(v),800,Y(v),'#dce4ee')+text(64,Y(v)+4,f(v,0),'#5f7284','end');});
+  [0,60,120,180,240,300,360].forEach(a=>{s+=line(X(a),top+25,X(a),top+165,'#e2e8ef')+text(X(a),top+187,a+'°','#5f7284','middle');});
+  function path(series,color,dash=false){
+   let d='',previous=false;for(const point of samples){if(!point.valid){previous=false;continue;}d+=(previous?' L ':' M ')+X(point.angle)+' '+Y(series(point));previous=true;}
+   s+='<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="'+(dash?1.7:2.5)+'"'+(dash?' stroke-dasharray="6 4"':'')+'/>';
+   const last=samples.at(-1);if(last?.valid)s+='<circle cx="'+X(theta)+'" cy="'+Y(series(last))+'" r="3.5" fill="'+color+'"/>';
+  }
+  names.forEach((n,i)=>path(point=>point[key][i],colors[i]));
+
+  s+=line(X(theta),top+20,X(theta),top+169,'#263e58',1.2,true);
+ }
+ chart('leg',25,values.dc,'Phase-leg averages: va0, vb0, vc0 · lower DC rail reference (V)');
+ chart('line',260,Math.max(values.dc,1),'Line-voltage averages: vab = va0 − vb0, vbc, vca (V)');
+ s+=text(800,472,'Electrical angle θe','#5f7284','end');
+ return svg(s,'0 0 870 495','Progressive phase-leg voltages from zero to Vdc and line voltages after common-mode cancellation');
+}
+function reconstructionPanel(){
+ const peak=Math.hypot(values.d,values.q),llpeak=Math.sqrt(3)*peak,linear=llpeak<=values.dc+1e-9;
+ const metrics='<div class="tablewrap"><table><thead><tr><th>Balanced sinusoidal component</th><th>Peak (V)</th><th>RMS (V)</th></tr></thead><tbody><tr><td>'+inline('V_a,V_b,V_c')+' · phase-to-neutral</td><td>'+f(peak)+'</td><td>'+f(peak/Math.sqrt(2))+'</td></tr><tr><td>'+inline('V_{ab},V_{bc},V_{ca}')+' · line-to-line</td><td>'+f(llpeak)+'</td><td>'+f(llpeak/Math.sqrt(2))+'</td></tr></tbody></table></div>';
+ return '<section class="panel wide"><h2>From phase-leg voltages to sinusoidal line voltages</h2><p class="subtle"><span style="color:#2463eb">● a0 / ab</span> &nbsp; <span style="color:#009a82">● b0 / bc</span> &nbsp; <span style="color:#e48a20">● c0 / ca</span></p><div id="rotation-reconstruction" class="cycle-wave"></div>'+
+ eq('\\overline v_{ab}=\\overline v_{a0}-\\overline v_{b0},\\quad\\overline v_{bc}=\\overline v_{b0}-\\overline v_{c0},\\quad\\overline v_{ca}=\\overline v_{c0}-\\overline v_{a0}')+
+ '<p class="subtle">The upper plot uses the lower DC rail as reference, so phase-leg averages lie between 0 and Vdc. Their shared common-mode waveform disappears when one leg voltage is subtracted from another, producing the sinusoidal line voltages below.</p>'+metrics+
+ '<p class="subtle">'+(linear?'Values describe the complete electrical cycle reconstructed by PWM averaging.':'Requested fundamental values only: this command cannot be synthesized throughout the full revolution in linear modulation.')+' These are not the RMS values of the raw PWM pulses or the distorted phase-leg averages.</p>'+
+ '<details><summary>Voltage definitions and RMS calculation</summary>'+
+ eq('v_{x0}=S_xV_{\\mathrm{dc}}\\in\\{0,V_{\\mathrm{dc}}\\},\\qquad\\overline v_{x0}=\\frac{V_{\\mathrm{dc}}}{T_s}\\sum_{k=1}^{7}S_{x,k}\\Delta t_k')+
+ eq('V_{\\mathrm{phase,peak}}=|\\vec V_{\\mathrm{ref}}|=\\sqrt{(V_d^*)^2+(V_q^*)^2}')+
+ eq('V_{\\mathrm{L-L,peak}}=\\sqrt3\\,V_{\\mathrm{phase,peak}},\\qquad V_{\\mathrm{L-L,rms}}=\\frac{V_{\\mathrm{L-L,peak}}}{\\sqrt2}')+
+ '<p>Instantaneous phase-leg voltage switches between 0 and Vdc; instantaneous line voltage switches among −Vdc, 0 and +Vdc. These smooth plots show their switching-period averages. The detailed timing diagram below shows the actual pulses. Invalid linear-modulation intervals are left blank.</p></details></section>';
+}
+let playing=false,playSpeed=30,animationId=null,lastFrame=null,lastPaint=0;
+function stopRotation(){
+ playing=false;if(animationId!==null)cancelAnimationFrame(animationId);animationId=null;lastFrame=null;
+ if($('#rotation-play')){$('#rotation-play').textContent='Play rotation';$('#rotation-play').setAttribute('aria-pressed','false');}
+}
+function rotationFrame(now){
+ if(!playing||step!==7){stopRotation();return;}
+ if(lastFrame!==null&&!document.hidden)values.theta=Math.min(360,values.theta+Math.min(now-lastFrame,200)*playSpeed/1000);
+ lastFrame=now;
+ if(values.theta>=360){refreshRotation();stopRotation();return;}
+ if(now-lastPaint>=80){refreshRotation();lastPaint=now;}
+ animationId=requestAnimationFrame(rotationFrame);
+}
+function startRotation(){
+ if(playing)return;if(values.theta>=360){values.theta=0;refreshRotation();}playing=true;lastFrame=null;lastPaint=0;
+ $('#rotation-play').textContent='Pause';$('#rotation-play').setAttribute('aria-pressed','true');
+ animationId=requestAnimationFrame(rotationFrame);
+}
+function rotationBody(){
+ return '<section class="panel rotation-controls"><div class="rotation-toolbar"><button id="rotation-play" aria-pressed="'+playing+'">'+(playing?'Pause':'Play rotation')+'</button><button id="rotation-reset" class="secondary">Reset to 0°</button><label>Playback speed<select id="rotation-speed"><option value="10">10° / s</option><option value="30">30° / s</option><option value="60">60° / s</option></select></label><strong id="rotation-angle-value"></strong></div><label>Electrical angle θe<input id="rotation-angle" type="range" min="0" max="360" step=".1" value="'+values.theta+'"></label><p class="subtle">Slow-motion illustration: each angle shows one switching period with the reference held constant. Playback speed is not the motor electrical frequency. The trace starts at 0° and stops at 360°; press Play again to rebuild the next revolution.</p></section>'+
+ '<section class="panel wide"><div class="rotation-heading"><h2>Two contributions create the rotating reference</h2><span id="rotation-map"></span></div><div id="rotation-vector" class="rotation-vector"></div><p id="rotation-values" class="subtle"></p>'+eq('\\vec V_{\\mathrm{ref}}=\\tfrac23 V_{pm}\\vec p+\\tfrac23 V_{mn}(-\\vec n)')+'<p class="subtle">The dashed circle is the reference-vector locus. At a phase-order boundary one contribution reaches zero and the selected pair changes while Vref remains continuous.</p></section>'+
+ reconstructionPanel()+'<section class="panel wide"><h2>The corresponding switching period</h2>'+segment([['pole','Phase-leg voltage'],['line','Line voltage']],'voltage',voltage)+segment([[0,voltage==='line'?'ab':'a'],[1,voltage==='line'?'bc':'b'],[2,voltage==='line'?'ca':'c']],'phase',phase)+
+ '<p class="subtle">Ordered p,m,n bits and physical a,b,c bits are shown separately. Interval widths and voltages update at the same angle as the vector diagram.</p><div id="rotation-timing" class="wave"></div><p id="rotation-dwells" class="subtle"></p></section>';
+}
+function refreshRotation(){
+ if(step!==7||!$('#rotation-vector'))return;
+ C=calculate(values.d,values.q,values.theta,values.dc,values.ts);
+ $('#rotation-angle-value').textContent=f(C.theta,1)+'°';
+ $('#rotation-angle').value=C.theta;
+ $('#rotation-map').textContent='p = '+names[C.p]+'   ·   m = '+names[C.m]+'   ·   n = '+names[C.n];
+ $('#rotation-values').textContent='Va = '+f(C.abc[0])+' V   ·   Vb = '+f(C.abc[1])+' V   ·   Vc = '+f(C.abc[2])+' V   ·   |Vref| = '+f(Math.hypot(C.alpha,C.beta))+' V';
+ $('#rotation-vector').innerHTML=vectors('two');
+ $('#rotation-reconstruction').innerHTML=reconstructionPlot();
+ $('#rotation-timing').innerHTML=C.valid?timing():'<div class="hint">No feasible linear sequence at this angle: T0 = '+f(C.t0)+' μs. Reduce the command magnitude or increase Vdc.</div>';
+ $('#rotation-dwells').textContent='Tp = '+f(C.tp)+' μs   ·   T−n = '+f(C.tn)+' μs   ·   T0 = '+f(C.t0)+' μs   ·   Ts = '+f(C.ts)+' μs';
+ renderSvgLabels($('#rotation-vector'));renderSvgLabels($('#rotation-timing'));
+}
+function draw(){
+ if(step!==7)stopRotation();
+ if(step===7&&!rotationOpened){values.theta=0;rotationOpened=true;}
+ C=calculate(values.d,values.q,values.theta,values.dc,values.ts);
+ $('#steps').innerHTML='<p class="navlabel">THE LEARNING PATH</p>'+titles.map((t,i)=>'<button data-step="'+i+'" class="'+(step===i?'active':'')+'" '+(step===i?'aria-current="step"':'')+'><span class="num">'+(i+1)+'</span><span class="stepname">'+t+'</span></button>').join('')+'<p class="navnote">Alternative space-vector synthesis<br><br>abc reference frame<br>Phase-voltage ordering</p>';
+ let body='',title='',lead='',a='',b='';
+ if(step===0){
+ title='Start with the FOC command';lead='The current controllers request two voltages in the rotating dq frame. Follow one sample all the way to the inverter.';
+ a='<h2>Command at this instant</h2><div class="controls">'+input('d','Vd*','V',-1000,1000)+input('q','Vq*','V',-1000,1000)+input('theta','Electrical angle θe','°',0,360)+input('dc','DC-link voltage','V',1,2000)+input('ts','Switching period Ts','μs',1,10000)+'</div><p class="subtle">θe is measured counterclockwise from α to d. The q axis leads d by 90°.</p><button id="reset" class="secondary">Reset example</button>';
+ b='<h2>One vector, rotating coordinates</h2>'+vectors('dq')+eq('\\vec V_{\\mathrm{ref}}=(V_d^*+jV_q^*)e^{j\\theta_e}');
+ body=grid(panel(a),panel(b,true));
+ }else if(step===1){
+ title='Rotate into the stationary frame';lead='Inverse Park transformation expresses the same voltage vector on the fixed α and β axes.';
+ a=eq('\\begin{aligned}V_\\alpha^*&=V_d^*\\cos\\theta_e-V_q^*\\sin\\theta_e\\\\V_\\beta^*&=V_d^*\\sin\\theta_e+V_q^*\\cos\\theta_e\\end{aligned}')+eq('\\begin{aligned}V_\\alpha^*&='+f(C.d)+'\\cos('+f(C.theta)+'^\\circ)\\\\&\\quad-('+f(C.q)+')\\sin('+f(C.theta)+'^\\circ)\\\\&='+f(C.alpha)+'\\,\\mathrm V\\\\[4pt]V_\\beta^*&='+f(C.d)+'\\sin('+f(C.theta)+'^\\circ)\\\\&\\quad+('+f(C.q)+')\\cos('+f(C.theta)+'^\\circ)\\\\&='+f(C.beta)+'\\,\\mathrm V\\end{aligned}')+row('|Vref|',f(Math.hypot(C.alpha,C.beta))+' V')+hint('The coordinates change; the physical reference vector does not.');
+ body=grid(panel(a),panel(vectors('ab')+eq('\\vec V_{\\mathrm{ref}}=V_\\alpha^*+jV_\\beta^*'),true));
+ }else if(step===2){
+ title='Recover the three phase references';lead='Inverse Clarke gives three signed phase voltages. Together, their contributions reconstruct the reference vector.';
+ a=eq('\\begin{aligned}V_a&=V_\\alpha^*\\\\V_b&=-\\tfrac12V_\\alpha^*+\\tfrac{\\sqrt3}{2}V_\\beta^*\\\\V_c&=-\\tfrac12V_\\alpha^*-\\tfrac{\\sqrt3}{2}V_\\beta^*\\end{aligned}')+C.abc.map((v,i)=>row('V'+names[i],f(v)+' V')).join('')+eq('\\vec V_{\\mathrm{ref}}=\\tfrac23(V_a\\vec a+V_b\\vec b+V_c\\vec c)')+'<details><summary>Define the unit vectors</summary>'+eq('\\vec a=e^{j0},\\quad\\vec b=e^{j2\\pi/3},\\quad\\vec c=e^{-j2\\pi/3}')+'<p>Va is a scalar voltage; a⃗ is a unit direction. The three fixed phase axes are 120° apart.</p></details>';
+ b='<h2>abc over one electrical revolution</h2>'+phaseWave()+'<p class="subtle"><span style="color:#2463eb">● a</span> &nbsp; <span style="color:#009a82">● b</span> &nbsp; <span style="color:#e48a20">● c</span></p><label>Sampled angle · '+f(C.theta)+'°<input type="range" id="angle" min="0" max="360" step="1" value="'+C.theta+'"></label><p class="subtle">Va + Vb + Vc = 0. These are voltage references, before switching.</p>';
+ body=grid(panel(a),panel(b,true));
+ }else if(step===3){
+ title='Three directions become two';lead='Sort the signed phase voltages. The maximum selects p; the minimum selects −n. The physical abc axes stay fixed.';
+ a=eq('V_p\\ge V_m\\ge V_n')+row('(p, m, n)','('+C.order.map(i=>names[i]).join(', ')+')')+row('ΔVpm = Vp − Vm',f(C.gap1)+' V')+row('ΔVmn = Vm − Vn',f(C.gap2)+' V')+eq('\\vec p+\\vec m+\\vec n=0')+eq('\\vec V_{\\mathrm{ref}}=\\tfrac23\\big[(V_p-V_m)\\vec p+(V_m-V_n)(-\\vec n)\\big]')+hint('Both coefficients are nonnegative. They are weights on two directions 60° apart, not orthogonal projections.')+'<details><summary>Follow the algebra from abc</summary><p>The ordered unit vectors p⃗, m⃗, n⃗ are a permutation of a⃗, b⃗, c⃗. Relabel the original definition, then use m⃗ = −p⃗ − n⃗:</p>'+eq('\\begin{aligned}\\vec V_{\\mathrm{ref}}&=\\tfrac23(V_p\\vec p+V_m\\vec m+V_n\\vec n)\\\\&=\\tfrac23[(V_p-V_m)\\vec p+(V_n-V_m)\\vec n]\\end{aligned}')+'<p>The middle phase is absorbed into the two voltage differences.</p></details>';
+ b=segment([['three','Three contributions'],['two','Two contributions']],'view',view)+contributionSummary()+vectors(view)+'<p class="subtle">All contributions include ⅔. Dashed translated arrows show the sum; both constructions end at the same dark Vref.</p>';
+ body=grid(panel(a),panel(b,true));
+ }else if(step===4){
+ title='Turn directions into switching states';lead='Connect the windings to the DC rails. Each active switching state creates a fixed voltage vector.';
+ a=circuit()+'<p class="subtle">1 means the upper switch is ON. State bits always follow physical a, b, c order.</p>';
+ b=eq(stateView?'\\vec U_{-n}=\\tfrac{2V_{\\mathrm{dc}}}{3}(\\vec p+\\vec m)=\\tfrac{2V_{\\mathrm{dc}}}{3}(-\\vec n)':'\\vec U_p=\\tfrac{2V_{\\mathrm{dc}}}{3}\\vec p')+row('vpm',stateView?'0 V':f(C.dc)+' V')+row('vmn',stateView?f(C.dc)+' V':'0 V')+row('Active-vector magnitude',f(2*C.dc/3)+' V')+hint(stateView?'p and m connect to the upper rail; n connects to the lower rail. The line voltage vmn is Vdc.':'p connects to the upper rail; m and n connect to the lower rail. The line voltage vpm is Vdc.')+'<details><summary>Derive from real winding voltages</summary>'+eq('v_{xN}=V_{\\mathrm{dc}}\\left(S_x-\\frac{S_a+S_b+S_c}{3}\\right)')+'<p>For an ideal inverter and balanced star load with no zero-sequence back EMF:</p>'+eq(stateView?'(v_{pN},v_{mN},v_{nN})=\\tfrac{V_{\\mathrm{dc}}}{3}(1,1,-2)':'(v_{pN},v_{mN},v_{nN})=\\tfrac{V_{\\mathrm{dc}}}{3}(2,-1,-1)')+'<p>Insert these winding voltages into the same space-vector definition to obtain the selected inverter vector.</p></details>';
+ body=synthesisDiagram(false)+'<details class="winding-details"><summary>Connect these vectors to the winding circuit</summary>'+segment([[0,'p00 · Up · '+C.states[1].join('')],[1,'pm0 · U−n · '+C.states[2].join('')]],'state',stateView)+grid(panel(a,true),panel(b))+'</details>';
+ }else if(step===5){
+ title='Match volt-seconds to find the dwell';lead='Apply full-amplitude pulses for only part of the period. Their average must equal the requested line voltage.';
+ a='<h2>From line voltage to time</h2>'+eq('\\underbrace{(V_p-V_m)T_s}_{\\text{required volt-seconds}}=\\underbrace{V_{\\mathrm{dc}}T_p}_{\\text{applied volt-seconds}}')+eq('T_p=T_s\\frac{V_p-V_m}{V_{\\mathrm{dc}}}')+eq('T_{-n}=T_s\\frac{V_m-V_n}{V_{\\mathrm{dc}}}')+hint('If Up stays ON for 100% of Ts, vpm = Vdc. A smaller requested average needs only that fraction of the full switching period.');
+ b='<h2>This sample</h2>'+eq('\\begin{aligned}T_p&='+f(C.ts)+'\\frac{'+f(C.gap1)+'}{'+f(C.dc)+'}='+f(C.tp)+'\\,\\mu\\mathrm s\\\\[6pt]T_{-n}&='+f(C.ts)+'\\frac{'+f(C.gap2)+'}{'+f(C.dc)+'}='+f(C.tn)+'\\,\\mu\\mathrm s\\\\[6pt]T_0&='+f(C.ts)+'-'+f(C.tp)+'-'+f(C.tn)+'\\\\&='+f(C.t0)+'\\,\\mu\\mathrm s\\end{aligned}')+eq('\\vec V_{\\mathrm{ref}}=\\frac{T_p}{T_s}\\vec U_p+\\frac{T_{-n}}{T_s}\\vec U_{-n}')+'<p>'+ (C.valid?'✓ All dwell times fit inside Ts.':'The command exceeds the linear synthesis boundary.')+'</p><p class="subtle">Feasibility: Vp − Vn ≤ Vdc. References are constant within Ts; dead time and device drops are neglected.</p>';
+ body=synthesisDiagram(true)+'<div class="wide">'+grid(panel(a),panel(b))+'</div>';
+ }else if(step===6){
+ title='Build the switching sequence';lead='Turn on p, then m, then n. Reverse the order to complete a centered seven-segment period.';
+ if(!C.valid)body=panel('<h2>No feasible linear PWM sequence</h2><p>T0 = '+f(C.t0)+' μs. Negative zero-vector time cannot be scheduled.</p><p>Reduce the command magnitude or increase Vdc. Overmodulation requires a separate voltage-limiting rule.</p><button id="command">Edit FOC command</button>');
+ else{
+ let k=6;for(let i=0;i<7;i++)if(cursor*C.ts/100<C.bounds[i+1]){k=i;break}
+ const st=C.states[k],selected=outputVoltages(st)[phase],average=C.states.reduce((sum,state,i)=>sum+outputVoltages(state)[phase]*C.durations[i]/C.ts,0),symbol='v_{'+names[phase]+(voltage==='line'?names[(phase+1)%3]:'0')+'}';
+ a=eq('p='+names[C.p]+',\\qquad m='+names[C.m]+',\\qquad n='+names[C.n])+
+ segment([['pole','Phase-leg voltage'],['line','Line voltage']],'voltage',voltage)+segment([[0,voltage==='line'?'ab':'a'],[1,voltage==='line'?'bc':'b'],[2,voltage==='line'?'ca':'c']],'phase',phase)+
+ '<p class="subtle">The first binary row uses ordered '+inline('(p,m,n)')+' bits: p00 = 100, pm0 = 110. The second row uses physical '+inline('(a,b,c)')+' bits for the Sa, Sb, Sc waveforms. Here, p00 maps to '+C.states[1].join('')+' and pm0 maps to '+C.states[2].join('')+' in abc order.</p><div class="wave">'+timing()+'</div><label>Inspect the switching instant · '+f(cursor*C.ts/100)+' μs<input id="cursor" type="range" min="0" max="99.99" step=".1" value="'+cursor+'"></label><div class="stats"><div class="stat"><small>State SaSbSc</small><strong>'+st.join('')+'</strong></div><div class="stat"><small>'+inline(symbol)+' at cursor</small><strong>'+f(selected)+' V</strong></div><div class="stat"><small>Average '+inline(symbol)+'</small><strong>'+f(average)+' V</strong></div></div><p class="subtle">Phase-leg voltage is measured relative to the lower DC rail '+inline('0')+'. Line voltage is the difference between two phase-leg voltages. Solid traces show instantaneous outputs; dashed voltage shows the switching-period average.</p><details><summary>Sequence times and output voltages</summary><div class="tablewrap"><table><thead><tr><th>Ordered state</th><th>Bits (p,m,n)</th><th>Bits (a,b,c)</th><th>Duration</th>'+names.map((n,i)=>'<th>'+inline('v_{'+n+(voltage==='line'?names[(i+1)%3]:'0')+'}')+' (V)</th>').join('')+'</tr></thead><tbody>'+
+ C.states.map((state,i)=>'<tr><td>'+orderedStates[i]+'</td><td>'+orderedBits[i]+'</td><td>'+state.join('')+'</td><td>'+inline(intervalTex[i])+' = '+f(C.durations[i],3)+' μs</td>'+outputVoltages(state).map(v=>'<td>'+f(v)+'</td>').join('')+'</tr>').join('')+
+ '</tbody></table></div>'+eq('\\overline{\\vec V}=\\frac{T_p\\vec U_p+T_{-n}\\vec U_{-n}}{T_s}=\\vec V_{\\mathrm{ref}}')+'<p>000 and 111 both produce zero line voltage. Their phase-leg voltages are 0 and Vdc, respectively. Lower switches are complementary to Sa, Sb, Sc in this ideal model.</p></details>';
+
+ body=panel(a);
+ }
+ }else if(step===7){
+ title='Create a rotating reference';lead='Keep Vd and Vq fixed and advance the electrical angle. Watch the selected phase axes and their dwell times change together.';body=rotationBody();
+ }
+ if(window.MathJax?.typesetClear)MathJax.typesetClear([$('#content')]);
+ $('#content').className='step-'+step;
+ $('#content').innerHTML='<div class="eyebrow">STEP '+String(step+1).padStart(2,'0')+' / 08</div><h1>'+title+'</h1><p class="lead">'+lead+'</p>'+body+(step&&step!==7?'<p class="sample">Current sample: Vd* = '+f(C.d)+' V · Vq* = '+f(C.q)+' V · θe = '+f(C.theta)+'° · Vdc = '+f(C.dc,0)+' V · Ts = '+f(C.ts)+' μs</p>':'');
+ $('#back').disabled=step===0;$('#next').textContent=step===7?'Back to command ↺':'Next step →';$('#progress').textContent=(step+1)+' of 8';
+ normalizeTextNotation();
+ bind();renderMath();
+ if(step===7)refreshRotation();
+}
+function normalizeTextNotation(){
+ const root=$('#content'),walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+ while(walk.nextNode()){
+  const node=walk.currentNode;if(node.parentElement.closest('svg,.equation,mjx-container,script,input')||node.nodeValue.includes('\\(')||node.nodeValue.includes('\\['))continue;
+  nodes.push(node);
+ }
+ const map={'Vref':'\\vec V_{\\mathrm{ref}}','Up':'\\vec U_p','U−n':'\\vec U_{-n}','T−n':'T_{-n}','Tp':'T_p','T0':'T_0','Ts':'T_s','Vdc':'V_{\\mathrm{dc}}','Vd*':'V_d^*','Vq*':'V_q^*','θe':'\\theta_e','Va':'V_a','Vb':'V_b','Vc':'V_c','Vp':'V_p','Vm':'V_m','Vn':'V_n','vpm':'v_{pm}','vmn':'v_{mn}','Sa':'S_a','Sb':'S_b','Sc':'S_c','a⃗':'\\vec a','b⃗':'\\vec b','c⃗':'\\vec c','p⃗':'\\vec p','m⃗':'\\vec m','n⃗':'\\vec n'};
+ const re=/(?<![A-Za-z])(Vref|U−n|Up|T−n|Tp|T0|Ts|Vdc|Vd\*|Vq\*|θe|Va|Vb|Vc|Vp|Vm|Vn|vpm|vmn|Sa|Sb|Sc|a⃗|b⃗|c⃗|p⃗|m⃗|n⃗)(?![A-Za-z])/g;
+ nodes.forEach(node=>{node.nodeValue=node.nodeValue.replace(re,m=>inline(map[m]));});
+}
+function bind(){
+ document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{step=+b.dataset.step;draw()});
+ document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{view=b.dataset.view;draw()});
+ document.querySelectorAll('[data-state]').forEach(b=>b.onclick=()=>{stateView=+b.dataset.state;draw();if($('.winding-details'))$('.winding-details').open=true});
+ document.querySelectorAll('[data-voltage]').forEach(b=>b.onclick=()=>{voltage=b.dataset.voltage;draw()});
+ document.querySelectorAll('[data-phase]').forEach(b=>b.onclick=()=>{phase=+b.dataset.phase;draw()});
+ if($('#rotation-play'))$('#rotation-play').onclick=()=>playing?stopRotation():startRotation();
+ if($('#rotation-speed')){$('#rotation-speed').value=playSpeed;$('#rotation-speed').onchange=e=>{playSpeed=+e.target.value;};}
+ if($('#rotation-angle'))$('#rotation-angle').oninput=e=>{stopRotation();values.theta=+e.target.value;refreshRotation();};
+ if($('#rotation-reset'))$('#rotation-reset').onclick=()=>{stopRotation();values.theta=0;refreshRotation();};
+ for(const id of Object.keys(values)){const el=$('#'+id);if(el)el.onchange=()=>{if(!el.checkValidity()||!Number.isFinite(el.valueAsNumber)){el.reportValidity();return}values[id]=el.valueAsNumber;draw()};}
+ if($('#angle'))$('#angle').onchange=e=>{values.theta=+e.target.value;draw();$('#angle').focus()};
+ if($('#cursor'))$('#cursor').onchange=e=>{cursor=+e.target.value;draw();$('#cursor').focus()};
+ if($('#reset'))$('#reset').onclick=()=>{values={d:120,q:40,theta:30,dc:300,ts:100};draw()};
+ if($('#command'))$('#command').onclick=()=>{step=0;draw()};
+}
+$('#back').onclick=()=>{if(step>0)step--;draw();window.scrollTo(0,0)};
+$('#next').onclick=()=>{step=(step+1)%8;draw();window.scrollTo(0,0)};
+draw();
+
+</script></body></html>
