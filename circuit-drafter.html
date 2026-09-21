@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Circuit Drafter - Effortless circuit schematics</title>
+    <title>Circuit Drafter V1.05 - Effortless circuit schematics</title>
     <!-- Google Material Icons -->
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
@@ -1651,7 +1651,7 @@
         class="logo"
       />
       <div>
-        <h1>Circuit Drafter (V1.03 Touch) </h1>
+        <h1>Circuit Drafter (V1.05 Touch)</h1>
         <p id="tagline">Effortless circuit schematics. Desktop + iPad touch editor. Compact modal edit on small screens.</p>
       </div>
     </div>
@@ -2491,6 +2491,23 @@
 
     <script>
       /****************************************************************************
+      * Circuit Drafter - V1.05 Touch (Date: 2026-09-21)
+       * Changes since V1.03:
+       *   - Replaced the unavailable CodeCogs equation service with local
+       *     MathJax SVG rendering and retained MathML export.
+       *   - Added editable canvas equations, multiline aligned equations,
+       *     circuit-equation templates, and persistent LaTeX source.
+       *   - Matched equation size to the 16 px component-label font and made
+       *     equation scaling strictly proportional using exact SVG dimensions.
+       *   - Added arbitrary 0-360 degree rotation input with 15 degree controls.
+       *   - Corrected drawn and stored terminal coordinates for MOSFET, IGBT,
+       *     BJT, op-amp, SPDT, and scaled inductor symbols.
+       *   - Preserved exact floating-point endpoints for rotated components;
+       *     only routing corners snap to the grid.
+       *   - Added dynamic wire-to-terminal attachment so wires remain connected
+       *     when components are moved, rotated, flipped, or scaled.
+      * Circuit Drafter - V1.03 Touch
+       *   - Removed the duplicate original dropdown in the touch layout.
       * Circuit Drafter - V1.00 Touch (Date: 2026-06-23)
        *   - Unified Pointer Events for desktop mouse, iPad touch, and pen.
        *   - Tap dropdowns, one-finger draw/move, two-finger pan, pinch zoom, double-tap edit.
@@ -2772,63 +2789,63 @@
             width: 80,
             height: 60,
             terminals: [
-              { x: -40, y: 0 },
-              { x: 40, y: -20 },
-              { x: 40, y: 20 },
+              { x: -40, y: 0, dir: { x: -1, y: 0 } },
+              { x: 40, y: -20, dir: { x: 1, y: 0 } },
+              { x: 40, y: 20, dir: { x: 1, y: 0 } },
             ],
           },
           igbt: {
             width: 60,
-            height: 105,
+            height: 100,
             terminals: [
-              { x: 30, y: -52.5 },
-              { x: 30, y: 52.5 },
-              { x: -30, y: 12.5 },
+              { x: 30, y: -50, dir: { x: 0, y: -1 } },
+              { x: 30, y: 50, dir: { x: 0, y: 1 } },
+              { x: -30, y: 10, dir: { x: -1, y: 0 } },
             ],
           },
           opamp: {
             width: 140,
             height: 100,
             terminals: [
-              { x: -70, y: -20 },
-              { x: -70, y: 20 },
-              { x: 70, y: 0 },
+              { x: -70, y: -20, dir: { x: -1, y: 0 } },
+              { x: -70, y: 20, dir: { x: -1, y: 0 } },
+              { x: 70, y: 0, dir: { x: 1, y: 0 } },
             ],
           },
           nfet: {
             width: 60,
-            height: 105,
+            height: 100,
             terminals: [
-              { x: 30, y: -52.5 },
-              { x: 30, y: 52.5 },
-              { x: -30, y: 12.5 },
+              { x: 30, y: -50, dir: { x: 0, y: -1 } },
+              { x: 30, y: 50, dir: { x: 0, y: 1 } },
+              { x: -30, y: 20, dir: { x: -1, y: 0 } },
             ],
           },
           pfet: {
             width: 60,
-            height: 105,
+            height: 100,
             terminals: [
-              { x: 30, y: -52.5 },
-              { x: 30, y: 52.5 },
-              { x: -30, y: 12.5 },
+              { x: 30, y: -50, dir: { x: 0, y: -1 } },
+              { x: 30, y: 50, dir: { x: 0, y: 1 } },
+              { x: -30, y: 20, dir: { x: -1, y: 0 } },
             ],
           },
           npn: {
             width: 60,
-            height: 105,
+            height: 100,
             terminals: [
-              { x: 30, y: -52.5 },
-              { x: 30, y: 52.5 },
-              { x: -30, y: 0 },
+              { x: 30, y: -50, dir: { x: 0, y: -1 } },
+              { x: 30, y: 50, dir: { x: 0, y: 1 } },
+              { x: -30, y: 0, dir: { x: -1, y: 0 } },
             ],
           },
           pnp: {
             width: 60,
-            height: 105,
+            height: 100,
             terminals: [
-              { x: 30, y: -52.5 },
-              { x: 30, y: 52.5 },
-              { x: -30, y: 0 },
+              { x: 30, y: -50, dir: { x: 0, y: -1 } },
+              { x: 30, y: 50, dir: { x: 0, y: 1 } },
+              { x: -30, y: 0, dir: { x: -1, y: 0 } },
             ],
           },
           voltage: {
@@ -6224,7 +6241,15 @@ I_0, & 0\le t<T_1 \\
             const flippedY = scaledTermY * flipScaleY;
             const rotatedX = flippedX * cos - flippedY * sin;
             const rotatedY = flippedX * sin + flippedY * cos;
-            const mag = Math.hypot(rotatedX, rotatedY) || 1;
+            // Routing direction follows the actual external lead, not the
+            // radial line from the component centre. This matters for offset
+            // pins such as MOSFET gates, op-amp inputs and SPDT throws.
+            const localDir = t.dir || { x: t.x, y: t.y };
+            const flippedDirX = localDir.x * flipScaleX;
+            const flippedDirY = localDir.y * flipScaleY;
+            const rotatedDirX = flippedDirX * cos - flippedDirY * sin;
+            const rotatedDirY = flippedDirX * sin + flippedDirY * cos;
+            const dirMag = Math.hypot(rotatedDirX, rotatedDirY) || 1;
             return {
               x: el.x + rotatedX,
               y: el.y + rotatedY,
@@ -6232,8 +6257,8 @@ I_0, & 0\le t<T_1 \\
               ownerType: el.type,
               terminalIndex,
               dir: {
-                x: Math.abs(rotatedX) < 1e-9 ? 0 : rotatedX / mag,
-                y: Math.abs(rotatedY) < 1e-9 ? 0 : rotatedY / mag,
+                x: Math.abs(rotatedDirX) < 1e-9 ? 0 : rotatedDirX / dirMag,
+                y: Math.abs(rotatedDirY) < 1e-9 ? 0 : rotatedDirY / dirMag,
               },
             };
           });
@@ -6598,10 +6623,12 @@ I_0, & 0\le t<T_1 \\
 
         function offsetFromTerminal(point, distance) {
           if (!point.dir) return { x: point.x, y: point.y };
-          return snapPointToFineGrid({
+          // Keep this point on the exact rotated lead axis. Rounding it to the
+          // fine grid changes the stub angle for non-orthogonal components.
+          return {
             x: point.x + point.dir.x * distance,
             y: point.y + point.dir.y * distance,
-          });
+          };
         }
 
         function routeBetweenOrthogonal(a, b, firstAxis) {
@@ -6628,14 +6655,48 @@ I_0, & 0\le t<T_1 \\
             Math.abs(e.x - s.x) >= Math.abs(e.y - s.y)
           );
           const between = routeBetweenOrthogonal(sStub, eStub, startAxis);
-          return compactPath([s, ...between, e]).map(snapPointToFineGrid);
+          // The terminal endpoints and their stubs must remain exact floating-
+          // point coordinates after rotation. routeBetweenOrthogonal() already
+          // snaps only its routing corner, where grid alignment is desirable.
+          return compactPath([s, ...between, e]);
+        }
+
+        function resolveAttachedWirePoint(point) {
+          if (!point || point.ownerId === undefined || point.ownerId === null || point.terminalIndex === undefined) {
+            return point;
+          }
+          const owner = circuitElements.find((el) => el.id === point.ownerId);
+          if (!owner) return point;
+          const terminal = getAbsoluteTerminals(owner)[point.terminalIndex];
+          if (!terminal) return point;
+          return {
+            ...point,
+            x: terminal.x,
+            y: terminal.y,
+            ownerType: terminal.ownerType,
+            dir: terminal.dir ? { ...terminal.dir } : point.dir,
+          };
+        }
+
+        function resolveAttachedPathEndpoints(path) {
+          if (!path || path.length === 0) return path || [];
+          const resolved = path.map((point) => ({ ...point }));
+          resolved[0] = resolveAttachedWirePoint(resolved[0]);
+          if (resolved.length > 1) {
+            resolved[resolved.length - 1] = resolveAttachedWirePoint(resolved[resolved.length - 1]);
+          }
+          return resolved;
         }
 
         function getWirePath(wire) {
-          if (wire.points && wire.points.length >= 2) return wire.points;
-          if (wire.routing === "direct") return [wire.start, wire.end];
-          if (wire.routing === "auto") return buildAutoWirePath(wire.start, wire.end, false);
-          return [wire.start, { x: wire.start.x, y: wire.end.y }, wire.end];
+          if (wire.points && wire.points.length >= 2) {
+            return resolveAttachedPathEndpoints(wire.points);
+          }
+          const start = resolveAttachedWirePoint(wire.start);
+          const end = resolveAttachedWirePoint(wire.end);
+          if (wire.routing === "direct") return [start, end];
+          if (wire.routing === "auto") return buildAutoWirePath(start, end, false);
+          return [start, { x: start.x, y: end.y }, end];
         }
         function drawWireFromPath(path) {
           if (!path || path.length < 2) return;
@@ -7252,7 +7313,12 @@ I_0, & 0\le t<T_1 \\
           ctx.stroke();
         }
 
-        function drawInductor() {
+        function drawInductor(el) {
+          const { scale } = getDimensionsAndScale(el);
+          const externalLineWidth = ctx.lineWidth;
+          ctx.save();
+          ctx.scale(scale, scale);
+          ctx.lineWidth = externalLineWidth / Math.max(scale, 0.001);
           const baseLineWidth = ctx.lineWidth;
           const originalCenterX = 218;
           const originalCenterY = 457;
@@ -7284,6 +7350,7 @@ I_0, & 0\le t<T_1 \\
           ctx.moveTo(21, 0);
           ctx.lineTo(40, 0);
           ctx.stroke();
+          ctx.restore();
         }
 
         function drawDiode(el) {
@@ -7935,7 +8002,7 @@ I_0, & 0\le t<T_1 \\
           const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
           document.body.style.cursor = "wait";
           alert("Generating circuit with AI... Please wait.");
-          const system_prompt = `You are a circuit design assistant for 'Circuit Drafter'. Your ONLY task is to generate a valid JSON object representing a circuit from a user's description. Your output MUST be a single, raw JSON object and nothing else. Do not include explanations or markdown formatting. The JSON structure must be: { "version": "0.42a", "elements": [ ... ], "nextId": <number> }. Valid types: "resistor", "capacitor", "inductor", "diode", "zener", "led", "switch", "spdtSwitch", "voltage", "acvoltage", "currentsource", "battery", "gnd", "npn", "pnp", "nfet", "pfet", "opamp", "igbt", "wire", "text". RULES: Unique integer 'id' starting from 0. 'nextId' is highest 'id' + 1. Wires must connect to component terminals. Use LaTeX for labels (e.g., "R_{1}", "10k\\\\Omega").`;
+          const system_prompt = `You are a circuit design assistant for 'Circuit Drafter'. Your ONLY task is to generate a valid JSON object representing a circuit from a user's description. Your output MUST be a single, raw JSON object and nothing else. Do not include explanations or markdown formatting. The JSON structure must be: { "version": "1.05", "elements": [ ... ], "nextId": <number> }. Valid types: "resistor", "capacitor", "inductor", "diode", "zener", "led", "switch", "spdtSwitch", "voltage", "acvoltage", "currentsource", "battery", "gnd", "npn", "pnp", "nfet", "pfet", "opamp", "igbt", "wire", "text". RULES: Unique integer 'id' starting from 0. 'nextId' is highest 'id' + 1. Wires must connect to component terminals. Use LaTeX for labels (e.g., "R_{1}", "10k\\\\Omega").`;
           try {
             const response = await fetch(API_URL, {
               method: "POST",
@@ -7996,7 +8063,7 @@ I_0, & 0\le t<T_1 \\
           );
           if (!filename) return;
           const dataToSave = {
-            version: "0.75m-fullscreen-labels-compact-inspector-v3",
+            version: "1.05-touch-mathjax-terminal-snap",
             elements: circuitElements,
             nextId: nextId,
             viewport: viewport,
