@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Space Vector Transformation · Interactive Lab</title>
+    <style>
+      :root {
+        font-family: Arial, Helvetica, sans-serif;
+        color: #17212a;
+        background: #edf0f2;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      header {
+        background: #20272e;
+        border-bottom: 4px solid #00629b;
+        color: white;
+        padding: 18px 3vw;
+        font:
+          600 23px Georgia,
+          serif;
+      }
+      header small {
+        display: block;
+        color: #b2c0c9;
+        font:
+          700 11px Arial,
+          sans-serif;
+        letter-spacing: 0.12em;
+        margin-top: 4px;
+      }
+      main {
+        max-width: 1550px;
+        margin: auto;
+        padding: 19px;
+      }
+      .intro {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+      }
+      .intro h1 {
+        font:
+          600 25px Georgia,
+          serif;
+        margin: 0 0 5px;
+      }
+      .intro p {
+        margin: 0 0 16px;
+        color: #53636e;
+      }
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        border: 1px solid #89969e;
+        margin-bottom: 14px;
+      }
+      .tabs button {
+        background: #d9dee2;
+        border: 0;
+        border-right: 1px solid #89969e;
+        padding: 11px;
+        text-align: left;
+        color: #455864;
+        font-weight: 700;
+        min-height: 62px;
+      }
+      .tabs button.active {
+        background: white;
+        color: #162d3f;
+        box-shadow: inset 0 -5px #00629b;
+      }
+      .tabs small {
+        display: block;
+        color: #00629b;
+        margin-bottom: 4px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 305px minmax(0, 1fr);
+        gap: 14px;
+      }
+      .settings,
+      .study {
+        background: #fff;
+        border: 1px solid #96a2aa;
+        padding: 16px;
+        min-width: 0;
+      }
+      .settings-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 5px;
+      }
+      .settings h2 {
+        font:
+          600 20px Georgia,
+          serif;
+        margin: 0;
+      }
+      .actions {
+        display: flex;
+        gap: 5px;
+      }
+      .plain {
+        border: 1px solid #87949d;
+        background: white;
+        color: #005486;
+        padding: 7px;
+        font-weight: 700;
+      }
+      .control {
+        border-top: 1px solid #d8dfe4;
+        padding-top: 13px;
+        margin-top: 14px;
+      }
+      .control label {
+        display: flex;
+        justify-content: space-between;
+        color: #3d4c57;
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 9px;
+      }
+      .choices {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .choices button,
+      .presets button {
+        border: 1px solid #87949d;
+        background: white;
+        color: #344857;
+        padding: 8px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .choices button.sel,
+      .presets button.sel {
+        background: #233746;
+        color: #fff;
+        box-shadow: inset 0 -3px #00629b;
+      }
+      .choices button small {
+        display: block;
+        font-weight: 400;
+      }
+      .choices.equal button {
+        flex: 1;
+      }
+      .amp {
+        display: grid;
+        grid-template-columns: 30px 1fr 35px;
+        align-items: center;
+        gap: 6px;
+        margin: 10px 0;
+      }
+      .amp output {
+        font: 700 13px monospace;
+        text-align: right;
+      }
+      input[type="range"] {
+        width: 100%;
+        accent-color: #00629b;
+      }
+      .stephead {
+        background: #f4f5f6;
+        border-bottom: 1px solid #a4afb5;
+        margin: -16px -16px 17px;
+        padding: 15px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+      .stephead h2 {
+        font:
+          600 20px Georgia,
+          serif;
+        margin: 0;
+      }
+      .badge {
+        font: 700 12px monospace;
+        border: 1px solid #a3adb4;
+        background: #fff;
+        padding: 7px;
+        white-space: nowrap;
+      }
+      .concept {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        background: #eef1f3;
+        border: 1px solid #bac3c9;
+        margin-bottom: 14px;
+      }
+      .concept div {
+        padding: 10px;
+        border-right: 1px solid #bac3c9;
+      }
+      .concept strong {
+        display: block;
+        color: #005486;
+        font: 700 13px monospace;
+      }
+      .concept span {
+        font-size: 13px;
+      }
+      .stagegrid {
+        display: grid;
+        grid-template-columns: minmax(245px, 0.6fr) minmax(0, 1.4fr);
+        gap: 17px;
+        align-items: start;
+      }
+      .vector svg {
+        display: block;
+        width: 100%;
+        max-width: 450px;
+        margin: auto;
+      }
+      .vector-caption {
+        text-align: center;
+        color: #435664;
+        font: 700 13px monospace;
+      }
+      .plot {
+        border: 1px solid #a9b4bc;
+        background: #fff;
+        padding: 14px 16px;
+      }
+      .plothead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .plothead strong {
+        font-size: 16px;
+      }
+      .plothead span {
+        font: 700 13px monospace;
+        color: #53636e;
+      }
+      .plothead button {
+        border: 0;
+        background: #00629b;
+        color: #fff;
+        font-weight: 700;
+        padding: 9px 13px;
+      }
+      .plot svg {
+        display: block;
+        width: 100%;
+        margin: 12px 0 8px;
+        touch-action: none;
+        cursor: crosshair;
+      }
+      .legend {
+        display: flex;
+        justify-content: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        font: 700 14px monospace;
+      }
+      .calculation {
+        background: #f3f5f6;
+        border: 1px solid #bac3c9;
+        border-left: 4px solid #00629b;
+        margin-top: 14px;
+        padding: 13px;
+        overflow-x: auto;
+      }
+      .calculation h3 {
+        font:
+          600 18px Georgia,
+          serif;
+        margin: 0 0 9px;
+      }
+      .calculation .math {
+        margin: 10px 0;
+        min-height: 35px;
+        white-space: nowrap;
+      }
+      .observe {
+        background: #e9eef1;
+        border-left: 4px solid #758894;
+        margin-top: 14px;
+        padding: 12px;
+        color: #405462;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .observe strong {
+        margin-right: 10px;
+        color: #233746;
+      }
+      .modal {
+        border: 1px solid #87949d;
+        max-width: 740px;
+        width: min(90vw, 740px);
+        max-height: 85vh;
+        overflow: auto;
+        padding: 25px;
+        line-height: 1.6;
+        color: #344b5a;
+      }
+      .modal::backdrop {
+        background: #17212abb;
+      }
+      .modal h2 {
+        font:
+          600 24px Georgia,
+          serif;
+      }
+      .modal .close {
+        float: right;
+      }
+      .modal p {
+        margin: 12px 0;
+      }
+      .modal a {
+        color: #00629b;
+      }
+      footer {
+        text-align: center;
+        font-size: 12px;
+        color: #647783;
+        margin: 17px;
+      }
+      svg text {
+        font-family: Arial, sans-serif;
+      }
+      @media (max-width: 1250px) {
+        .stagegrid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 880px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .settings {
+          display: block;
+        }
+      }
+      @media (max-width: 650px) {
+        main {
+          padding: 10px;
+        }
+        .tabs {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .concept {
+          grid-template-columns: 1fr;
+        }
+        .concept div {
+          border-bottom: 1px solid #bac3c9;
+        }
+        .intro h1 {
+          font-size: 21px;
+        }
+        .plot {
+          padding: 10px 8px;
+        }
+        .stephead h2 {
+          font-size: 17px;
+        }
+      }
+    </style>
+    <script>
+      window.MathJax = {
+        tex: { inlineMath: [["\\(", "\\)"]], displayMath: [["\\[", "\\]"]] },
+        svg: { fontCache: "global" },
+      };
+    </script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"
+    ></script>
+  </head>
+  <body>
+    <header>
+      SV&nbsp; Space Vector Transformation<small
+        >ELECTRIC DRIVES · INTERACTIVE CONCEPT LAB</small
+      >
+    </header>
+    <main>
+      <div class="intro">
+        <div>
+          <h1>Space Vector in three reference frames</h1>
+          <p>
+            How we represent a three-phase quantity as one spatial vector
+            depends on the reference frame.
+          </p>
+        </div>
+        <button class="plain" id="conceptHelp">ⓘ Concept help</button>
+      </div>
+      <nav class="tabs" id="tabs"></nav>
+      <div class="layout">
+        <aside class="settings">
+          <div class="settings-head">
+            <h2>Inputs</h2>
+            <div class="actions">
+              <button class="plain" id="inputHelp">ⓘ Help</button
+              ><button class="plain" id="reset">↺ Reset</button>
+            </div>
+          </div>
+          <div class="control">
+            <label>Three-phase quantity</label>
+            <div class="choices equal" id="quantities"></div>
+          </div>
+          <div class="control">
+            <label>Phase peak amplitudes <span id="unit"></span></label>
+            <div id="amplitudes"></div>
+          </div>
+          <div class="control">
+            <label>Input waveform</label>
+            <div class="choices" id="waveforms"></div>
+          </div>
+          <div class="control">
+            <label>Phase shifts</label>
+            <div class="choices" id="sequences"></div>
+          </div>
+          <div class="control">
+            <label>Clarke scale k</label>
+            <div class="choices equal" id="scales"></div>
+          </div>
+          <div class="control" id="offsetControl">
+            <label
+              >Vector angle relative to d
+              <output id="deltaValue"></output></label
+            ><input type="range" id="delta" min="-180" max="180" step="1" />
+            <div class="choices presets" id="presets"></div>
+          </div>
+          <div class="control">
+            <label>Electrical angle θ <output id="angleValue"></output></label
+            ><input type="range" id="angle" min="0" max="360" step="1" />
+          </div>
+        </aside>
+        <section class="study">
+          <div class="stephead">
+            <h2 id="stageTitle"></h2>
+            <span class="badge" id="scaleBadge"></span>
+          </div>
+          <div class="concept" id="conceptStrip"></div>
+          <div class="stagegrid">
+            <div class="vector">
+              <svg
+                id="vector"
+                viewBox="0 0 440 440"
+                role="img"
+                aria-label="Space vector diagram"
+              ></svg>
+              <div class="vector-caption" id="vectorCaption"></div>
+            </div>
+            <div>
+              <section class="plot">
+                <div class="plothead">
+                  <strong id="plotTitle"></strong>
+                  <div>
+                    <span id="plotAngle"></span>
+                    <button id="play">▷ Play</button>
+                  </div>
+                </div>
+                <svg
+                  id="plot"
+                  viewBox="0 0 880 350"
+                  role="img"
+                  aria-label="Waveforms across one electrical cycle; click to select angle"
+                ></svg>
+                <div class="legend" id="legend"></div>
+              </section>
+              <section class="calculation">
+                <h3 id="calcTitle"></h3>
+                <div id="equations"></div>
+              </section>
+            </div>
+          </div>
+          <div class="observe">
+            <strong>Observe</strong><span id="insight"></span>
+          </div>
+        </section>
+      </div>
+      <footer>
+        Conventions: phase axes 0°, +120°, −120° · +β leads +α · +q leads +d ·
+        angle increases counterclockwise
+      </footer>
+    </main>
+    <dialog class="modal" id="help">
+      <button class="plain close" id="closeHelp">✕ Close</button>
+      <h2 id="helpTitle"></h2>
+      <div id="helpBody"></div>
+    </dialog>
+    <script>
+      (() => {
+        "use strict";
+        const $ = (id) => document.getElementById(id),
+          R = Math.PI / 180,
+          SQ = Math.sqrt(3),
+          s = {
+            stage: 0,
+            quantity: "current",
+            theta: 0,
+            amps: [5, 5, 5],
+            waveform: "cos",
+            sequence: 1,
+            scale: "amplitude",
+            delta: 0,
+            playing: false,
+          };
+        let timer = null;
+        const meta = {
+            current: ["i", "A", "Current"],
+            voltage: ["v", "V", "Voltage"],
+            flux: ["ψ", "Wb", "Flux linkage"],
+          },
+          plotColors = {
+            a: "#4c72b0",
+            b: "#dd8452",
+            c: "#55a868",
+            alpha: "#4c72b0",
+            beta: "#dd8452",
+            d: "#4c72b0",
+            q: "#dd8452",
+          },
+          vectorColors = {
+            a: "#00629b",
+            b: "#008f95",
+            c: "#d97800",
+            alpha: "#00629b",
+            beta: "#a52052",
+            d: "#00629b",
+            q: "#a52052",
+          };
+        const stages = [
+            "What is a vector?",
+            "Three-phase ABC",
+            "Clarke αβ",
+            "Park dq",
+            "PMSM FOC",
+          ],
+          titles = [
+            "One spatial vector from three phase values",
+            "Three fixed winding axes and a moving sum",
+            "The same vector on stationary αβ axes",
+            "Observe the vector from a rotating dq frame",
+            "Align d with permanent-magnet rotor flux",
+          ],
+          insights = [
+            "A signed phase value becomes a spatial contribution only after assigning its fixed phase axis. Add those directed contributions to get one vector.",
+            "A negative phase value reverses its contribution. Dashed arrows show head-to-tail addition; their sum is the solid vector.",
+            "The αβ axes remain stationary. Their components change as the vector moves; x₀ retains the common part that αβ omits.",
+            "The dq frame rotates at the nominal rate. Unequal phase amplitudes can make xd and xq ripple.",
+            "For real FOC, rotor d-axis requires a calibrated electrical position; current vector angle is not necessarily rotor angle.",
+          ];
+        const f = (n, p = 3) =>
+            Math.abs(n) < 0.0005 ? (0).toFixed(p) : n.toFixed(p),
+          wrap = (x) => ((x % 360) + 360) % 360,
+          scale = () =>
+            s.scale === "amplitude"
+              ? 2 / 3
+              : s.scale === "power"
+                ? Math.sqrt(2 / 3)
+                : 1,
+          esc = (x) =>
+            String(x).replace(
+              /[&<>"']/g,
+              (c) =>
+                ({
+                  "&": "&amp;",
+                  "<": "&lt;",
+                  ">": "&gt;",
+                  '"': "&quot;",
+                  "'": "&#39;",
+                })[c],
+            );
+        function calc(theta) {
+          let a = theta * R,
+            fn = s.waveform === "cos" ? Math.cos : Math.sin,
+            abc = [
+              s.amps[0] * fn(a),
+              s.amps[1] * fn(a - s.sequence * 120 * R),
+              s.amps[2] * fn(a + s.sequence * 120 * R),
+            ],
+            rawX = abc[0] - (abc[1] + abc[2]) / 2,
+            rawY = (SQ * (abc[1] - abc[2])) / 2,
+            k = scale(),
+            alpha = k * rawX,
+            beta = k * rawY,
+            frame = wrap(
+              s.sequence * (theta + (s.waveform === "sin" ? -90 : 0)) - s.delta,
+            ),
+            rad = frame * R;
+          return {
+            abc,
+            rawX,
+            rawY,
+            alpha,
+            beta,
+            zero: (abc[0] + abc[1] + abc[2]) / 3,
+            d: alpha * Math.cos(rad) + beta * Math.sin(rad),
+            q: -alpha * Math.sin(rad) + beta * Math.cos(rad),
+            frame,
+            mag: Math.hypot(alpha, beta),
+            vectorAngle: wrap(Math.atan2(beta, alpha) / R),
+          };
+        }
+        function pause() {
+          s.playing = false;
+          clearInterval(timer);
+          timer = null;
+        }
+        function controlGroup(id, items, key, labels) {
+          $(id).innerHTML = items
+            .map(
+              (v, i) =>
+                `<button data-value="${v}" class="${s[key] === v ? "sel" : ""}">${labels[i]}</button>`,
+            )
+            .join("");
+          $(id)
+            .querySelectorAll("button")
+            .forEach(
+              (b) =>
+                (b.onclick = () => {
+                  s[key] =
+                    key === "sequence"
+                      ? Number(b.dataset.value)
+                      : b.dataset.value;
+                  render();
+                }),
+            );
+        }
+        function drawControls() {
+          $("tabs").innerHTML = stages
+            .map(
+              (t, i) =>
+                `<button data-step="${i}" class="${s.stage === i ? "active" : ""}"><small>STEP 0${i}</small>${t}</button>`,
+            )
+            .join("");
+          $("tabs")
+            .querySelectorAll("button")
+            .forEach(
+              (b) =>
+                (b.onclick = () => {
+                  s.stage = Number(b.dataset.step);
+                  if (s.stage === 4) s.quantity = "current";
+                  render();
+                }),
+            );
+          $("quantities").innerHTML = Object.entries(meta)
+            .map(
+              ([v, m]) =>
+                `<button data-value="${v}" class="${s.quantity === v ? "sel" : ""}" ${s.stage === 4 && v !== "current" ? "disabled" : ""}>${m[2]}<small>${m[0]}abc · ${m[1]}</small></button>`,
+            )
+            .join("");
+          $("quantities")
+            .querySelectorAll("button")
+            .forEach(
+              (b) =>
+                (b.onclick = () => {
+                  s.quantity = b.dataset.value;
+                  render();
+                }),
+            );
+          $("unit").textContent = meta[s.quantity][1];
+          $("amplitudes").innerHTML = s.amps
+            .map(
+              (v, i) =>
+                `<div class="amp"><b style="color:${vectorColors["abc"[i]]}">${meta[s.quantity][0]}<sub>${"abc"[i]}</sub></b><input aria-label="Phase ${"ABC"[i]} amplitude" type="range" data-amp="${i}" min="0" max="10" step="0.1" value="${v}"><output>${f(v, 1)}</output></div>`,
+            )
+            .join("");
+          $("amplitudes")
+            .querySelectorAll("input")
+            .forEach(
+              (inp) =>
+                (inp.oninput = () => {
+                  s.amps[Number(inp.dataset.amp)] = Number(inp.value);
+                  render();
+                }),
+            );
+          controlGroup("waveforms", ["cos", "sin"], "waveform", [
+            "cos θ",
+            "sin θ",
+          ]);
+          controlGroup("sequences", [1, -1], "sequence", [
+            "b −120° · c +120°",
+            "b +120° · c −120°",
+          ]);
+          controlGroup("scales", ["amplitude", "raw", "power"], "scale", [
+            "⅔ <small>Amplitude</small>",
+            "1 <small>Raw sum</small>",
+            "√⅔ <small>Power</small>",
+          ]);
+          $("offsetControl").hidden = s.stage < 3;
+          $("delta").value = s.delta;
+          $("deltaValue").textContent = `δ = ${s.delta}°`;
+          $("presets").innerHTML = [0, 30, 90, -90]
+            .map(
+              (v) =>
+                `<button data-angle="${v}" class="${s.delta === v ? "sel" : ""}">${v}°</button>`,
+            )
+            .join("");
+          $("presets")
+            .querySelectorAll("button")
+            .forEach(
+              (b) =>
+                (b.onclick = () => {
+                  s.delta = Number(b.dataset.angle);
+                  render();
+                }),
+            );
+          $("angle").value = s.theta;
+          $("angleValue").textContent = `${f(s.theta, 1)}°`;
+        }
+        function svg(tag, attrs) {
+          return `<${tag} ${Object.entries(attrs)
+            .map(([k, v]) => `${k}="${esc(v)}"`)
+            .join(" ")} />`;
+        }
+        function drawPlot() {
+          let v = calc(s.theta),
+            tr =
+              s.stage < 2
+                ? ["a", "b", "c"]
+                : s.stage === 2
+                  ? ["alpha", "beta"]
+                  : ["d", "q"],
+            read = (z, t) =>
+              t === "a"
+                ? z.abc[0]
+                : t === "b"
+                  ? z.abc[1]
+                  : t === "c"
+                    ? z.abc[2]
+                    : z[t],
+            points = Array.from({ length: 241 }, (_, i) => calc(i * 1.5)),
+            max = Math.max(
+              1,
+              Math.ceil(
+                Math.max(
+                  ...points.flatMap((p) => tr.map((t) => Math.abs(read(p, t)))),
+                ) * 1.12,
+              ),
+            ),
+            L = 46,
+            T = 22,
+            W = 880,
+            H = 350,
+            B = 36,
+            RR = 18,
+            x = (ang) => L + (ang / 360) * (W - L - RR),
+            y = (n) => T + ((max - n) / (2 * max)) * (H - T - B),
+            metaQ = meta[s.quantity];
+          let h = `<rect x="${L}" y="${T}" width="${W - L - RR}" height="${H - T - B}" fill="#eaeaf2"/>`;
+          [0, 0.25, 0.5, 0.75, 1].forEach((q) => {
+            let yy = T + q * (H - T - B);
+            h += `<line x1="${L}" y1="${yy}" x2="${W - RR}" y2="${yy}" stroke="white" stroke-width="1.5"/><text x="38" y="${yy + 5}" text-anchor="end" fill="#5f6672" font-size="14">${f(max * (1 - 2 * q), 0)}</text>`;
+          });
+          [0, 90, 180, 270, 360].forEach(
+            (a) =>
+              (h += `<line x1="${x(a)}" y1="${T}" x2="${x(a)}" y2="${H - B}" stroke="white" stroke-width="1.5"/><text x="${x(a)}" y="${H - 9}" text-anchor="middle" fill="#5f6672" font-size="14">${a}°</text>`),
+          );
+          tr.forEach((t) => {
+            let d = points
+              .map(
+                (p, i) =>
+                  `${i ? "L" : "M"}${x(i * 1.5).toFixed(1)},${y(read(p, t)).toFixed(1)}`,
+              )
+              .join(" ");
+            h += `<path d="${d}" fill="none" stroke="${plotColors[t]}" stroke-width="3" stroke-linecap="round"/>`;
+          });
+          h += `<line x1="${x(s.theta)}" y1="${T}" x2="${x(s.theta)}" y2="${H - B}" stroke="#243a50" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+          tr.forEach(
+            (t) =>
+              (h += `<circle cx="${x(s.theta)}" cy="${y(read(v, t))}" r="6" stroke="white" stroke-width="2" fill="${plotColors[t]}"/>`),
+          );
+          h += `<rect id="seek" x="${L}" y="${T}" width="${W - L - RR}" height="${H - T - B}" fill="transparent"/>`;
+          $("plot").innerHTML = h;
+          $("seek").onpointerdown = (e) => {
+            let box = e.currentTarget.getBoundingClientRect();
+            s.theta = Math.round(
+              Math.min(
+                360,
+                Math.max(0, ((e.clientX - box.left) / box.width) * 360),
+              ),
+            );
+            pause();
+            render();
+          };
+          $("plotTitle").textContent =
+            s.stage < 2
+              ? "Three-phase input"
+              : s.stage === 2
+                ? "Stationary αβ components"
+                : "Rotating dq components";
+          $("plotAngle").textContent = `θ = ${f(s.theta, 1)}°`;
+          $("play").textContent = s.playing ? "Ⅱ Pause" : "▷ Play";
+          $("legend").innerHTML = tr
+            .map(
+              (t) =>
+                `<span style="color:${plotColors[t]}">━ ${metaQ[0]}<sub>${t === "alpha" ? "α" : t === "beta" ? "β" : t}</sub> <span style="color:#344b5a">${f(read(v, t))} ${metaQ[1]}</span></span>`,
+            )
+            .join("");
+        }
+        function drawVector() {
+          let v = calc(s.theta),
+            C = 220,
+            lim = Math.max(2, ...s.amps) * Math.max(1.5, 2.25 * scale()),
+            u = 148 / lim,
+            P = (x, y) => [C + x * u, C - y * u],
+            raw = s.stage === 0,
+            ab = s.stage < 2,
+            k = raw ? 1 : scale(),
+            lines = ab
+              ? [
+                  ["a", k * v.abc[0], 0],
+                  ["b", (-k * v.abc[1]) / 2, (k * SQ * v.abc[1]) / 2],
+                  ["c", (-k * v.abc[2]) / 2, (-k * SQ * v.abc[2]) / 2],
+                ]
+              : s.stage === 2
+                ? [
+                    ["alpha", v.alpha, 0],
+                    ["beta", 0, v.beta],
+                  ]
+                : [
+                    [
+                      "d",
+                      v.d * Math.cos(v.frame * R),
+                      v.d * Math.sin(v.frame * R),
+                    ],
+                    [
+                      "q",
+                      -v.q * Math.sin(v.frame * R),
+                      v.q * Math.cos(v.frame * R),
+                    ],
+                  ],
+            sum = P(raw ? v.rawX : v.alpha, raw ? v.rawY : v.beta),
+            sym = meta[s.quantity][0];
+          let h =
+            "<defs>" +
+            Object.entries({ ...vectorColors, sum: "#233746" })
+              .map(
+                ([t, col]) =>
+                  `<marker id="arr-${t}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="${col}"/></marker>`,
+              )
+              .join("") +
+            '</defs><circle cx="220" cy="220" r="170" fill="#fbfcfe" stroke="#dce4eb"/><circle cx="220" cy="220" r="104" fill="none" stroke="#edf1f5" stroke-dasharray="4 5"/>';
+          if (ab) {
+            [0, 120, -120].forEach((angle, i) => {
+              let xx = Math.cos(angle * R),
+                yy = Math.sin(angle * R);
+              h += `<line x1="${C - 170 * xx}" y1="${C + 170 * yy}" x2="${C + 170 * xx}" y2="${C - 170 * yy}" stroke="#cdd7e0"/><text x="${C + 183 * xx}" y="${C - 183 * yy}" text-anchor="middle" fill="#6a7d90" font-size="16">${"abc"[i]}</text>`;
+            });
+          } else
+            h +=
+              '<line x1="45" y1="220" x2="395" y2="220" stroke="#b4c2d0"/><line x1="220" y1="45" x2="220" y2="395" stroke="#b4c2d0"/><text x="398" y="216" fill="#7c8da1">α</text><text x="225" y="48" fill="#7c8da1">β</text>';
+          if (s.stage >= 3)
+            [0, 90].forEach((off, i) => {
+              let a = (v.frame + off) * R,
+                col = i ? vectorColors.q : vectorColors.d;
+              h += `<line x1="${C - 173 * Math.cos(a)}" y1="${C + 173 * Math.sin(a)}" x2="${C + 173 * Math.cos(a)}" y2="${C - 173 * Math.sin(a)}" stroke="${col}" stroke-dasharray="5 4"/><text x="${C + 188 * Math.cos(a)}" y="${C - 188 * Math.sin(a)}" text-anchor="middle" fill="${col}">${i ? "q" : "d"}</text>`;
+            });
+          if (s.stage === 4)
+            h += `<g transform="rotate(${-v.frame} 220 220)"><circle cx="220" cy="220" r="45" fill="#f3f6f9" stroke="#b5c3d0"/><path d="M220 175 A45 45 0 0 1 220 265 L220 220 Z" fill="#d76565"/><path d="M220 265 A45 45 0 0 1 220 175 L220 220 Z" fill="#6c9cc3"/><text x="247" y="225" fill="white">N</text><text x="193" y="225" fill="white">S</text></g>`;
+          lines.forEach(([t, xx, yy]) => {
+            let p = P(xx, yy),
+              col = vectorColors[t];
+            h += `<line x1="220" y1="220" x2="${p[0]}" y2="${p[1]}" stroke="${col}" stroke-width="2.5" marker-end="url(#arr-${t})"/><text x="${p[0] + 9}" y="${p[1] - 8}" fill="${col}" font-size="14" font-weight="bold">${sym}${t === "alpha" ? "α" : t === "beta" ? "β" : t}</text>`;
+          });
+          if (ab) {
+            let xx = 0,
+              yy = 0;
+            lines.forEach(([t, dx, dy]) => {
+              let a = P(xx, yy);
+              xx += dx;
+              yy += dy;
+              let b = P(xx, yy);
+              h += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${vectorColors[t]}" opacity=".75" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arr-${t})"/>`;
+            });
+          }
+          h += `<line x1="220" y1="220" x2="${sum[0]}" y2="${sum[1]}" stroke="#233746" stroke-width="3.4" marker-end="url(#arr-sum)"/><text x="${sum[0] + 12}" y="${sum[1] + 14}" fill="#233746" font-size="17" font-weight="bold">${sym}ₛ${raw ? ", raw" : ""}</text><circle cx="220" cy="220" r="3" fill="#26394d"/>`;
+          $("vector").innerHTML = h;
+          $("vectorCaption").textContent =
+            `|${sym}ₛ${raw ? ",raw" : ""}| = ${f(raw ? Math.hypot(v.rawX, v.rawY) : v.mag)} ${meta[s.quantity][1]} · ∠${sym}ₛ = ${v.mag < 1e-8 ? "undefined" : f(raw ? Math.atan2(v.rawY, v.rawX) / R : v.vectorAngle, 1) + "°"}${s.stage >= 3 ? " · θₖ = " + f(v.frame, 1) + "°" : ""}`;
+        }
+        function drawCalculation() {
+          let v = calc(s.theta),
+            sym = meta[s.quantity][0],
+            x = sym === "ψ" ? "\\psi" : sym,
+            unit = meta[s.quantity][1],
+            fn = s.waveform === "cos" ? "\\cos" : "\\sin",
+            sign = s.sequence === 1 ? "-" : "+",
+            other = s.sequence === 1 ? "+" : "-",
+            eq = [];
+          if (s.stage === 0) {
+            eq.push(
+              `\\hat e_a=1\\angle0^\\circ,\\quad\\hat e_b=1\\angle120^\\circ,\\quad\\hat e_c=1\\angle-120^\\circ`,
+            );
+            eq.push(
+              `\\underline ${x}_{\\rm raw}=${x}_a\\hat e_a+${x}_b\\hat e_b+${x}_c\\hat e_c`,
+            );
+            eq.push(
+              `\\underline ${x}_{\\rm raw}=(${f(v.rawX)}+j\\,${f(v.rawY)})\\,\\mathrm{${unit}}`,
+            );
+          }
+          eq.push(
+            `\\begin{aligned}${x}_a&=${f(s.amps[0], 1)}${fn}(\\theta)=${f(v.abc[0])}\\\\${x}_b&=${f(s.amps[1], 1)}${fn}(\\theta${sign}120^\\circ)=${f(v.abc[1])}\\\\${x}_c&=${f(s.amps[2], 1)}${fn}(\\theta${other}120^\\circ)=${f(v.abc[2])}\\end{aligned}`,
+          );
+          if (s.stage > 0)
+            eq.push(
+              `\\begin{aligned}${x}_\\alpha&=${f(scale(), 4)}[${x}_a-\\tfrac12(${x}_b+${x}_c)]=${f(v.alpha)}\\\\${x}_\\beta&=${f(scale(), 4)}\\tfrac{\\sqrt3}{2}(${x}_b-${x}_c)=${f(v.beta)}\\\\${x}_0&=(${x}_a+${x}_b+${x}_c)/3=${f(v.zero)}\\end{aligned}`,
+            );
+          if (s.stage >= 3)
+            eq.push(
+              `\\begin{aligned}\\theta_k&=${f(v.frame, 1)}^\\circ\\\\${x}_d&=${x}_\\alpha\\cos\\theta_k+${x}_\\beta\\sin\\theta_k=${f(v.d)}\\\\${x}_q&=-${x}_\\alpha\\sin\\theta_k+${x}_\\beta\\cos\\theta_k=${f(v.q)}\\end{aligned}`,
+            );
+          $("calcTitle").textContent =
+            s.stage === 0
+              ? "Build one vector from three phase values"
+              : "Calculation at the selected angle";
+          $("equations").innerHTML =
+            eq.map((e) => `<div class="math">\\[${e}\\]</div>`).join("") +
+            (s.stage > 0
+              ? `<small>${Math.abs(v.zero) > 0.001 ? "Zero-sequence component present; αβ alone cannot reconstruct all three phases." : "Zero sequence is zero at this instant."}</small>`
+              : "");
+          window.MathJax?.typesetPromise?.([$("equations")]).catch(() => {});
+        }
+        function render() {
+          drawControls();
+          $("stageTitle").textContent = `STEP 0${s.stage} · ${titles[s.stage]}`;
+          $("scaleBadge").textContent =
+            s.stage === 0
+              ? "raw sum · k = 1"
+              : `k = ${s.scale === "amplitude" ? "2/3" : s.scale === "power" ? "√(2/3)" : "1"}`;
+          $("conceptStrip").hidden = s.stage !== 0;
+          $("conceptStrip").innerHTML =
+            `<div><strong>1 · Signed scalars</strong><span>${meta[s.quantity][0]}ₐ, ${meta[s.quantity][0]}ᵦ, ${meta[s.quantity][0]}𝒸 are values in ${meta[s.quantity][1]}.</span></div><div><strong>2 · Fixed directions</strong><span>a: 0° · b: +120° · c: −120°</span></div><div><strong>3 · One sum</strong><span>Multiply each value by its unit axis, then add.</span></div>`;
+          $("insight").textContent = insights[s.stage];
+          drawVector();
+          drawPlot();
+          drawCalculation();
+        }
+        const helpBodies = [
+          `<h3>1 · From numbers to directions</h3><p>A phase quantity xₐ(t), xᵦ(t), or x𝒸(t) is a signed scalar at an instant. Represent the three phase axes by unit vectors fixed 120° apart: a at 0°, b at +120°, and c at −120° electrical. Multiply each signed value by its axis unit vector. A negative value reverses the arrow along that axis.</p><p>\\[\\hat e_a=1,\\quad\\hat e_b=e^{j2\\pi/3},\\quad\\hat e_c=e^{-j2\\pi/3}\\]</p><h3>2 · Add three directed contributions</h3><p>Add the three arrows head to tail in one plane. Their result is the instantaneous space vector. Step 0 shows the raw geometric sum (k = 1); later steps apply your chosen Clarke scale.</p><p>\\[\\underline x_s=k(x_a\\hat e_a+x_b\\hat e_b+x_c\\hat e_c)=x_\\alpha+jx_\\beta\\]</p><p>The horizontal and vertical components are xα and xβ. Its magnitude is √(xα²+xβ²), and its angle is atan2(xβ,xα) when the magnitude is nonzero.</p><h3>3 · What does x stand for?</h3><p>Set x = i for phase currents (A), x = v for phase voltages (V), or x = ψ for flux linkages (Wb). The geometry and transformation are the same; the physical quantity and units change. A voltage space vector is a representation of voltages, not a magnetic-field arrow. A current space vector relates to a physical field through winding turns and geometry.</p><h3>4 · Watch it rotate</h3><p>With equal sinusoidal peaks and positive a-b-c sequence, the amplitude-scaled vector has constant magnitude and rotates counterclockwise. Reversing the b and c phase shifts reverses rotation; unequal peaks usually make the magnitude vary. Sine shifts the starting position relative to cosine.</p><p><a href="https://app.notion.com/p/e538432bbf5f4d19895dc8caa072bc7f" target="_blank" rel="noopener noreferrer">Space-vector and rotating-field reference in Notion ↗</a></p>`,
+          `<h3>Three-phase contributions</h3><p>The stationary phase axes a, b, and c are separated by 120° electrical. At each angle θ, each phase value multiplies its own axis. A negative phase value reverses the corresponding arrow. Dashed arrows show head-to-tail addition; the dark arrow is the sum.</p><p>\\[\\underline x_s=k\\left(x_a+x_b e^{j2\\pi/3}+x_c e^{-j2\\pi/3}\\right)\\]</p><p>With equal amplitudes and cosine inputs, b delayed 120° and c advanced 120° produce counterclockwise rotation. Swapping those offsets reverses rotation. Unequal amplitudes generally make the vector magnitude change through a cycle. Choosing sine instead of cosine shifts the starting angle.</p><p><a href="https://app.notion.com/p/e538432bbf5f4d19895dc8caa072bc7f" target="_blank" rel="noopener noreferrer">Rotating magnetic field in Notion ↗</a></p>`,
+          `<h3>Clarke: the stationary αβ view</h3><p>Clarke describes the same space vector with two perpendicular stationary axes. +α coincides with +a, while +β leads +α by 90°. It does not change the physical three-phase quantity; it changes its coordinates.</p><p>\\[\\begin{bmatrix}x_\\alpha\\\\x_\\beta\\end{bmatrix}=k\\begin{bmatrix}1&-\\tfrac12&-\\tfrac12\\\\0&\\tfrac{\\sqrt3}{2}&-\\tfrac{\\sqrt3}{2}\\end{bmatrix}\\begin{bmatrix}x_a\\\\x_b\\\\x_c\\end{bmatrix},\\quad x_0=\\tfrac{x_a+x_b+x_c}{3}\\]</p><p>Choose k = 1 for the raw geometric sum, k = 2/3 for amplitude invariance (a balanced phase peak Xₘ becomes space-vector magnitude Xₘ), or k = √(2/3) for power invariance of the αβ part. This app always displays x₀ as the phase average; a fully power-invariant three-axis zero coordinate would use (xₐ+xᵦ+x𝒸)/√3. The shortcut xα = xₐ holds only if zero sequence is zero.</p><p><a href="https://app.notion.com/p/1398a041f4618072a2cee4280af2bfe7" target="_blank" rel="noopener noreferrer">Clarke transformation in Notion ↗</a></p>`,
+          `<h3>Park: the rotating dq view</h3><p>The dq axes rotate together. Angle θₖ is measured counterclockwise from stationary +α to +d; +q leads +d by 90°. Park projects the same αβ vector onto those moving axes.</p><p>\\[\\begin{bmatrix}x_d\\\\x_q\\end{bmatrix}=\\begin{bmatrix}\\cos\\theta_k&\\sin\\theta_k\\\\-\\sin\\theta_k&\\cos\\theta_k\\end{bmatrix}\\begin{bmatrix}x_\\alpha\\\\x_\\beta\\end{bmatrix}\\]</p><p>For balanced ideal inputs and δ = 0°, +d tracks the vector, so xq = 0. At δ = +90°, the vector lies along +q and xd = 0. With unequal phase amplitudes, xd and xq can ripple even when the frame rotates at nominal synchronous speed. Vector angle is undefined when its magnitude is zero.</p><p><a href="https://app.notion.com/p/1398a041f4618072a2cee4280af2bfe7" target="_blank" rel="noopener noreferrer">Clarke versus Park in Notion ↗</a></p>`,
+          `<h3>From reference frames to PMSM control</h3><p>For PMSM field-oriented control, the d axis aligns with calibrated rotor permanent-magnet flux. The angle supplied to Park must be rotor electrical position, including pole-pair conversion and sensor offset. It is not automatically the measured current-vector angle. The δ control illustrates their relative geometry.</p><p>\\[T_e=\\tfrac32 p\\left[\\lambda_m i_q+(L_d-L_q)i_di_q\\right]\\]</p><p>For a surface PMSM with Ld ≈ Lq, iq supplies the magnet torque term; choosing id near zero is one common operating strategy. Voltage commands use inverse Park and Clarke transformations (dq → αβ → abc) before PWM. This page shows geometry rather than a motor torque simulation.</p><p><a href="https://app.notion.com/p/3fb0ba47e16f46a1847f0725fbebd07d" target="_blank" rel="noopener noreferrer">PMSM modeling in the synchronous frame ↗</a> · <a href="https://app.notion.com/p/d5c4335e472e44ce82f957d4285cd4de" target="_blank" rel="noopener noreferrer">PMSM FOC current-control context ↗</a></p>`,
+        ];
+        function openHelp(title, html) {
+          $("helpTitle").textContent = title;
+          $("helpBody").innerHTML = html;
+          $("help").showModal();
+          window.MathJax?.typesetPromise?.([$("helpBody")]).catch(() => {});
+        }
+        $("conceptHelp").onclick = () =>
+          openHelp(
+            `Step 0${s.stage} · ${stages[s.stage]}`,
+            helpBodies[s.stage],
+          );
+        $("inputHelp").onclick = () =>
+          openHelp(
+            "Understanding the inputs",
+            "<p><strong>Quantity.</strong> Use x = i for current, x = v for phase voltage, or x = ψ for flux linkage. The coordinate operation is the same; its interpretation and units change.</p><p><strong>Phase values.</strong> Each number is a signed scalar. Multiply it by the unit vector of its fixed phase axis, then add the arrows.</p><p><strong>Phase shifts.</strong> The first choice gives positive a-b-c sequence and counterclockwise rotation; reversing offsets reverses rotation.</p><p><strong>Clarke scale.</strong> Step 0 draws the raw sum; later steps apply the chosen scale.</p><p><strong>Electrical angle.</strong> Drag the slider or click the waveform plot. Play animates the angle.</p>",
+          );
+        $("closeHelp").onclick = () => $("help").close();
+        $("reset").onclick = () => {
+          pause();
+          Object.assign(s, {
+            stage: 0,
+            quantity: "current",
+            theta: 0,
+            amps: [5, 5, 5],
+            waveform: "cos",
+            sequence: 1,
+            scale: "amplitude",
+            delta: 0,
+          });
+          render();
+        };
+        $("angle").oninput = (e) => {
+          pause();
+          s.theta = Number(e.target.value);
+          render();
+        };
+        $("delta").oninput = (e) => {
+          s.delta = Number(e.target.value);
+          render();
+        };
+        $("play").onclick = () => {
+          if (s.playing) {
+            pause();
+            render();
+            return;
+          }
+          s.playing = true;
+          timer = setInterval(() => {
+            s.theta = wrap(s.theta + 2.5);
+            render();
+          }, 75);
+          render();
+        };
+        render();
+        window.addEventListener("load", () =>
+          window.MathJax?.typesetPromise?.().catch(() => {}),
+        );
+      })();
+    </script>
+  </body>
+</html>
