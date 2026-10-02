@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rectifier Waveform Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        /* Custom Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #4C72B0;
+            cursor: pointer;
+            margin-top: -6px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #ddd;
+            border-radius: 2px;
+        }
+
+        .control-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4C72B0;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4C72B0;
+        }
+        
+        canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col lg:flex-row overflow-hidden">
+
+    <!-- Sidebar Controls -->
+    <div class="w-full lg:w-80 bg-white border-r border-gray-200 p-6 flex flex-col overflow-y-auto z-10 shadow-lg">
+        <h1 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            Rectifier Lab
+        </h1>
+
+        <!-- Configuration -->
+        <div class="control-group">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Configuration</label>
+            
+            <div class="flex bg-gray-100 p-1 rounded-lg mb-3">
+                <button id="btnHalf" class="flex-1 py-1.5 text-sm font-medium rounded-md bg-white shadow text-gray-800 transition-all" onclick="setRectifierType('half')">Half Wave</button>
+                <button id="btnFull" class="flex-1 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 transition-all" onclick="setRectifierType('full')">Full Wave</button>
+            </div>
+
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-gray-700">Capacitor Filter</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="checkFilter" class="sr-only peer" onchange="updateSim()">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+        </div>
+
+        <hr class="border-gray-100 my-4">
+
+        <!-- Parameters -->
+        <div class="control-group">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Parameters</label>
+
+            <div class="mb-4">
+                <div class="flex justify-between mb-1">
+                    <label class="text-sm text-gray-600">Peak Voltage (Vm)</label>
+                    <span id="valVm" class="text-sm font-mono text-blue-600">12V</span>
+                </div>
+                <input type="range" id="rangeVm" min="5" max="50" value="12" step="1" oninput="updateSim()">
+            </div>
+
+            <div class="mb-4">
+                <div class="flex justify-between mb-1">
+                    <label class="text-sm text-gray-600">Diode Drop (Vf)</label>
+                    <span id="valVf" class="text-sm font-mono text-blue-600">0.7V</span>
+                </div>
+                <input type="range" id="rangeVf" min="0" max="2.0" value="0.7" step="0.1" oninput="updateSim()">
+            </div>
+
+            <div class="mb-4">
+                <div class="flex justify-between mb-1">
+                    <label class="text-sm text-gray-600">Load Resistance (RL)</label>
+                    <span id="valR" class="text-sm font-mono text-blue-600">100Ω</span>
+                </div>
+                <input type="range" id="rangeR" min="10" max="1000" value="100" step="10" oninput="updateSim()">
+            </div>
+
+            <div class="mb-4">
+                <div class="flex justify-between mb-1">
+                    <label class="text-sm text-gray-600">Capacitance (C)</label>
+                    <span id="valC" class="text-sm font-mono text-blue-600">470μF</span>
+                </div>
+                <input type="range" id="rangeC" min="10" max="2000" value="470" step="10" oninput="updateSim()">
+            </div>
+            
+            <div class="mb-2">
+                <div class="flex justify-between mb-1">
+                    <label class="text-sm text-gray-600">Frequency (f)</label>
+                    <span id="valFreq" class="text-sm font-mono text-blue-600">50Hz</span>
+                </div>
+                <input type="range" id="rangeFreq" min="10" max="100" value="50" step="5" oninput="updateSim()">
+            </div>
+        </div>
+
+        <!-- Formulas -->
+        <div class="mb-4">
+             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Design Equations</label>
+             <div id="formulaContainer" class="bg-blue-50 p-3 rounded border border-blue-100 text-gray-800">
+                <!-- Injected via JS -->
+             </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="mt-auto bg-gray-50 p-4 rounded-lg border border-gray-100">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-xs text-gray-500">Avg Output (Vdc)</span>
+                <span id="statVdc" class="text-sm font-bold text-gray-800">--</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-gray-500">Ripple (Vpp)</span>
+                <span id="statVpp" class="text-sm font-bold text-gray-800">--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content / Canvas -->
+    <div class="flex-1 bg-gray-50 p-4 lg:p-8 flex flex-col overflow-hidden relative">
+        <div class="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 relative overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-gray-100 bg-white flex justify-between items-center">
+                <h2 class="font-semibold text-gray-700">Waveform Analysis</h2>
+                <div class="flex gap-4 text-xs font-medium">
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-gray-300"></span> Input AC</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#4C72B0]"></span> Output Voltage</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#C44E52]"></span> Avg DC</div>
+                </div>
+            </div>
+            <div class="flex-1 relative w-full h-full" id="canvasContainer">
+                <canvas id="scopeCanvas" class="w-full h-full"></canvas>
+            </div>
+        </div>
+        
+        <!-- Legend for Current (Bottom Strip) -->
+        <div class="h-12 flex items-center justify-end px-4 gap-4 text-xs font-medium text-gray-500">
+             <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-[#E6A035]"></span> Diode Current</div>
+        </div>
+    </div>
+
+    <script>
+        // --- Simulation Logic ---
+
+        const canvas = document.getElementById('scopeCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvasContainer');
+
+        let rectType = 'half'; // 'half' or 'full'
+
+        // Parameters
+        let params = {
+            Vm: 12,
+            Vf: 0.7,
+            R: 100,
+            C: 470e-6,
+            freq: 50,
+            hasFilter: false,
+            Rs: 0.5 // Source/Diode series resistance (very small, controls charging speed)
+        };
+
+        // UI References
+        const ui = {
+            btnHalf: document.getElementById('btnHalf'),
+            btnFull: document.getElementById('btnFull'),
+            rangeVm: document.getElementById('rangeVm'),
+            rangeVf: document.getElementById('rangeVf'),
+            rangeR: document.getElementById('rangeR'),
+            rangeC: document.getElementById('rangeC'),
+            rangeFreq: document.getElementById('rangeFreq'),
+            checkFilter: document.getElementById('checkFilter'),
+            // Labels
+            valVm: document.getElementById('valVm'),
+            valVf: document.getElementById('valVf'),
+            valR: document.getElementById('valR'),
+            valC: document.getElementById('valC'),
+            valFreq: document.getElementById('valFreq'),
+            // Stats
+            statVdc: document.getElementById('statVdc'),
+            statVpp: document.getElementById('statVpp'),
+        };
+
+        function updateFormulas() {
+            const container = document.getElementById('formulaContainer');
+            let html = '';
+            
+            // Inline styles for math formatting
+            const math = 'font-family: "Times New Roman", serif; font-size: 1.1em;';
+            const italic = 'font-style: italic;';
+            
+            if (!params.hasFilter) {
+                // No Filter
+                const num = rectType === 'half' ? '1' : '2';
+                html = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs text-gray-500">Average DC</span>
+                        <span style="${math}"><span style="${italic}">V<sub>dc</sub></span> = <span class="inline-block text-center" style="vertical-align:middle; line-height:1;"><span style="border-bottom:1px solid black;">${num}(<span style="${italic}">V<sub>m</sub></span> - <span style="${italic}">V<sub>f</sub></span>)</span><br><span>π</span></span></span>
+                    </div>
+                `;
+            } else {
+                // With Filter
+                const fMult = rectType === 'half' ? '' : '2';
+                html = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-gray-500">Ripple (pp)</span>
+                        <span style="${math}"><span style="${italic}">V<sub>r</sub></span> ≈ <span class="inline-block text-center" style="vertical-align:middle; line-height:1;"><span style="border-bottom:1px solid black; ${italic}">I<sub>load</sub></span><br><span>${fMult}<span style="${italic}">fC</span></span></span></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">Average DC</span>
+                        <span style="${math}"><span style="${italic}">V<sub>dc</sub></span> ≈ <span style="${italic}">V<sub>m</sub></span> - <span class="inline-block text-center" style="vertical-align:middle; line-height:1;"><span style="border-bottom:1px solid black; ${italic}">V<sub>r</sub></span><br><span>2</span></span></span>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function setRectifierType(type) {
+            rectType = type;
+            // Update button styles
+            if (type === 'half') {
+                ui.btnHalf.classList.add('bg-white', 'shadow', 'text-gray-800');
+                ui.btnHalf.classList.remove('text-gray-500');
+                ui.btnFull.classList.remove('bg-white', 'shadow', 'text-gray-800');
+                ui.btnFull.classList.add('text-gray-500');
+            } else {
+                ui.btnFull.classList.add('bg-white', 'shadow', 'text-gray-800');
+                ui.btnFull.classList.remove('text-gray-500');
+                ui.btnHalf.classList.remove('bg-white', 'shadow', 'text-gray-800');
+                ui.btnHalf.classList.add('text-gray-500');
+            }
+            updateSim();
+        }
+
+        function updateSim() {
+            // Read UI values
+            params.Vm = parseFloat(ui.rangeVm.value);
+            params.Vf = parseFloat(ui.rangeVf.value);
+            params.R = parseFloat(ui.rangeR.value);
+            params.C = parseFloat(ui.rangeC.value) * 1e-6; // Convert uF to F
+            params.freq = parseFloat(ui.rangeFreq.value);
+            params.hasFilter = ui.checkFilter.checked;
+
+            // Update Label Text
+            ui.valVm.innerText = params.Vm + "V";
+            ui.valVf.innerText = params.Vf + "V";
+            ui.valR.innerText = params.R + "Ω";
+            ui.valC.innerText = ui.rangeC.value + "μF";
+            ui.valFreq.innerText = params.freq + "Hz";
+
+            updateFormulas();
+            runSimulation();
+        }
+
+        function runSimulation() {
+            // Ensure canvas is sized correctly BEFORE calculations
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            const width = canvas.width;
+            
+            // Simulation Time Settings
+            const cyclesToShow = 3.5;
+            const period = 1 / params.freq;
+            const totalTime = cyclesToShow * period;
+            
+            // Sub-stepping setup:
+            // One screen pixel represents 'dt_pixel' time.
+            // But physics needs finer steps to capture the fast charging spike.
+            // We'll perform 'physicsSubSteps' calculation steps for every 1 pixel.
+            const physicsSubSteps = 20; 
+            const dt_pixel = totalTime / width;
+            const dt_physics = dt_pixel / physicsSubSteps;
+            
+            const dataPoints = [];
+            
+            let v_cap = 0; // Initial capacitor voltage
+            
+            // --- Helper: Physics Update Function ---
+            // Returns { v_out, i_diode } for a single physics step at time t
+            function stepPhysics(t, currentVCap) {
+                let Vin = params.Vm * Math.sin(2 * Math.PI * params.freq * t);
+                let effectiveDrop = rectType === 'half' ? params.Vf : params.Vf * 2;
+                
+                // Determine the driving voltage (Voltage at the anode side basically)
+                // For bridge, it's |Vin|. For half, it's Vin (but blocked if negative).
+                let drivingVoltage = 0;
+                if (rectType === 'half') {
+                    drivingVoltage = Vin;
+                } else {
+                    drivingVoltage = Math.abs(Vin);
+                }
+
+                // If voltage is negative (Half wave reverse bias), potential to charge is negligible
+                if (rectType === 'half' && drivingVoltage < 0) {
+                    drivingVoltage = -9999; 
+                }
+
+                let potential = drivingVoltage - effectiveDrop;
+                let nextVCap = currentVCap;
+                let i_diode = 0;
+
+                if (params.hasFilter) {
+                    if (potential > currentVCap) {
+                        // Diode ON (Charging)
+                        // Current is driven by difference in potential across Source Resistor
+                        i_diode = (potential - currentVCap) / params.Rs;
+                        let i_load = currentVCap / params.R;
+                        
+                        // dv = I_net * dt / C
+                        let dv = (i_diode - i_load) * dt_physics / params.C;
+                        nextVCap += dv;
+                        
+                        // Clamp: Capacitor voltage cannot exceed driving potential instantly 
+                        // (prevents overshoot with large steps/small C)
+                        if (nextVCap > potential) nextVCap = potential; 
+                    } else {
+                        // Diode OFF (Discharging)
+                        i_diode = 0;
+                        let i_load = currentVCap / params.R;
+                        let dv = -(i_load) * dt_physics / params.C;
+                        nextVCap += dv;
+                    }
+                    if (nextVCap < 0) nextVCap = 0;
+                    return { v_out: nextVCap, i_diode: i_diode, v_c_new: nextVCap, v_raw: potential > 0 ? potential : 0, v_in: Vin };
+                } else {
+                    // No Filter
+                    let rawOut = potential > 0 ? potential : 0;
+                    return { v_out: rawOut, i_diode: rawOut / params.R, v_c_new: 0, v_raw: rawOut, v_in: Vin };
+                }
+            }
+
+            // --- Pre-run Simulation (Settle State) ---
+            // We run for some cycles to get v_cap to steady state
+            if (params.hasFilter) {
+                let settleTime = 0.2; // Run for 0.2s
+                let steps = settleTime / dt_physics;
+                for(let i=0; i<steps; i++) {
+                    let simT = i * dt_physics;
+                    let res = stepPhysics(simT, v_cap);
+                    v_cap = res.v_c_new;
+                }
+                // Important: Adjust 't' offset logic if we wanted perfect phase matching, 
+                // but since we restart 't=0' for the plot, we just assume v_cap starts 
+                // at roughly the valley or peak depending on where 0.2s landed.
+                // Actually, to make the graph look 'steady', we should start v_cap at the value
+                // it WOULD have at t=0 (which is 0 phase).
+                // Let's run a full integer number of periods for pre-run to end at phase 0.
+                let periodsToRun = 10;
+                let stepsPhase = (periodsToRun * period) / dt_physics;
+                for(let i=0; i<stepsPhase; i++) {
+                    let simT = i * dt_physics;
+                    let res = stepPhysics(simT, v_cap);
+                    v_cap = res.v_c_new;
+                }
+            } else {
+                v_cap = 0;
+            }
+
+            // --- Main Data Generation Loop ---
+            let sumVout = 0;
+            let maxVout = -Infinity;
+            let minVout = Infinity;
+            let count = 0;
+            
+            // We track time 't' starting from 0 for the graph
+            let t = 0;
+
+            for (let x = 0; x < width; x++) {
+                // For each pixel, we run multiple physics steps
+                let pixelVout = 0;
+                let pixelIin = 0;
+                let pixelVin = 0;
+
+                // We capture the state at the end of the sub-steps for plotting
+                // or we could average them. Sampling the last point is usually fine for dense simulation.
+                for(let s=0; s<physicsSubSteps; s++) {
+                    t += dt_physics;
+                    let res = stepPhysics(t, v_cap);
+                    v_cap = res.v_c_new;
+                    
+                    // Capture values
+                    if(s === physicsSubSteps - 1) {
+                       pixelVout = res.v_out;
+                       pixelIin = res.i_diode;
+                       pixelVin = res.v_in;
+                    }
+                }
+
+                dataPoints.push({
+                    t: t,
+                    Vin: pixelVin,
+                    Vout: pixelVout,
+                    Iin: pixelIin
+                });
+
+                sumVout += pixelVout;
+                if(pixelVout > maxVout) maxVout = pixelVout;
+                if(pixelVout < minVout) minVout = pixelVout;
+                count++;
+            }
+
+            let avgVout = sumVout / count;
+            
+            // Update Stats
+            ui.statVdc.innerText = avgVout.toFixed(2) + " V";
+            ui.statVpp.innerText = params.hasFilter ? (maxVout - minVout).toFixed(2) + " V" : "--";
+
+            drawPlot(dataPoints, avgVout);
+        }
+
+        // --- Drawing Logic (Seaborn Style) ---
+        function drawPlot(data, avgVout) {
+            const w = canvas.width;
+            const h = canvas.height;
+            const pad = { top: 20, bottom: 20, left: 50, right: 20 };
+            
+            // Layout: Top 70% Voltage, Bottom 30% Current
+            const hVoltage = (h * 0.7) - pad.top;
+            const hCurrent = (h * 0.3) - pad.bottom;
+            const yZeroVoltage = pad.top + hVoltage / 2; 
+            const yZeroCurrent = h - pad.bottom - 10; 
+
+            // Background
+            ctx.fillStyle = "#EAEAF2";
+            ctx.fillRect(0, 0, w, h);
+
+            // Scale calculations
+            // Voltage Y scale: fit Vm + headroom
+            let maxV = params.Vm * 1.2;
+            let yScaleV = (hVoltage / 2) / maxV;
+            
+            // Current Y scale: Find max current
+            let maxI = 0;
+            data.forEach(d => { if(d.Iin > maxI) maxI = d.Iin; });
+            if (maxI < 0.1) maxI = 0.5; // Minimum scale
+            let yScaleI = (hCurrent * 0.8) / maxI;
+
+            // --- Draw Grid ---
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            
+            // Horizontal lines (Voltage)
+            const vSteps = 5;
+            for(let i = -vSteps; i <= vSteps; i++) {
+                let y = yZeroVoltage - (i * (maxV/vSteps) * yScaleV);
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(w - pad.right, y);
+                
+                // Axis Labels
+                ctx.fillStyle = "#888";
+                ctx.font = "10px Inter";
+                ctx.textAlign = "right";
+                ctx.fillText((i * (maxV/vSteps)).toFixed(0) + "V", pad.left - 5, y + 3);
+            }
+            
+            // Horizontal lines (Current)
+            ctx.moveTo(pad.left, yZeroCurrent);
+            ctx.lineTo(w-pad.right, yZeroCurrent);
+            ctx.fillText("0A", pad.left - 5, yZeroCurrent + 3);
+            
+            let yMaxI = yZeroCurrent - (maxI * yScaleI);
+            ctx.moveTo(pad.left, yMaxI);
+            ctx.lineTo(w-pad.right, yMaxI);
+            ctx.fillText(maxI.toFixed(1) + "A", pad.left - 5, yMaxI + 3);
+
+            // Vertical lines (Time)
+            const tSteps = 10;
+            for(let i = 0; i <= tSteps; i++) {
+                let x = pad.left + (i/tSteps) * (w - pad.left - pad.right);
+                ctx.moveTo(x, pad.top);
+                ctx.lineTo(x, h - pad.bottom);
+            }
+            ctx.stroke();
+
+            // Draw Separation Line between plots
+            ctx.strokeStyle = "#ccc";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(pad.left, pad.top + hVoltage + 10);
+            ctx.lineTo(w - pad.right, pad.top + hVoltage + 10);
+            ctx.stroke();
+
+            // Function to map data index to X
+            const getX = (i) => pad.left + (i / data.length) * (w - pad.left - pad.right);
+
+            // --- 1. Draw Input AC (Vin) ---
+            ctx.beginPath();
+            ctx.strokeStyle = "#ccc";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            for (let i = 0; i < data.length; i++) {
+                let x = getX(i);
+                let y = yZeroVoltage - (data[i].Vin * yScaleV);
+                if (i===0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset
+
+            // --- 2. Draw Output Voltage (Vout) ---
+            ctx.beginPath();
+            ctx.strokeStyle = "#4C72B0"; // Seaborn Blue
+            ctx.lineWidth = 3;
+            for (let i = 0; i < data.length; i++) {
+                let x = getX(i);
+                let y = yZeroVoltage - (data[i].Vout * yScaleV);
+                if (i===0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // --- 3. Draw Average Voltage (Vavg) ---
+            ctx.beginPath();
+            ctx.strokeStyle = "#C44E52"; // Seaborn Red
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 5]);
+            let yAvg = yZeroVoltage - (avgVout * yScaleV);
+            ctx.moveTo(pad.left, yAvg);
+            ctx.lineTo(w - pad.right, yAvg);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Label for Average
+            ctx.fillStyle = "#C44E52";
+            ctx.fillText("Vdc", w - pad.right - 20, yAvg - 5);
+
+            // --- 4. Draw Current (Iin) ---
+            ctx.beginPath();
+            ctx.strokeStyle = "#E6A035"; // Yellow/Orange
+            ctx.lineWidth = 2;
+            for (let i = 0; i < data.length; i++) {
+                let x = getX(i);
+                let y = yZeroCurrent - (data[i].Iin * yScaleI);
+                if (i===0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Fill Current area
+            ctx.lineTo(getX(data.length-1), yZeroCurrent);
+            ctx.lineTo(getX(0), yZeroCurrent);
+            ctx.fillStyle = "rgba(230, 160, 53, 0.2)";
+            ctx.fill();
+
+            // Labels for Plots
+            ctx.fillStyle = "#555";
+            ctx.font = "bold 12px Inter";
+            ctx.textAlign = "left";
+            ctx.fillText("Voltage (V)", pad.left + 10, pad.top + 15);
+            ctx.fillText("Diode Current (A)", pad.left + 10, pad.top + hVoltage + 25);
+        }
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            updateSim();
+        });
+
+        // Initialize
+        updateSim();
+
+    </script>
+</body>
+</html>

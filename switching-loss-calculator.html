@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Loss & Transient Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #1c1b1f;
+        }
+        h1, h2, h3, .serif-font {
+            font-family: 'Spectral', serif;
+        }
+        
+        /* Custom Input Styling */
+        input[type="number"] {
+            transition: all 0.2s;
+            background-color: #fcfcfc;
+        }
+        input[type="number"]:focus {
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.1);
+            border-color: #3f51b5;
+            outline: none;
+        }
+
+        /* Tooltip Styling */
+        .tooltip-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: help;
+        }
+        .tooltip-icon {
+            margin-left: 6px;
+            color: #9ca3af;
+            font-size: 0.8rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            width: 240px;
+            background-color: #1f2937;
+            color: #f9fafb;
+            text-align: left;
+            border-radius: 4px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 20;
+            bottom: 140%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, bottom 0.2s;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            font-weight: 400;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+            bottom: 125%;
+        }
+
+        .hidden-group { display: none !important; }
+        
+        #results-container, #plot-container {
+            transition: all 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+
+    <header class="max-w-6xl mx-auto mb-10 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-2">Power Loss Simulator</h1>
+        <p class="text-gray-500 tracking-wide uppercase text-xs font-semibold">Transient Analysis for Power Electronics</p>
+    </header>
+
+    <div class="max-w-6xl mx-auto grid lg:grid-cols-12 gap-8">
+        
+        <!-- INPUT SECTION -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <!-- Method Selection -->
+                <div class="mb-8">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Calculation Method</label>
+                    <div class="grid grid-cols-3 gap-0 bg-gray-100 p-1 rounded-lg">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="input-method" value="charge" class="sr-only peer" checked>
+                            <div class="py-2 text-xs font-semibold text-center rounded-md text-gray-500 transition-all peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm">Gate Charge</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="input-method" value="capacitance" class="sr-only peer">
+                            <div class="py-2 text-xs font-semibold text-center rounded-md text-gray-500 transition-all peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm">Capacitance</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="input-method" value="eon-eoff" class="sr-only peer">
+                            <div class="py-2 text-xs font-semibold text-center rounded-md text-gray-500 transition-all peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm">Energy</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Operating Conditions -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Operating Points</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Voltage (V<sub>DS</sub>)</label>
+                            <input type="number" id="param-voltage" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="400">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Current (I<sub>D</sub>)</label>
+                            <input type="number" id="param-current" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="10">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Freq (kHz)</label>
+                            <input type="number" id="param-frequency" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Duty (%)</label>
+                            <input type="number" id="param-duty-cycle" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Parameters -->
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Device Params</h3>
+                    
+                    <div class="mb-4">
+                         <div class="tooltip-container mb-1">
+                            <label class="block text-xs font-medium text-gray-500">V<sub>DS,on</sub> (V)</label>
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">On-state voltage drop at operating current.</span>
+                        </div>
+                        <input type="number" id="param-vds-on" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="1.2">
+                    </div>
+
+                    <div class="transient-param-group grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">V<sub>Gate</sub> (V)</label>
+                            <input type="number" id="param-v-drive" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="12">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">R<sub>g,ext</sub> (Ω)</label>
+                            <input type="number" id="param-rg-ext" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="10">
+                        </div>
+                         <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">R<sub>g,int</sub> (Ω)</label>
+                            <input type="number" id="param-rg-int" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="1.5">
+                        </div>
+                        <div>
+                             <div class="tooltip-container mb-1">
+                                <label class="block text-xs font-medium text-gray-500">V<sub>th</sub> (V)</label>
+                                <span class="tooltip-icon">?</span><span class="tooltip-text">Gate Threshold Voltage</span>
+                            </div>
+                            <input type="number" id="param-vth" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="3">
+                        </div>
+                    </div>
+
+                    <div class="transient-param-group mb-4">
+                        <div class="tooltip-container mb-1">
+                            <label class="block text-xs font-medium text-gray-500">V<sub>pl</sub> (Plateau V)</label>
+                            <span class="tooltip-icon">?</span><span class="tooltip-text">Miller Plateau Voltage</span>
+                        </div>
+                        <input type="number" id="param-vpl" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="5">
+                    </div>
+
+                    <!-- Dynamic Params -->
+                    <div class="charge-param-group grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Q<sub>gs</sub> (nC)</label>
+                            <input type="number" id="param-qgs" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="15">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Q<sub>gd</sub> (nC)</label>
+                            <input type="number" id="param-qgd" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="25">
+                        </div>
+                    </div>
+
+                    <div class="capacitance-param-group hidden-group grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">C<sub>iss</sub> (pF)</label>
+                            <input type="number" id="param-ciss" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="3000">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">C<sub>rss</sub> (pF)</label>
+                            <input type="number" id="param-crss" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="100">
+                        </div>
+                    </div>
+
+                    <div class="eon-eoff-param-group hidden-group grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">E<sub>on</sub> (µJ)</label>
+                            <input type="number" id="param-eon" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">E<sub>off</sub> (µJ)</label>
+                            <input type="number" id="param-eoff" class="w-full p-2.5 text-sm border border-gray-200 rounded-lg text-gray-700 font-medium" value="80">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="calculate-button" class="mt-8 w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 transform active:scale-95">
+                    Run Simulation
+                </button>
+            </div>
+            
+            <!-- THERMAL CARD -->
+            <div id="thermal-container" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+                    <h3 class="text-xl font-bold text-gray-800">Thermal Model</h3>
+                    <div class="flex items-center">
+                        <input id="use-heatsink" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="use-heatsink" class="ml-2 block text-xs font-medium text-gray-600 uppercase">Heatsink</label>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">R<sub>th j-c</sub> (°C/W)</label>
+                        <input type="number" id="thermal-rth-jc" class="w-full p-2 text-sm border border-gray-200 rounded-lg" value="1.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">T<sub>ambient</sub> (°C)</label>
+                        <input type="number" id="thermal-ta" class="w-full p-2 text-sm border border-gray-200 rounded-lg" value="25">
+                    </div>
+                </div>
+                
+                <div id="rth-ca-group" class="mb-4">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">R<sub>th c-a</sub> (Case-Amb) (°C/W)</label>
+                    <input type="number" id="thermal-rth-ca" class="w-full p-2 text-sm border border-gray-200 rounded-lg" value="60.5">
+                </div>
+                <div id="rth-cs-group" class="hidden-group grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">R<sub>th c-s</sub></label>
+                        <input type="number" id="thermal-rth-cs" class="w-full p-2 text-sm border border-gray-200 rounded-lg" value="0.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">R<sub>th h-a</sub></label>
+                        <input type="number" id="thermal-rth-ha" class="w-full p-2 text-sm border border-gray-200 rounded-lg" value="10">
+                    </div>
+                </div>
+
+                <button id="calculate-temp-button" class="w-full bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-emerald-700 transition duration-200 text-sm">
+                    Estimate Temperature
+                </button>
+
+                 <div id="temp-result-container" class="mt-4 pt-4 border-t border-gray-100 hidden">
+                    <div class="flex justify-between text-center mb-4">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Case</p>
+                            <p id="result-case-temp" class="text-lg font-bold text-gray-800">0 °C</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Junction</p>
+                            <p id="result-junction-temp" class="text-lg font-bold text-indigo-700">0 °C</p>
+                        </div>
+                    </div>
+                     <div id="thermal-graphic-container" class="space-y-1 text-white text-xs font-semibold text-center">
+                        <div class="bg-indigo-500 py-1 rounded-t">Tj: <span id="graphic-tj"></span>°C</div>
+                        <div class="bg-gray-400 py-1">Tc: <span id="graphic-tc"></span>°C</div>
+                        <div id="graphic-hs-layer" class="bg-gray-300 text-gray-700 py-1 hidden-group">Ths: <span id="graphic-ths"></span>°C</div>
+                        <div class="bg-emerald-500 py-1 rounded-b">Ta: <span id="graphic-ta"></span>°C</div>
+                    </div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- OUTPUT SECTION -->
+        <div class="lg:col-span-8 space-y-8">
+            
+            <!-- RESULTS DASHBOARD -->
+            <div id="results-container" class="hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Total Loss Card -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-indigo-600 flex flex-col justify-between">
+                        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Power Loss</p>
+                        <p id="result-total-loss" class="text-4xl font-serif font-bold text-gray-900 mt-2">0 W</p>
+                    </div>
+                    
+                    <!-- Breakdown Card -->
+                     <div class="bg-white rounded-xl shadow-md p-6 col-span-2 border border-gray-100">
+                        <h4 class="text-sm font-bold text-gray-800 mb-4 font-serif">Loss Breakdown</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500">Conduction</p>
+                                <p id="result-conduction-loss" class="text-xl font-bold text-blue-600 font-serif">0 W</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Switching</p>
+                                <p id="result-switching-loss" class="text-xl font-bold text-emerald-600 font-serif">0 W</p>
+                            </div>
+                             <div id="result-eon-wrapper" class="hidden">
+                                <p class="text-xs text-gray-500">E<sub>on</sub></p>
+                                <p id="result-eon" class="text-lg font-semibold text-gray-700">0 µJ</p>
+                            </div>
+                            <div id="result-eoff-wrapper" class="hidden">
+                                <p class="text-xs text-gray-500">E<sub>off</sub></p>
+                                <p id="result-eoff" class="text-lg font-semibold text-gray-700">0 µJ</p>
+                            </div>
+                        </div>
+                     </div>
+                 </div>
+            </div>
+
+            <!-- PLOTS -->
+            <div id="plot-container" class="hidden bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 font-serif">Switching Dynamics</h2>
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">µs Resolution</span>
+                </div>
+
+                <!-- Vertical Plot Stack -->
+                <div class="space-y-8">
+                    <div class="w-full h-56"><canvas id="chart-vgs"></canvas></div>
+                    <!-- Combined Plot -->
+                    <div class="w-full h-72"><canvas id="chart-combined"></canvas></div>
+                    <div class="w-full h-56"><canvas id="chart-power"></canvas></div>
+                </div>
+
+                <!-- Modern Metric Cards (Moved to bottom) -->
+                <div class="mt-10 pt-8 border-t border-gray-100">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-6">Switching Characteristics</h3>
+                    
+                    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                        <!-- TURN ON -->
+                        <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-center shadow-sm">
+                            <span class="block text-emerald-700 text-[10px] font-bold uppercase mb-1">On Delay (t<sub>d,on</sub>)</span>
+                            <span id="info-td-on" class="font-mono text-gray-800 font-bold text-lg">0</span> <span class="text-xs text-gray-500">ns</span>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-center shadow-sm">
+                            <span class="block text-emerald-700 text-[10px] font-bold uppercase mb-1">Rise Time (t<sub>ri</sub>)</span>
+                            <span id="info-tri" class="font-mono text-gray-800 font-bold text-lg">0</span> <span class="text-xs text-gray-500">ns</span>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-100 rounded-lg p-3 text-center shadow-sm">
+                            <span class="block text-emerald-700 text-[10px] font-bold uppercase mb-1">Fall Time (t<sub>fv</sub>)</span>
+                            <span id="info-tfv" class="font-mono text-gray-800 font-bold text-lg">0</span> <span class="text-xs text-gray-500">ns</span>
+                        </div>
+
+                        <!-- TURN OFF -->
+                        <div class="bg-red-50 border border-red-100 rounded-lg p-3 text-center shadow-sm">
+                            <span class="block text-red-700 text-[10px] font-bold uppercase mb-1">Off Delay (t<sub>d,off</sub>)</span>
+                            <span id="info-td-off" class="font-mono text-gray-800 font-bold text-lg">0</span> <span class="text-xs text-gray-500">ns</span>
+                        </div>
+                        <div class="bg-red-50 border border-red-100 rounded-lg p-3 text-center shadow-sm">
+                            <span class="block text-red-700 text-[10px] font-bold uppercase mb-1">Rise Time (t<sub>rv</sub>)</span>
+                            <span id="info-trv" class="font-mono text-gray-800 font-bold text-lg">0</span> <span class="text-xs text-gray-500">ns</span>
+                        </div>
+                        <div class="bg-red-50 border border-red-100 rounded-lg p-3 text-center shadow-sm">
+                            <span class="block text-red-700 text-[10px] font-bold uppercase mb-1">Fall Time (t<sub>fi</sub>)</span>
+                            <span id="info-tfi" class="font-mono text-gray-800 font-bold text-lg">0</span> <span class="text-xs text-gray-500">ns</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const charts = {};
+
+        // Seaborn-ish Palette
+        const colors = {
+            blue: '#4C72B0',
+            orange: '#DD8452',
+            green: '#55A868',
+            red: '#C44E52',
+            purple: '#8172B3',
+            grey: '#EAEAF2',
+            powerFill: 'rgba(221, 132, 82, 0.7)',
+            overlapFill: 'rgba(255, 193, 7, 0.25)' 
+        };
+
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#555';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('calculate-button').addEventListener('click', runCalculation);
+            document.querySelectorAll('input[name="input-method"]').forEach(radio => {
+                radio.addEventListener('change', handleInputMethodChange);
+            });
+            handleInputMethodChange();
+        });
+        
+        function handleInputMethodChange() {
+            const method = document.querySelector('input[name="input-method"]:checked').value;
+            
+            document.querySelectorAll('.transient-param-group').forEach(el => el.classList.toggle('hidden-group', method === 'eon-eoff'));
+            document.querySelectorAll('.charge-param-group').forEach(el => el.classList.toggle('hidden-group', method !== 'charge'));
+            document.querySelectorAll('.capacitance-param-group').forEach(el => el.classList.toggle('hidden-group', method !== 'capacitance'));
+            document.querySelectorAll('.eon-eoff-param-group').forEach(el => el.classList.toggle('hidden-group', method !== 'eon-eoff'));
+            
+            document.getElementById('calculate-button').textContent = (method === 'eon-eoff') ? 'Calculate Losses' : 'Run Simulation';
+        }
+
+        function getFloatValue(id) {
+            const value = parseFloat(document.getElementById(id).value);
+            return isNaN(value) ? 0 : value;
+        }
+
+        function runCalculation() {
+            document.getElementById('calculate-temp-button').onclick = calculateTemperature;
+            document.getElementById('use-heatsink').onchange = handleHeatsinkToggle;
+            handleHeatsinkToggle();
+
+            const method = document.querySelector('input[name="input-method"]:checked').value;
+            const Id = getFloatValue('param-current');
+            const Vds_on = getFloatValue('param-vds-on');
+            const dutyCycle = getFloatValue('param-duty-cycle') / 100;
+            const fsw = getFloatValue('param-frequency') * 1000;
+            
+            let conductionLoss = Vds_on * Id * dutyCycle;
+            let switchingLoss = 0, Eon = 0, Eoff = 0;
+
+            if (method === 'eon-eoff') {
+                Eon = getFloatValue('param-eon') * 1e-6;
+                Eoff = getFloatValue('param-eoff') * 1e-6;
+                switchingLoss = (Eon + Eoff) * fsw;
+                document.getElementById('plot-container').classList.add('hidden');
+                document.getElementById('result-eon-wrapper').classList.add('hidden');
+                document.getElementById('result-eoff-wrapper').classList.add('hidden');
+            } else {
+                const Vds_bus = getFloatValue('param-voltage');
+                const Vdrive = getFloatValue('param-v-drive');
+                const Rg_ext = getFloatValue('param-rg-ext');
+                const Rg_int = getFloatValue('param-rg-int');
+                const Vth = getFloatValue('param-vth');
+                const Vpl = getFloatValue('param-vpl');
+                const Rg = Rg_ext + Rg_int;
+
+                let Qgs, Qgd;
+                if (method === 'charge') {
+                    Qgs = getFloatValue('param-qgs') * 1e-9;
+                    Qgd = getFloatValue('param-qgd') * 1e-9;
+                } else {
+                    const Ciss = getFloatValue('param-ciss') * 1e-12;
+                    const Crss = getFloatValue('param-crss') * 1e-12;
+                    const Cgs_calc = Ciss - Crss;
+                    Qgs = Cgs_calc * Vpl;
+                    Qgd = Crss * Vds_bus;
+                }
+                
+                const Cgs_eff = (Vpl > 0) ? Qgs / Vpl : 0;
+                
+                // Turn On Calculation
+                const t_delay_on_duration = (Vdrive > Vth) ? -Math.log(1 - Vth / Vdrive) * Rg * Cgs_eff : 0;
+                const t_current_rise_end = (Vdrive > Vpl) ? -Math.log(1 - Vpl / Vdrive) * Rg * Cgs_eff : t_delay_on_duration;
+                const t_current_rise_duration = t_current_rise_end - t_delay_on_duration;
+                const t_voltage_fall_duration = (Vdrive > Vpl) ? Rg * Qgd / (Vdrive - Vpl) : 0;
+                const t_voltage_fall_end = t_current_rise_end + t_voltage_fall_duration;
+                
+                // Turn Off Calculation
+                const t_off_start = t_voltage_fall_end * 4;
+                const t_delay_off_duration = (Vdrive > 0) ? -Math.log(Vpl / Vdrive) * Rg * Cgs_eff : 0;
+                const t_voltage_rise_duration = (Vpl > 0) ? Rg * Qgd / Vpl : 0;
+                const t_voltage_rise_end = t_off_start + t_delay_off_duration + t_voltage_rise_duration;
+                const t_current_fall_duration = (Vpl > Vth) ? -Math.log(Vth / Vpl) * Rg * Cgs_eff : 0;
+                const t_current_fall_end = t_voltage_rise_end + t_current_fall_duration;
+
+                const total_time = t_current_fall_end * 1.2;
+                const points = 500;
+                const dt = total_time / points;
+                let timeData = [], vgsData = [], vdsData = [], idData = [], powerData = [];
+                
+                for (let i = 0; i <= points; i++) {
+                    const t = i * dt;
+                    timeData.push(t * 1e6); // Convert to microseconds
+                    let vgs_val, vds_val, id_val;
+                    if (t < t_off_start) {
+                        vgs_val = (t <= t_current_rise_end) ? Vdrive * (1 - Math.exp(-t / (Rg * Cgs_eff))) : Vpl;
+                        if (t > t_voltage_fall_end) vgs_val = Vdrive;
+                        vds_val = (t > t_current_rise_end && t <= t_voltage_fall_end) ? Vds_bus * (1 - (t - t_current_rise_end) / t_voltage_fall_duration) : (t > t_voltage_fall_end ? Vds_on : Vds_bus);
+                        id_val = (vgs_val > Vth) ? Id * Math.min(1, (vgs_val - Vth) / (Vpl - Vth)) : 0;
+                        if (t > t_voltage_fall_end) id_val = Id;
+                    } else {
+                        const t_rel = t - t_off_start;
+                        vgs_val = (t_rel <= t_delay_off_duration) ? Vdrive * Math.exp(-t_rel / (Rg * Cgs_eff)) : Vpl;
+                        const t_vr_start = t_off_start + t_delay_off_duration;
+                        vds_val = (t > t_vr_start && t <= t_voltage_rise_end) ? Vds_bus * ((t - t_vr_start) / t_voltage_rise_duration) : (t > t_voltage_rise_end ? Vds_bus : Vds_on);
+                        const t_cf_start = t_voltage_rise_end;
+                        if (t > t_cf_start && t <= t_current_fall_end) {
+                            vgs_val = Vpl * Math.exp(-(t - t_cf_start) / (Rg * Cgs_eff));
+                            id_val = Id * Math.max(0, (vgs_val - Vth) / (Vpl - Vth));
+                        } else if (t > t_current_fall_end) {
+                            id_val = 0;
+                            vgs_val = Vth * Math.exp(-(t - t_current_fall_end) / (Rg * Cgs_eff));
+                        } else {
+                            id_val = Id;
+                        }
+                    }
+                    vgsData.push(Math.max(0, vgs_val));
+                    vdsData.push(Math.max(0, Math.min(Vds_bus, vds_val)));
+                    idData.push(Math.max(0, id_val));
+                    const power_val = vdsData[i] * idData[i];
+                    powerData.push(power_val);
+                    if (t > 0 && t <= t_voltage_fall_end) Eon += power_val * dt;
+                    if (t > t_off_start && t <= t_current_fall_end) Eoff += power_val * dt;
+                }
+                
+                switchingLoss = (Eon + Eoff) * fsw;
+                
+                // Identify Overlap Zones (Key Time Frames)
+                const onZoneStart = t_delay_on_duration * 1e6;
+                const onZoneEnd = t_voltage_fall_end * 1e6;
+                const offZoneStart = (t_off_start + t_delay_off_duration) * 1e6;
+                const offZoneEnd = t_current_fall_end * 1e6;
+
+                const lossZones = [
+                    { start: onZoneStart, end: onZoneEnd },
+                    { start: offZoneStart, end: offZoneEnd }
+                ];
+
+                plotWaveforms(timeData, vgsData, vdsData, idData, powerData, lossZones);
+                
+                // Update Detailed Metrics
+                document.getElementById('info-td-on').textContent = (t_delay_on_duration * 1e9).toFixed(1);
+                document.getElementById('info-tri').textContent = (t_current_rise_duration * 1e9).toFixed(1);
+                document.getElementById('info-tfv').textContent = (t_voltage_fall_duration * 1e9).toFixed(1);
+
+                document.getElementById('info-td-off').textContent = (t_delay_off_duration * 1e9).toFixed(1);
+                document.getElementById('info-trv').textContent = (t_voltage_rise_duration * 1e9).toFixed(1);
+                document.getElementById('info-tfi').textContent = (t_current_fall_duration * 1e9).toFixed(1);
+
+                document.getElementById('plot-container').classList.remove('hidden');
+                document.getElementById('result-eon-wrapper').classList.remove('hidden');
+                document.getElementById('result-eoff-wrapper').classList.remove('hidden');
+            }
+
+            document.getElementById('results-container').classList.remove('hidden');
+            document.getElementById('result-conduction-loss').textContent = `${conductionLoss.toFixed(2)} W`;
+            document.getElementById('result-switching-loss').textContent = `${switchingLoss.toFixed(2)} W`;
+            document.getElementById('result-eon').textContent = `${(Eon * 1e6).toFixed(2)} µJ`;
+            document.getElementById('result-eoff').textContent = `${(Eoff * 1e6).toFixed(2)} µJ`;
+            document.getElementById('result-total-loss').textContent = `${(conductionLoss + switchingLoss).toFixed(2)} W`;
+            document.getElementById('temp-result-container').classList.add('hidden');
+        }
+
+        function handleHeatsinkToggle() {
+            const useHeatsink = document.getElementById('use-heatsink').checked;
+            document.getElementById('rth-ca-group').classList.toggle('hidden-group', useHeatsink);
+            document.getElementById('rth-cs-group').classList.toggle('hidden-group', !useHeatsink);
+            document.getElementById('temp-result-container').classList.add('hidden');
+        }
+
+        function calculateTemperature() {
+            const totalLoss = parseFloat(document.getElementById('result-total-loss').textContent);
+            if (isNaN(totalLoss) || totalLoss < 0) return;
+
+            const Ta = getFloatValue('thermal-ta');
+            const Rth_jc = getFloatValue('thermal-rth-jc');
+            const useHeatsink = document.getElementById('use-heatsink').checked;
+            
+            let Tc = 0, Tj = 0, Ths = 0;
+
+            if (useHeatsink) {
+                const Rth_cs = getFloatValue('thermal-rth-cs');
+                const Rth_ha = getFloatValue('thermal-rth-ha');
+                Ths = Ta + totalLoss * Rth_ha;
+                Tc = Ths + totalLoss * Rth_cs;
+                Tj = Tc + totalLoss * Rth_jc;
+            } else {
+                const Rth_ca = getFloatValue('thermal-rth-ca');
+                Tc = Ta + totalLoss * Rth_ca;
+                Tj = Tc + totalLoss * Rth_jc;
+            }
+
+            document.getElementById('result-case-temp').textContent = `${Tc.toFixed(1)} °C`;
+            document.getElementById('result-junction-temp').textContent = `${Tj.toFixed(1)} °C`;
+            
+            document.getElementById('graphic-tj').textContent = Tj.toFixed(1);
+            document.getElementById('graphic-tc').textContent = Tc.toFixed(1);
+            document.getElementById('graphic-ta').textContent = Ta.toFixed(1);
+            document.getElementById('graphic-hs-layer').classList.toggle('hidden-group', !useHeatsink);
+            if(useHeatsink) document.getElementById('graphic-ths').textContent = Ths.toFixed(1);
+
+            document.getElementById('temp-result-container').classList.remove('hidden');
+        }
+        
+        function createOrUpdateChart(id, label, time, data, color, yAxisLabel, filled = false, fillAlpha = 0.2) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (charts[id]) {
+                charts[id].destroy();
+            }
+
+            charts[id] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: time,
+                    datasets: [{ 
+                        label: label, 
+                        data: data, 
+                        borderColor: color, 
+                        backgroundColor: filled ? (fillAlpha === 0.7 ? colors.powerFill : color) : 'transparent',
+                        borderWidth: 2, 
+                        pointRadius: 0, 
+                        fill: filled,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    layout: { padding: 10 },
+                    plugins: { 
+                        legend: { display: false }, 
+                        title: { 
+                            display: true, 
+                            text: label, 
+                            font: { family: 'Spectral', size: 16, weight: 'bold' },
+                            color: '#333',
+                            padding: { bottom: 20 }
+                        },
+                        customCanvasBackgroundColor: { color: colors.grey }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Time (µs)', font: { size: 12 } },
+                            type: 'linear',
+                            grid: { color: 'white', drawBorder: false },
+                            ticks: { font: { size: 12 } },
+                            border: { display: false }
+                        },
+                        y: { 
+                            title: { display: true, text: yAxisLabel, font: { size: 12 } },
+                            grid: { color: 'white', drawBorder: false },
+                            ticks: { font: { size: 12 } },
+                            border: { display: false }
+                        },
+                        // GHOST AXIS: Reserves Right Side Space for alignment
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            suggestedMax: 10, // Ensure ticks are generated to calculate width
+                            grid: { drawOnChartArea: false, borderColor: 'transparent' },
+                            ticks: { color: 'transparent', backdropColor: 'transparent' },
+                            title: { 
+                                display: true, 
+                                text: 'Current (A)', 
+                                color: 'transparent', 
+                                font: { size: 10 } 
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'customCanvasBackgroundColor',
+                    beforeDraw: (chart, args, options) => {
+                        const {ctx} = chart;
+                        ctx.save();
+                        ctx.globalCompositeOperation = 'destination-over';
+                        ctx.fillStyle = options.color || '#EAEAF2';
+                        ctx.fillRect(0, 0, chart.width, chart.height);
+                        ctx.restore();
+                    }
+                }]
+            });
+        }
+
+        function createCombinedChart(id, time, vds, idData, lossZones) {
+            const ctx = document.getElementById(id).getContext('2d');
+            if (charts[id]) {
+                charts[id].destroy();
+            }
+
+            charts[id] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: time,
+                    datasets: [
+                        { 
+                            label: 'Vds (Voltage)', 
+                            data: vds, 
+                            borderColor: colors.blue, 
+                            backgroundColor: 'transparent',
+                            borderWidth: 2, 
+                            pointRadius: 0, 
+                            fill: false,
+                            tension: 0.2,
+                            yAxisID: 'y'
+                        },
+                        { 
+                            label: 'Id (Current)', 
+                            data: idData, 
+                            borderColor: colors.green, 
+                            backgroundColor: 'transparent',
+                            borderWidth: 2, 
+                            pointRadius: 0, 
+                            fill: false,
+                            tension: 0.2,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    layout: { padding: 10 },
+                    plugins: { 
+                        legend: { 
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 11 } }
+                        }, 
+                        title: { 
+                            display: true, 
+                            text: 'Combined Switching Dynamics (Loss Zones)', 
+                            font: { family: 'Spectral', size: 16, weight: 'bold' },
+                            color: '#333',
+                            padding: { bottom: 10 }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Time (µs)', font: { size: 12 } },
+                            type: 'linear',
+                            grid: { color: 'white', drawBorder: false },
+                            ticks: { font: { size: 12 } },
+                            border: { display: false }
+                        },
+                        y: { 
+                            title: { display: true, text: 'Voltage (V)', font: { size: 12 } },
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { color: 'white', drawBorder: false },
+                            ticks: { font: { size: 12 } },
+                            border: { display: false }
+                        },
+                        y1: {
+                            title: { display: true, text: 'Current (A)', font: { size: 12 } },
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false }, 
+                            ticks: { font: { size: 12 } },
+                            suggestedMax: 20, // Ensure ticks are generated to calculate width
+                            border: { display: false }
+                        }
+                    }
+                },
+                plugins: [
+                    {
+                        id: 'customCanvasBackgroundColor',
+                        beforeDraw: (chart, args, options) => {
+                            const {ctx} = chart;
+                            ctx.save();
+                            ctx.globalCompositeOperation = 'destination-over';
+                            ctx.fillStyle = '#EAEAF2';
+                            ctx.fillRect(0, 0, chart.width, chart.height);
+                            ctx.restore();
+                        }
+                    },
+                    {
+                        id: 'overlapShading',
+                        beforeDatasetsDraw: (chart) => {
+                            const { ctx, scales: { x, y } } = chart;
+                            if(!lossZones) return;
+
+                            ctx.save();
+                            ctx.fillStyle = colors.overlapFill;
+                            
+                            lossZones.forEach(zone => {
+                                const startX = x.getPixelForValue(zone.start);
+                                const endX = x.getPixelForValue(zone.end);
+                                const topY = chart.chartArea.top;
+                                const bottomY = chart.chartArea.bottom;
+                                const width = endX - startX;
+
+                                if (width > 0) {
+                                    ctx.fillRect(startX, topY, width, bottomY - topY);
+                                }
+                            });
+                            ctx.restore();
+                        }
+                    }
+                ]
+            });
+        }
+
+        function plotWaveforms(time, vgs, vds, id, power, lossZones) {
+            createOrUpdateChart('chart-vgs', 'Gate Voltage (Vgs)', time, vgs, colors.red, 'Voltage (V)');
+            createCombinedChart('chart-combined', time, vds, id, lossZones);
+            createOrUpdateChart('chart-power', 'Instantaneous Power Loss', time, power, colors.orange, 'Power (W)', true, 0.7);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inverter PWM Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8f9fa; color: #333; }
+        canvas { background-color: #EAEAF2; border: 1px solid #d1d5db; }
+
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #4C72B0; cursor: pointer; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #cbd5e1; border-radius: 2px;
+        }
+
+        /* UI Components */
+        .control-group { background: #ffffff; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; margin-bottom: 1rem; }
+        .metric-card { background: #ffffff; padding: 1rem; border-radius: 0.5rem; border-left: 5px solid #C44E52; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+        .metric-card-blue { border-left-color: #4C72B0; }
+        
+        .chart-container { width: 100%; max-width: 60rem; aspect-ratio: 1/1; max-height: 90vh; position: relative; }
+        @media (min-width: 1024px) { .chart-container { aspect-ratio: 4/3; } }
+
+        /* Modal & Scroll */
+        .modal-backdrop { background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+        .custom-scroll::-webkit-scrollbar { width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Toggle Switch Style */
+        .toggle-btn { flex: 1; padding: 0.5rem; font-size: 0.875rem; font-weight: 600; text-align: center; cursor: pointer; border-radius: 0.375rem; transition: all 0.2s; }
+        .toggle-active { background-color: #4C72B0; color: white; shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .toggle-inactive { background-color: transparent; color: #64748b; hover:bg-slate-100; }
+    </style>
+</head>
+<body class="h-screen flex flex-col lg:flex-row overflow-hidden text-slate-800">
+
+    <!-- Sidebar -->
+    <div class="w-full lg:w-80 flex-shrink-0 p-6 overflow-y-auto border-r border-slate-200 bg-white z-20 shadow-sm">
+        <h1 class="text-xl font-bold text-slate-800 mb-1">Inverter Analysis</h1>
+        <p class="text-xs text-slate-500 mb-4 font-medium tracking-wide">SPWM, RIPPLE & THD</p>
+
+        <!-- PWM Mode Toggle -->
+        <div class="mb-5 bg-slate-100 p-1 rounded-lg flex">
+            <div id="btn-bipolar" onclick="setMode('bipolar')" class="toggle-btn toggle-active">Bipolar</div>
+            <div id="btn-unipolar" onclick="setMode('unipolar')" class="toggle-btn toggle-inactive">Unipolar</div>
+        </div>
+
+        <div class="mb-4">
+            <!-- V_DC -->
+            <div class="control-group">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm font-semibold text-slate-700">DC Voltage (<span class="italic">V<sub>dc</sub></span>)</label>
+                    <span id="val-vdc" class="text-sm font-bold text-[#4C72B0]">400 V</span>
+                </div>
+                <input type="range" id="input-vdc" min="100" max="800" step="10" value="400">
+            </div>
+
+            <!-- I_load -->
+            <div class="control-group">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm font-semibold text-slate-700">Load Current (<span class="italic">I<sub>peak</sub></span>)</label>
+                    <span id="val-iload" class="text-sm font-bold text-[#4C72B0]">40 A</span>
+                </div>
+                <input type="range" id="input-iload" min="5" max="100" step="1" value="40">
+            </div>
+
+            <!-- m_f -->
+            <div class="control-group">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm font-semibold text-slate-700">Modulation (<span class="italic">m<sub>f</sub></span>)</label>
+                    <span id="val-mf" class="text-sm font-bold text-[#4C72B0]">21</span>
+                </div>
+                <input type="range" id="input-mf" min="9" max="101" step="2" value="21">
+                <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                    <span id="lbl-fsw">fsw: 1.05 kHz</span>
+                </div>
+            </div>
+
+            <!-- Inductance -->
+            <div class="control-group">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm font-semibold text-slate-700">Inductance (L)</label>
+                    <span id="val-ind" class="text-sm font-bold text-[#4C72B0]">5.0 mH</span>
+                </div>
+                <input type="range" id="input-ind" min="1" max="20" step="0.5" value="5">
+            </div>
+
+            <!-- Metrics -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+                <div class="metric-card">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Ripple (Pk-Pk)</div>
+                    <div class="text-2xl font-light text-slate-800 mt-1" id="stat-ripple">0.0 A</div>
+                </div>
+                <div class="metric-card metric-card-blue">
+                    <div class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">THDi (Total)</div>
+                    <div class="text-2xl font-light text-slate-800 mt-1" id="stat-thd">0.0 %</div>
+                </div>
+            </div>
+
+            <button onclick="openModal()" class="mt-4 w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium py-2 px-4 rounded transition-colors border border-slate-300 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+                View Data Table
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col items-center justify-center bg-white p-4 lg:p-8 overflow-y-auto">
+        <div class="chart-container shadow-lg rounded-lg overflow-hidden border border-slate-200 bg-[#EAEAF2]">
+            <!-- Legend -->
+            <div class="absolute top-4 right-6 flex flex-col gap-2 bg-white/90 p-3 rounded border border-slate-200 shadow-sm z-10 text-xs">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#C44E52]"></div>
+                    <span class="text-slate-600 font-medium">Fundamental</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#4C72B0]"></div>
+                    <span class="text-slate-600 font-medium">Total Current</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-[#5da5da] opacity-50"></div> 
+                    <span class="text-slate-600 font-medium">PWM Voltage</span>
+                </div>
+            </div>
+            <canvas id="mainCanvas" class="w-full h-full"></canvas>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="dataModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-slate-100">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-800">Harmonic Analysis</h3>
+                    <p class="text-xs text-slate-500">Fundamental: 50Hz</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll p-4">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-slate-500 uppercase bg-slate-50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-2 rounded-l">Order</th>
+                            <th class="px-4 py-2">Freq (Hz)</th>
+                            <th class="px-4 py-2">Mag (A)</th>
+                            <th class="px-4 py-2 rounded-r">% Fund</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 rounded-b-lg flex justify-between items-center">
+                <span id="copyFeedback" class="text-xs font-semibold text-green-600 opacity-0 transition-opacity">Copied!</span>
+                <button onclick="copyToClipboard()" class="bg-[#4C72B0] hover:bg-[#3b5a8c] text-white text-sm font-medium py-2 px-4 rounded shadow-sm">Copy Table</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const F_FUND = 50; 
+        const CYCLES_TO_SHOW = 2; 
+        const SIM_POINTS = 10000;  
+        const MAX_HARMONIC = 50;
+
+        const COLORS = {
+            bg: '#EAEAF2', grid: '#FFFFFF',
+            blue: '#4C72B0', red: '#C44E52', pwm: '#5da5da',
+            dark: '#333333', text: '#64748b'
+        };
+        
+        // App State
+        let state = {
+            mode: 'bipolar', // 'bipolar' or 'unipolar'
+            mf: 21,       
+            L: 0.005,
+            Vdc: 400,
+            Ipeak: 40
+        };
+
+        let globalFFT = { spectrum: [], thd: 0, magFund: 0 };
+
+        // DOM Elements
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const ui = {
+            mf: document.getElementById('input-mf'),
+            ind: document.getElementById('input-ind'),
+            vdc: document.getElementById('input-vdc'),
+            iload: document.getElementById('input-iload'),
+            valMf: document.getElementById('val-mf'),
+            lblFsw: document.getElementById('lbl-fsw'),
+            valInd: document.getElementById('val-ind'),
+            valVdc: document.getElementById('val-vdc'),
+            valIload: document.getElementById('val-iload'),
+            statRipple: document.getElementById('stat-ripple'),
+            statThd: document.getElementById('stat-thd'),
+            btnBi: document.getElementById('btn-bipolar'),
+            btnUni: document.getElementById('btn-unipolar')
+        };
+
+        // --- Logic ---
+
+        function setMode(mode) {
+            state.mode = mode;
+            if (mode === 'bipolar') {
+                ui.btnBi.className = "toggle-btn toggle-active";
+                ui.btnUni.className = "toggle-btn toggle-inactive";
+            } else {
+                ui.btnBi.className = "toggle-btn toggle-inactive";
+                ui.btnUni.className = "toggle-btn toggle-active";
+            }
+            draw();
+        }
+
+        function runSimulation() {
+            const periodFund = 1 / F_FUND;
+            const totalTime = CYCLES_TO_SHOW * periodFund;
+            const dt = totalTime / SIM_POINTS;
+            const f_sw = state.mf * F_FUND;
+            const carrierPeriod = 1 / f_sw;
+            const w = 2 * Math.PI * F_FUND;
+
+            let data = { t: [], v_pwm: [], i_total: [], i_fund: [], rippleMax: 0 };
+            let currentRippleIntegrator = 0;
+            let rippleData = [];
+
+            for (let i = 0; i < SIM_POINTS; i++) {
+                const t = i * dt;
+                
+                // Reference (Ma = 0.9)
+                const ref = 0.9 * Math.sin(w * t); 
+                
+                // Triangle Carrier
+                const t_mod = t % carrierPeriod;
+                const halfCar = carrierPeriod / 2;
+                let carrier = 0;
+                if (t_mod < halfCar) carrier = -1 + (2 * (t_mod / halfCar));
+                else carrier = 1 - (2 * ((t_mod - halfCar) / halfCar));
+
+                // PWM Logic
+                let v_out = 0;
+                if (state.mode === 'bipolar') {
+                    // Standard Bipolar: Comparison against carrier gives +Vdc or -Vdc
+                    v_out = (ref > carrier) ? state.Vdc : -state.Vdc;
+                } else {
+                    // Unipolar: Leg A (ref) and Leg B (-ref)
+                    const vA = (ref > carrier) ? state.Vdc : 0;
+                    const vB = (-ref > carrier) ? state.Vdc : 0; 
+                    v_out = vA - vB; // +Vdc, 0, or -Vdc
+                }
+
+                // Inductor Physics: L * di/dt = V_L
+                // V_L = V_out - V_fund_equiv
+                const v_fund_equiv = ref * state.Vdc;
+                const di = ((v_out - v_fund_equiv) / state.L) * dt;
+                currentRippleIntegrator += di;
+
+                const i_fund = state.Ipeak * Math.sin(w * t); 
+
+                data.t.push(t);
+                data.v_pwm.push(v_out);
+                data.i_fund.push(i_fund);
+                rippleData.push(currentRippleIntegrator);
+            }
+
+            // Remove DC Offset & Construct Total Current
+            const avgRipple = rippleData.reduce((a, b) => a + b, 0) / rippleData.length;
+            for(let i=0; i<SIM_POINTS; i++) {
+                const cleanRipple = rippleData[i] - avgRipple;
+                data.i_total.push(data.i_fund[i] + cleanRipple);
+            }
+
+            const cleanRippleArray = rippleData.map(r => r - avgRipple);
+            data.rippleMax = Math.max(...cleanRippleArray) - Math.min(...cleanRippleArray);
+
+            return data;
+        }
+
+        function calculateHarmonics(currentArray) {
+            const N = currentArray.length;
+            const harmonics = [];
+            let sumSqHarmonics = 0;
+            let magFund = 0;
+
+            for (let h = 1; h <= MAX_HARMONIC; h++) {
+                let sumCos = 0, sumSin = 0;
+                const freqConst = 2 * Math.PI * h * CYCLES_TO_SHOW / N;
+
+                for (let i = 0; i < N; i++) {
+                    const theta = freqConst * i;
+                    sumCos += currentArray[i] * Math.cos(theta);
+                    sumSin += currentArray[i] * Math.sin(theta);
+                }
+
+                const magnitude = (2 / N) * Math.sqrt(sumCos * sumCos + sumSin * sumSin);
+                harmonics.push({ h: h, mag: magnitude });
+
+                if (h === 1) magFund = magnitude;
+                else sumSqHarmonics += magnitude * magnitude;
+            }
+            const thd = magFund > 0.1 ? (Math.sqrt(sumSqHarmonics) / magFund) * 100 : 0;
+            return { spectrum: harmonics, thd: thd, magFund: magFund };
+        }
+
+        // --- Drawing ---
+        function draw() {
+            resizeCanvas(canvas);
+            const w = canvas.width, h = canvas.height;
+            const simData = runSimulation();
+            const fftData = calculateHarmonics(simData.i_total);
+            globalFFT = fftData;
+            
+            // UI Text Updates
+            ui.statRipple.innerText = simData.rippleMax.toFixed(2) + " A";
+            ui.statThd.innerText = fftData.thd.toFixed(2) + " %";
+            ui.lblFsw.innerText = `fsw: ${((state.mf * F_FUND)/1000).toFixed(2)} kHz`;
+
+            const gap = h * 0.02; 
+            const hCurrent = h * 0.38;
+            const hVoltage = h * 0.22;
+            const hFFT = h * 0.32;
+            const yCurrent = 0;
+            const yVoltage = hCurrent + gap + 15;
+            const yFFT = yVoltage + hVoltage + gap + 15;
+
+            ctx.fillStyle = COLORS.bg; ctx.fillRect(0, 0, w, h);
+
+            // 1. Current
+            drawTitle(ctx, "Inductor Current", 40, 20);
+            const maxCurrentScale = Math.max(state.Ipeak * 1.5, Math.abs(Math.max(...simData.i_total)) * 1.1);
+            drawTimePlot(ctx, {
+                x: 0, y: yCurrent, w: w, h: hCurrent, tData: simData.t, yRange: maxCurrentScale,
+                seriesList: [
+                    { data: simData.i_fund, color: COLORS.red, width: 2, alpha: 0.6 },
+                    { data: simData.i_total, color: COLORS.blue, width: 2, alpha: 1.0 }
+                ]
+            });
+
+            // 2. Voltage
+            drawTitle(ctx, "PWM Voltage (" + (state.mode === 'bipolar' ? "2-Level" : "3-Level") + ")", 40, yVoltage - 5);
+            drawTimePlot(ctx, {
+                x: 0, y: yVoltage, w: w, h: hVoltage, tData: simData.t, yRange: state.Vdc * 1.1,
+                seriesList: [ { data: simData.v_pwm, color: COLORS.pwm, width: 1, alpha: 1.0, step: true, fill: true } ]
+            });
+
+            // 3. FFT
+            drawTitle(ctx, "Harmonic Spectrum", 40, yFFT - 5);
+            drawFFTPlot(ctx, { x: 40, y: yFFT, w: w - 50, h: hFFT - 20, data: fftData.spectrum, maxMag: fftData.magFund });
+        }
+
+        function drawTitle(ctx, text, x, y) {
+            ctx.fillStyle = COLORS.text; ctx.font = '600 12px "Segoe UI", sans-serif'; ctx.fillText(text, 20, y);
+        }
+
+        function drawTimePlot(ctx, config) {
+            const { x, y, w, h, tData, yRange, seriesList } = config;
+            const centerY = y + h / 2;
+            const tMax = tData[tData.length - 1];
+            ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+
+            // Grid
+            ctx.strokeStyle = COLORS.grid; ctx.lineWidth = 1; ctx.beginPath();
+            for (let i = 1; i < 10; i++) { const vx = x + (i / 10) * w; ctx.moveTo(vx, y); ctx.lineTo(vx, y + h); }
+            ctx.stroke();
+            ctx.strokeStyle = '#cccccc'; ctx.beginPath(); ctx.moveTo(x, centerY); ctx.lineTo(x + w, centerY); ctx.stroke();
+
+            seriesList.forEach(series => {
+                const mapY = (val) => centerY - (val / yRange) * (h/2 * 0.9);
+                const mapX = (t) => x + (t / tMax) * w;
+                ctx.beginPath(); ctx.strokeStyle = series.color; ctx.lineWidth = series.width; ctx.globalAlpha = series.alpha || 1.0;
+                ctx.moveTo(mapX(tData[0]), mapY(series.data[0]));
+                for (let i = 1; i < tData.length; i++) {
+                    const cx = mapX(tData[i]);
+                    if (series.step) { ctx.lineTo(cx, mapY(series.data[i-1])); ctx.lineTo(cx, mapY(series.data[i])); } 
+                    else ctx.lineTo(cx, mapY(series.data[i]));
+                }
+                ctx.stroke();
+                if (series.fill) { ctx.lineTo(x + w, centerY); ctx.lineTo(mapX(tData[0]), centerY); ctx.fillStyle = series.color + "44"; ctx.fill(); }
+            });
+            ctx.restore();
+        }
+
+        function drawFFTPlot(ctx, config) {
+            const { x, y, w, h, data, maxMag } = config;
+            const yBottom = y + h;
+            ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fillRect(x, y, w, h);
+            const barWidth = (w / data.length) * 0.6;
+            const stepX = w / data.length;
+
+            data.forEach((bin, index) => {
+                const hVal = index + 1;
+                const barHeight = (bin.mag / maxMag) * (h * 0.9);
+                const bx = x + index * stepX + (stepX - barWidth)/2;
+                const by = yBottom - barHeight;
+
+                ctx.fillStyle = (hVal === 1) ? COLORS.red : COLORS.dark;
+                
+                // Highlight Logic: 
+                // Bipolar: Harmonics at mf, 2mf...
+                // Unipolar: Harmonics at 2mf, 4mf...
+                const relevantMf = (state.mode === 'unipolar') ? state.mf * 2 : state.mf;
+                if(Math.abs(hVal - relevantMf) <= 1) ctx.fillStyle = COLORS.blue;
+
+                ctx.fillRect(bx, by, barWidth, barHeight);
+                if (hVal === 1 || hVal % 10 === 0 || hVal === relevantMf) {
+                    ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
+                    ctx.fillText(hVal, bx + barWidth/2, yBottom + 12);
+                }
+            });
+
+            ctx.strokeStyle = "#999"; ctx.lineWidth = 1; ctx.beginPath();
+            ctx.moveTo(x, yBottom); ctx.lineTo(x + w, yBottom); ctx.moveTo(x, yBottom); ctx.lineTo(x, y); ctx.stroke();
+            ctx.fillStyle = "#888"; ctx.textAlign = "right"; ctx.fillText(maxMag.toFixed(0) + "A", x - 4, y + h * 0.1);
+        }
+
+        function resizeCanvas(canvas) {
+            const parent = canvas.parentElement;
+            const rect = parent.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+                canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+                canvas.getContext('2d').scale(dpr, dpr);
+            }
+            canvas.style.width = '100%'; canvas.style.height = '100%';
+        }
+
+        // --- Modal/Listeners ---
+        function openModal() {
+            const modal = document.getElementById('dataModal'), tbody = document.getElementById('tableBody');
+            const fundMag = globalFFT.magFund || 1; tbody.innerHTML = '';
+            globalFFT.spectrum.forEach(item => {
+                const relevantMf = (state.mode === 'unipolar') ? state.mf * 2 : state.mf;
+                let rowClass = "hover:bg-slate-50";
+                if (item.h === 1) rowClass = "bg-red-50 hover:bg-red-100 font-semibold text-red-900";
+                else if (item.h === relevantMf) rowClass = "bg-blue-50 hover:bg-blue-100 font-medium text-blue-900";
+                
+                tbody.innerHTML += `<tr class="${rowClass} border-b border-slate-50 transition-colors"><td class="px-4 py-2">${item.h}</td><td class="px-4 py-2">${(item.h * F_FUND).toFixed(0)}</td><td class="px-4 py-2">${item.mag.toFixed(3)}</td><td class="px-4 py-2">${(item.mag / fundMag * 100).toFixed(2)}%</td></tr>`;
+            });
+            modal.classList.remove('hidden');
+        }
+        function closeModal() { document.getElementById('dataModal').classList.add('hidden'); document.getElementById('copyFeedback').style.opacity = '0'; }
+        function copyToClipboard() {
+            let text = "Order\tFreq\tMag\t%\n";
+            globalFFT.spectrum.forEach(i => text += `${i.h}\t${(i.h*F_FUND).toFixed(0)}\t${i.mag.toFixed(4)}\t${(i.mag/globalFFT.magFund*100).toFixed(4)}\n`);
+            navigator.clipboard.writeText(text).then(() => { const fb = document.getElementById('copyFeedback'); fb.style.opacity = '1'; setTimeout(() => fb.style.opacity = '0', 2000); });
+        }
+
+        window.addEventListener('resize', draw);
+        ui.mf.addEventListener('input', (e) => { state.mf = parseInt(e.target.value); ui.valMf.innerText = state.mf; draw(); });
+        ui.ind.addEventListener('input', (e) => { state.L = parseFloat(e.target.value) / 1000; ui.valInd.innerText = e.target.value + " mH"; draw(); });
+        ui.vdc.addEventListener('input', (e) => { state.Vdc = parseInt(e.target.value); ui.valVdc.innerText = state.Vdc + " V"; draw(); });
+        ui.iload.addEventListener('input', (e) => { state.Ipeak = parseInt(e.target.value); ui.valIload.innerText = state.Ipeak + " A"; draw(); });
+        document.addEventListener('keydown', (e) => { if (e.key === "Escape") closeModal(); });
+
+        draw(); 
+    </script>
+</body>
+</html>

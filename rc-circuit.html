@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding Waveform Characteristics of a Switching Circuit</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Google Fonts: Anuphan -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- MathJax for rendering equations -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- Chart.js and Annotation Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Anuphan', 'sans-serif'],
+                },
+                colors: {
+                    'ku-red': '#8A0000',
+                    'ku-gray': '#3A3A3A',
+                }
+            }
+        }
+    }
+</script>
+</head>
+<body class="bg-gray-100 font-sans text-ku-gray">
+
+<!-- Header -->
+<header class="bg-white shadow-md">
+    <div class="container mx-auto px-6 py-4 flex justify-center items-center">
+        <img src="https://ik.imagekit.io/Nithiphat/images/ee-logo-h150-ribbon.png?updatedAt=1761534816738" alt="Electrical Engineering Kasetsart University Logo" class="h-40">
+    </div>
+</header>
+
+<!-- Hero Section -->
+<section class="relative bg-gray-800 text-white py-20 px-6">
+    <div class="absolute inset-0 bg-cover bg-center opacity-30" style="background-image: url('https://images.unsplash.com/photo-1518770660439-46-36190af475?q=80&w=2070&auto=format&fit=crop');"></div>
+    <div class="relative container mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Understanding RC Circuits: From Analog to Switching</h1>
+    </div>
+</section>
+
+<!-- Main Content -->
+<main class="container mx-auto p-6 md:p-8">
+    <div class="space-y-12">
+
+        <!-- Steps 1-3 remain the same -->
+        <!-- Step 1: The Basic Analog RC Circuit -->
+        <section class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+            <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-ku-red/50 pb-2 mb-6">Step 1: The Basic Analog RC Circuit</h2>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <p class="mb-4 text-lg">Let's start with the fundamentals. An analog RC circuit consists of a resistor (R) and a capacitor (C) connected to a constant voltage source (\(V_S\)). When the switch closes, the capacitor begins to charge through the resistor.</p>
+                    <p class="mb-4 text-lg">The <strong>time constant (\(\tau\))</strong> determines how quickly the capacitor charges. It is calculated as:</p>
+                    <div class="text-center text-2xl bg-gray-100 p-4 rounded-md">
+                        $$\tau = R \times C$$
+                    </div>
+                    <p class="mt-4 mb-4 text-lg">The voltage across the capacitor, \(V_C(t)\), at any given time (\(t\)) during charging is described by the following equation:</p>
+                    <div class="text-center text-2xl bg-gray-100 p-4 rounded-md">
+                        $$V_C(t) = V_S \left(1 - e^{-t/\tau}\right)$$
+                    </div>
+                     <p class="mt-4 text-lg">After one time constant (\(t = \tau\)), the capacitor charges to approximately 63.2% of the source voltage.</p>
+                </div>
+                <div class="flex justify-center">
+                    <img src="https://ik.imagekit.io/Nithiphat/Lab%20363/RC.png" alt="Analog RC Circuit Diagram" class="rounded-lg shadow-md max-w-sm w-full">
+                </div>
+            </div>
+        </section>
+        
+        <!-- Step 2: The Switching RC Circuit -->
+        <section class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+            <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-ku-red/50 pb-2 mb-6">Step 2: Introducing a Switching Input</h2>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                 <div class="flex justify-center md:order-last">
+                    <img src="https://ik.imagekit.io/Nithiphat/Lab%20363/RC-switching.png" alt="Switching RC Circuit Diagram" class="rounded-lg shadow-md max-w-sm w-full">
+                </div>
+                <div>
+                    <p class="mb-4 text-lg">Now, what happens if we replace the simple switch and DC source with a continuous square wave? This is a <strong>switching circuit</strong>. The input voltage rapidly switches between a high state (e.g., 5V) and a low state (e.g., 0V).</p>
+                    <p class="mb-4 text-lg">Instead of fully charging, the capacitor now repeatedly charges when the input is high and discharges when it's low. This creates a "ripple" in the output voltage across the capacitor.</p>
+                    <p class="mb-4 text-lg">The average output voltage (the "Target DC Level") depends on the <strong>duty cycle</strong> of the input signal—the percentage of time the signal is in its high state.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 3: Interactive RC Switching Circuit Analysis Section -->
+        <section class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+            <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-ku-red/50 pb-2 mb-4">Step 3: Interactive Simulation</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <p class="mb-4 text-lg">Use the controls below to see how R, C, frequency, and duty cycle affect the circuit's response. The charts show the cause (Input) and effect (Response).</p>
+                    <ul class="list-disc list-inside mb-4 text-lg space-y-2">
+                       <li>The <b class="text-ku-red">Switching Response</b> shows the actual output voltage ripple.</li>
+                       <li>The <b class="text-gray-500">Ideal DC Transient</b> shows the charging curve. The crosshair marks the time constant (\(\tau\)), where the voltage reaches 63.2% of its final value.</li>
+                    </ul>
+                    <p class="mb-4 text-lg">The underlying transient behavior for each segment follows the equation:</p>
+                    <div class="text-center text-xl bg-gray-100 p-4 rounded-md">
+                        $$V(t) = V_{\text{final}} + (V_{\text{initial}} - V_{\text{final}})e^{-t/RC}$$
+                    </div>
+                    
+                    <!-- Controls Panel -->
+                    <div class="mt-6 space-y-4 p-4 border-2 border-gray-200 rounded-lg bg-gray-50">
+                        <h3 class="text-xl font-semibold text-center mb-2 text-ku-gray">Simulation Controls</h3>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="resistor" class="block font-medium">Resistance (R): <span id="resistorValue" class="font-bold">1000</span> Ω</label>
+                                <input type="range" id="resistor" min="100" max="5000" value="1000" step="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <div>
+                                <label for="capacitor" class="block font-medium">Capacitance (C): <span id="capacitorValue" class="font-bold">1.0</span> µF</label>
+                                <input type="range" id="capacitor" min="0.1" max="10" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+
+                         <div class="grid grid-cols-2 gap-4 pt-2">
+                            <div>
+                                <label for="frequency" class="block font-medium">Input Frequency</label>
+                                <select id="frequency" class="w-full p-2 border border-gray-300 rounded-md">
+                                    <option value="100">100 Hz</option>
+                                    <option value="500">500 Hz</option>
+                                    <option value="1000" selected>1 kHz</option>
+                                    <option value="2000">2 kHz</option>
+                                </select>
+                            </div>
+                            <div>
+                                 <label for="dutyCycle" class="block font-medium">Duty Cycle: <span id="dutyCycleValue" class="font-bold">50</span>%</label>
+                                <input type="range" id="dutyCycle" min="1" max="99" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-center text-lg font-semibold bg-ku-red/10 p-3 rounded-md grid grid-cols-2 gap-2">
+                            <div>Time Constant (\(\tau\)): <br><span id="timeConstant" class="font-bold">1.00</span> ms</div>
+                            <div>Target DC Level: <br><span id="targetDcLevel" class="font-bold">2.50</span> V</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-center mb-2">Output Response Waveform</h3>
+                    <canvas id="waveformChart"></canvas>
+                    <h3 class="text-xl font-semibold text-center mt-6 mb-2">Input Signal Waveform</h3>
+                    <canvas id="inputWaveformChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Step 4: Frequency Response Analysis Section -->
+        <section class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+            <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-ku-red/50 pb-2 mb-4">Step 4: Frequency Response Analysis (Bode Plot)</h2>
+            <div class="space-y-6">
+                <p class="text-lg">This RC circuit is a <strong>low-pass filter</strong>. It allows low-frequency signals to pass to the output but attenuates (reduces the amplitude of) high-frequency signals. The Bode plot shows us exactly how much attenuation occurs at each frequency.</p>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md">
+                    <h4 class="font-bold text-xl mb-2 text-blue-800">What Does This Mean in a Physical Circuit?</h4>
+                    <p class="text-lg">Think of the capacitor as a small bucket being filled and emptied. The time constant \(\tau\) determines how fast it fills.
+                        <ul class="list-disc list-inside mt-2 space-y-1 text-lg">
+                            <li><strong>Low Frequency:</strong> The input switches slowly. This is like leaving the tap on for a long time, then off for a long time. The bucket has plenty of time to fill up and empty, so the output voltage swings wildly. This results in a <strong>large voltage ripple</strong>.</li>
+                            <li><strong>High Frequency:</strong> The input switches very quickly. The tap is flicked on and off rapidly. The bucket doesn't have time to fill or empty much before the input changes again. The water level stays relatively stable. This results in a <strong>small voltage ripple</strong> and a smoother DC output.</li>
+                        </ul>
+                    </p>
+                    <p class="text-lg mt-3">The Bode plot's magnitude curve shows this: at high frequencies (right side), the magnitude is low, meaning the output ripple is heavily suppressed.</p>
+                </div>
+
+                <div class="bg-ku-red/10 border-l-4 border-ku-red p-4 rounded-md">
+                    <h4 class="font-bold text-xl mb-2 text-ku-red">The Corner Frequency (\(f_c\)) and Switching Circuits</h4>
+                    <p class="text-lg">The <strong>corner frequency (\(f_c\))</strong> is the critical point where the filter really starts to work. For a good DC power supply made from a switching signal, the goal is to get a smooth output with minimal ripple. Therefore, you want your switching frequency (\(f_{\text{switch}}\)) to be <strong>much higher</strong> than the circuit's corner frequency.
+                    </p>
+                    <p class="text-center text-2xl mt-4">
+                        $$f_{\text{switch}} \gg f_c$$
+                    </p>
+                    <p class="text-lg mt-3">This ensures the switching signal itself is heavily attenuated, leaving behind the desired average DC level. Go back to the simulator and see how the ripple shrinks as you increase the input frequency far above the corner frequency!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-center mb-2">Magnitude Response</h3>
+                        <canvas id="magnitudeChart"></canvas>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-center mb-2">Phase Response</h3>
+                        <canvas id="phaseChart"></canvas>
+                    </div>
+                </div>
+                 <div class="text-center text-xl font-semibold bg-gray-100 p-4 rounded-md">
+                    Calculated Corner Frequency (\(f_c\)): <span id="cutoffFrequency" class="font-bold">159.15</span> Hz
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 5: Test Your Understanding -->
+        <section class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+            <h2 class="text-3xl font-bold text-gray-800 border-b-2 border-ku-red/50 pb-2 mb-4">Step 5: Application & Design Challenges</h2>
+            <div class="space-y-10">
+                <!-- Challenge 1: Transient -->
+                <div class="max-w-3xl mx-auto bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                    <h3 class="text-2xl font-bold text-ku-gray text-center mb-4">Challenge 1: Transient Design</h3>
+                    <p class="text-lg font-medium text-center mb-4 leading-relaxed">
+                        <strong>Your Task:</strong> You have a <strong>5V</strong> source. You need the ideal transient voltage to reach exactly <strong>4.0 V</strong> in <strong>2.0 ms</strong>. What resistor, capacitor, and duty cycle values are required?
+                    </p>
+                    <form id="transientForm" class="space-y-6">
+                        <div>
+                            <label for="simResistorAnswer" class="block text-lg text-center mb-2">
+                                <strong>Part 1 (Simulation):</strong> Use the simulator in Step 3. Adjust R, C, and duty cycle until the ideal transient curve (gray line) passes through the point (t=2ms, V=4V). What is the closest duty cycle value on the slider?
+                            </label>
+                            <div class="flex items-center justify-center space-x-2">
+                                <input type="number" id="simResistorAnswer" step="5" required class="block w-1/3 p-2 border border-gray-300 rounded-md text-center text-lg" placeholder="e.g., 60">
+                                <span class="text-lg font-medium">%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="calcResistorAnswer" class="block text-lg text-center mb-2">
+                               <strong>Part 2 (Calculation):</strong> Now, calculate the precise theoretical value. Rearrange the formula \(V_C(t) = V_S (1 - e^{-t/RC})\) to solve for R. What is the value in Ω if the capacitor value is 2.2 µF? (Round to the nearest whole number).
+                            </label>
+                             <div class="flex items-center justify-center space-x-2">
+                                <input type="number" id="calcResistorAnswer" step="1" required class="block w-1/3 p-2 border border-gray-300 rounded-md text-center text-lg" placeholder="e.g., 565">
+                                <span class="text-lg font-medium">Ω</span>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <button type="submit" class="bg-ku-red hover:bg-ku-red/80 text-white font-bold py-2 px-6 rounded-lg transition-colors text-lg">
+                                Check Transient Design
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Challenge 2: Filter -->
+                 <div class="max-w-3xl mx-auto bg-gray-50 p-6 rounded-lg border-2 border-gray-200">
+                    <h3 class="text-2xl font-bold text-ku-gray text-center mb-4">Challenge 2: Filter Design</h3>
+                    <p class="text-lg font-medium text-center mb-4 leading-relaxed">
+                        <strong>Your Task:</strong> You are given a <strong>1 kΩ</strong> resistor and need to design a low-pass filter with a corner frequency of approximately <strong>300 Hz</strong>. Find the required capacitance.
+                    </p>
+                    <form id="filterForm" class="space-y-6">
+                        <div>
+                            <label for="simCapacitorAnswer" class="block text-lg text-center mb-2">
+                                <strong>Part 1 (Simulation):</strong> Use the controls in Step 3. Set R = 1000 Ω. Adjust C until the "Corner Frequency" in Step 4 is as close as possible to 300 Hz. What is the capacitor value?
+                            </label>
+                            <div class="flex items-center justify-center space-x-2">
+                                <input type="number" id="simCapacitorAnswer" step="0.1" required class="block w-1/3 p-2 border border-gray-300 rounded-md text-center text-lg" placeholder="e.g., 0.5">
+                                <span class="text-lg font-medium">µF</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="calcCapacitorAnswer" class="block text-lg text-center mb-2">
+                               <strong>Part 2 (Calculation):</strong> Now, calculate the precise theoretical value. Rearrange the formula \(f_c = 1 / (2\pi RC)\) to solve for C. What is the calculated value in µF? (Round to two decimal places).
+                            </label>
+                             <div class="flex items-center justify-center space-x-2">
+                                <input type="number" id="calcCapacitorAnswer" step="0.01" required class="block w-1/3 p-2 border border-gray-300 rounded-md text-center text-lg" placeholder="e.g., 0.53">
+                                <span class="text-lg font-medium">µF</span>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <button type="submit" class="bg-ku-red hover:bg-ku-red/80 text-white font-bold py-2 px-6 rounded-lg transition-colors text-lg">
+                                Check Filter Design
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+        
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- EXERCISE SCRIPT ---
+        const transientForm = document.getElementById('transientForm');
+        const filterForm = document.getElementById('filterForm');
+
+        // Challenge 1: Transient Design
+        transientForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const simResistorInput = document.getElementById('simResistorAnswer').value;
+            const calcResistorInput = document.getElementById('calcResistorAnswer').value;
+            
+            // Correct Answers: R = -t / (C * ln(1 - Vc/Vs)) = -0.002 / (2.2e-6 * ln(1 - 4/5)) = 564.9 Ohms
+            const correctCalcR = 909;
+            const correctSimR = 80; // Closest value on the slider (steps of 100)
+
+            const isSimCorrect = Math.abs(parseFloat(simResistorInput) - correctSimR) < 5;
+            const isCalcCorrect = Math.abs(parseFloat(calcResistorInput) - correctCalcR) < 5;
+
+            if (isSimCorrect && isCalcCorrect) {
+                alert('Well done on the transient design! Your simulated and calculated resistor values are correct.');
+            } else if (!isSimCorrect && isCalcCorrect) {
+                alert('Your calculation is perfect! Now, go back to the simulator, set C=2.2µF, and find the closest resistor value on the slider.');
+            } else if (isSimCorrect && !isCalcCorrect) {
+                alert('Your simulation value is correct, but check your math. Hint: Rearrange the charging equation to solve for R. You will need to use the natural log (ln).');
+            } else {
+                alert('Both answers need another look. Make sure you set C=2.2µF in the simulator and carefully rearrange the charging equation for the calculation.');
+            }
+        });
+
+        // Challenge 2: Filter Design
+        filterForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const simCapacitorInput = document.getElementById('simCapacitorAnswer').value;
+            const calcCapacitorInput = document.getElementById('calcCapacitorAnswer').value;
+            
+            // Correct Answers: C = 1 / (2 * pi * R * fc) = 1 / (2 * pi * 1000 * 300) = 0.53 uF
+            const correctCalcC = 0.53; 
+            const correctSimC = 0.5; // Closest value on the slider (steps of 0.1)
+
+            const isSimCorrect = Math.abs(parseFloat(simCapacitorInput) - correctSimC) < 0.05;
+            const isCalcCorrect = Math.abs(parseFloat(calcCapacitorInput) - correctCalcC) < 0.02;
+
+            if (isSimCorrect && isCalcCorrect) {
+                alert('Well done on the filter design! Your simulated value (0.5 µF) is the closest practical step, and your calculated value is spot on.');
+            } else if (!isSimCorrect && isCalcCorrect) {
+                alert('Your calculation is perfect! Now go back to the simulator, set R=1000Ω, and find the matching capacitor value on the slider.');
+            } else if (isSimCorrect && !isCalcCorrect) {
+                 alert('Your simulation value is correct, but check your calculation! Hint: Rearrange the formula to C = 1 / (2 * π * R * fc).');
+            } else {
+                alert('Both answers need another look. Make sure you set R=1000Ω in the simulator and double-check your formula for the calculation part.');
+            }
+        });
+
+        // --- SIMULATION SCRIPT ---
+        const controls = {
+            resistor: document.getElementById('resistor'),
+            capacitor: document.getElementById('capacitor'),
+            frequency: document.getElementById('frequency'),
+            dutyCycle: document.getElementById('dutyCycle'),
+        };
+
+        const displays = {
+            resistorValue: document.getElementById('resistorValue'),
+            capacitorValue: document.getElementById('capacitorValue'),
+            dutyCycleValue: document.getElementById('dutyCycleValue'),
+            timeConstant: document.getElementById('timeConstant'),
+            targetDcLevel: document.getElementById('targetDcLevel'),
+            cutoffFrequency: document.getElementById('cutoffFrequency'),
+        };
+
+        // Output Waveform Chart
+        const waveformCtx = document.getElementById('waveformChart').getContext('2d');
+        const waveformChart = new Chart(waveformCtx, {
+            type: 'line', data: { datasets: [
+                { label: 'Switching Response (Ripple)', borderColor: 'rgba(138, 0, 0, 1)', borderWidth: 2.5, pointRadius: 0, tension: 0.1, data: [] },
+                { label: 'Target DC Level', borderColor: 'rgba(54, 162, 235, 1)', borderWidth: 3, borderDash: [5, 5], pointRadius: 0, data: [] },
+                { label: 'Ideal DC Transient', borderColor: 'rgba(58, 58, 58, 0.6)', borderWidth: 3, borderDash: [10, 10], pointRadius: 0, data: [] }
+            ]},
+            options: { 
+                scales: { x: { type: 'linear', title: { display: false }, min: 0, max: 25 }, y: { title: { display: true, text: 'Voltage (V)' }, min: -0.2, max: 5.5 }}, 
+                animation: { duration: 0 },
+                plugins: {
+                    annotation: {
+                        annotations: {
+                            tauLine: {
+                                type: 'line',
+                                xMin: 1, xMax: 1, borderColor: 'rgba(58, 58, 58, 0.8)',
+                                borderWidth: 2, borderDash: [6, 6],
+                                label: { content: 'τ', enabled: true, position: 'end' }
+                            },
+                            v63Line: {
+                                type: 'line',
+                                yMin: 1, yMax: 1, borderColor: 'rgba(58, 58, 58, 0.8)',
+                                borderWidth: 2, borderDash: [6, 6],
+                                label: { content: '63.2%', enabled: true, position: 'start' }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Input Waveform Chart
+        const inputWaveformCtx = document.getElementById('inputWaveformChart').getContext('2d');
+        const inputWaveformChart = new Chart(inputWaveformCtx, {
+            type: 'line', data: { datasets: [
+                { label: 'Input Signal', borderColor: 'rgba(40, 167, 69, 1)', borderWidth: 2.5, pointRadius: 0, data: [], stepped: true },
+                { label: 'Average Input Level', borderColor: 'rgba(54, 162, 235, 1)', borderWidth: 3, borderDash: [5, 5], pointRadius: 0, data: [] }
+            ]},
+            options: { scales: { x: { type: 'linear', title: { display: true, text: 'Time (ms)' }, min: 0, max: 25 }, y: { title: { display: true, text: 'Voltage (V)' }, min: -0.5, max: 5.5 }}, animation: { duration: 0 }}
+        });
+
+        // Magnitude Chart
+        const magnitudeCtx = document.getElementById('magnitudeChart').getContext('2d');
+        const magnitudeChart = new Chart(magnitudeCtx, {
+            type: 'line', data: { datasets: [{ label: 'Magnitude (dB)', data: [], borderColor: 'rgba(138, 0, 0, 1)' }] },
+            options: { scales: { x: { type: 'logarithmic', title: { display: true, text: 'Frequency (Hz)' } }, y: { title: { display: true, text: 'Magnitude (dB)' } }}, animation: { duration: 0 },
+            plugins: { annotation: { annotations: {
+                fcLine: { type: 'line', xMin: 1, xMax: 1, borderColor: 'grey', borderWidth: 2, borderDash: [6, 6] },
+                dbLine: { type: 'line', yMin: -3, yMax: -3, borderColor: 'grey', borderWidth: 2, borderDash: [6, 6], label: { content: '-3 dB', enabled: true, position: 'start' } }
+            }}}}
+        });
+        
+        // Phase Chart
+        const phaseCtx = document.getElementById('phaseChart').getContext('2d');
+        const phaseChart = new Chart(phaseCtx, {
+            type: 'line', data: { datasets: [{ label: 'Phase (°)', data: [], borderColor: 'rgba(54, 162, 235, 1)' }] },
+            options: { scales: { x: { type: 'logarithmic', title: { display: true, text: 'Frequency (Hz)' } }, y: { title: { display: true, text: 'Phase (°)' }, min: -95, max: 5 }}, animation: { duration: 0 },
+            plugins: { annotation: { annotations: {
+                fcLine: { type: 'line', xMin: 1, xMax: 1, borderColor: 'grey', borderWidth: 2, borderDash: [6, 6] },
+                degLine: { type: 'line', yMin: -45, yMax: -45, borderColor: 'grey', borderWidth: 2, borderDash: [6, 6], label: { content: '-45°', enabled: true, position: 'start' } }
+            }}}}
+        });
+
+        function updateSimulation() {
+            const R = parseFloat(controls.resistor.value);
+            const C = parseFloat(controls.capacitor.value) * 1e-6;
+            const freq = parseFloat(controls.frequency.value);
+            const duty = parseFloat(controls.dutyCycle.value);
+            
+            const vin = 5;
+            const timeConstant = R * C;
+            const targetDcLevel = vin * (duty / 100);
+            const period = 1 / freq;
+            const t_on = period * (duty / 100);
+
+            displays.resistorValue.textContent = R;
+            displays.capacitorValue.textContent = (C * 1e6).toFixed(1);
+            displays.dutyCycleValue.textContent = duty;
+            displays.timeConstant.textContent = (timeConstant * 1000).toFixed(2);
+            displays.targetDcLevel.textContent = targetDcLevel.toFixed(2);
+
+            const totalTime = 0.025; // 25ms
+            const pointsPerPeriod = 100;
+            const timeStep = period / pointsPerPeriod;
+            const numPoints = Math.ceil(totalTime / timeStep);
+            
+            let v_out = 0;
+            const waveformData = [], targetLevelData = [], idealTransientData = [], inputWaveformData = [];
+            
+            for (let i = 0; i <= numPoints; i++) {
+                const t = i * timeStep;
+                const inputIsHigh = (t % period) < t_on;
+                const inputLevel = inputIsHigh ? vin : 0;
+                inputWaveformData.push({x: t * 1000, y: inputLevel});
+                const v_final = inputLevel;
+                v_out = v_final + (v_out - v_final) * Math.exp(-timeStep / timeConstant);
+                waveformData.push({x: t * 1000, y: v_out});
+                targetLevelData.push({x: t * 1000, y: targetDcLevel});
+                const v_ideal = targetDcLevel * (1 - Math.exp(-t / timeConstant));
+                idealTransientData.push({x: t * 1000, y: v_ideal});
+            }
+            
+            const tau_ms = timeConstant * 1000;
+            const v63 = targetDcLevel * (1 - Math.exp(-1));
+            const annotations = waveformChart.options.plugins.annotation.annotations;
+            annotations.tauLine.xMin = tau_ms;
+            annotations.tauLine.xMax = tau_ms;
+            annotations.v63Line.yMin = v63;
+            annotations.v63Line.yMax = v63;
+            annotations.tauLine.label.content = `τ = ${tau_ms.toFixed(2)} ms`;
+            annotations.v63Line.label.content = `${v63.toFixed(2)} V (63.2%)`;
+            
+            waveformChart.data.datasets[0].data = waveformData;
+            waveformChart.data.datasets[1].data = targetLevelData;
+            waveformChart.data.datasets[2].data = idealTransientData;
+            waveformChart.update();
+
+            inputWaveformChart.data.datasets[0].data = inputWaveformData;
+            inputWaveformChart.data.datasets[1].data = targetLevelData;
+            inputWaveformChart.update();
+            
+            const fc = 1 / (2 * Math.PI * R * C);
+            displays.cutoffFrequency.textContent = fc.toFixed(2);
+
+            const frequencies = Array.from({length: 401}, (_, i) => Math.pow(10, (i - 100) / 50));
+            const magnitudeData = frequencies.map(f => ({x: f, y: 20 * Math.log10(1 / Math.sqrt(1 + Math.pow(f/fc, 2)))}));
+            const phaseData = frequencies.map(f => ({x: f, y: -Math.atan(f/fc) * (180/Math.PI)}));
+            
+            magnitudeChart.data.datasets[0].data = magnitudeData;
+            phaseChart.data.datasets[0].data = phaseData;
+            
+            magnitudeChart.options.plugins.annotation.annotations.fcLine.xMin = fc;
+            magnitudeChart.options.plugins.annotation.annotations.fcLine.xMax = fc;
+            phaseChart.options.plugins.annotation.annotations.fcLine.xMin = fc;
+            phaseChart.options.plugins.annotation.annotations.fcLine.xMax = fc;
+
+            magnitudeChart.update();
+            phaseChart.update();
+        }
+
+        Object.values(controls).forEach(control => {
+            control.addEventListener('input', updateSimulation);
+        });
+
+        updateSimulation();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPWM Pulse Averaging Visualizer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f0f5;
+        }
+        .seaborn-plot {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        input[type=range] {
+            accent-color: #cf3838;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-slate-800">
+
+    <!-- CHANGED: max-w-5xl to max-w-3xl for a narrower plot area -->
+    <div class="max-w-2xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h1 class="text-3xl font-bold mb-2">SPWM Averaging Principle</h1>
+            <p class="text-slate-600 mb-6 font-sans">
+                This simulation demonstrates how a high-frequency PWM signal replicates a low-frequency sine wave. 
+                The <span class="text-red-600 font-bold">Red Stepped Line</span> shows the calculated average voltage over each individual switching period.
+            </p>
+
+            <!-- Controls -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 font-sans">
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <label class="font-semibold text-slate-700">Modulation Index (m)</label>
+                        <span id="mVal" class="text-red-600 font-bold">0.8</span>
+                    </div>
+                    <input type="range" id="mInput" min="0.1" max="1.0" step="0.05" value="0.8" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <label class="font-semibold text-slate-700">Frequency Ratio (Pulses per Cycle)</label>
+                        <span id="fcVal" class="text-red-600 font-bold">15</span>
+                    </div>
+                    <input type="range" id="fcInput" min="5" max="50" step="1" value="15" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+        </div>
+
+        <!-- Plot: PWM & Average -->
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold mb-4 ml-2">Pulse Width Modulation & Per-Cycle Average</h2>
+            <div id="plotMain" class="w-full h-[700px] seaborn-plot"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Constants ---
+        const FUNDAMENTAL_FREQ = 50; // Hz
+
+        // --- Seaborn Style ---
+        const STYLE = {
+            paper_bgcolor: '#EAEAF2',
+            plot_bgcolor: '#EAEAF2',
+            font: { family: "sans-serif", size: 14, color: '#333' },
+            gridcolor: 'white',
+            zerolinecolor: 'white',
+            zerolinewidth: 2
+        };
+
+        // --- Logic ---
+        function generateData(m, fc_ratio) {
+            const fc = FUNDAMENTAL_FREQ * fc_ratio;
+            const period = 1 / FUNDAMENTAL_FREQ; // 0.02s
+            
+            // Sync sampling to carrier for perfect edges
+            // 400 points per carrier cycle ensures very high resolution for integration
+            const samplesPerCarrier = 200; 
+            const fs = fc * samplesPerCarrier; 
+            const totalSamples = samplesPerCarrier * fc_ratio; // For 1 fundamental cycle
+
+            const time = [];
+            const carrier = [];
+            const ref = [];
+            const pwm = [];
+
+            // 1. Generate Raw Signals
+            for (let i = 0; i <= totalSamples; i++) {
+                const t = i / fs;
+                time.push(t);
+
+                // Reference Sine (Standard -1 to 1)
+                const r = m * Math.sin(2 * Math.PI * FUNDAMENTAL_FREQ * t);
+                ref.push(r);
+
+                // Triangle Carrier (-1 to 1)
+                const phase = (t * fc) % 1; 
+                let c = 0;
+                if (phase < 0.25) c = phase * 4;       // 0 to 1
+                else if (phase < 0.75) c = 1 - (phase - 0.25) * 4; // 1 to -1
+                else c = -1 + (phase - 0.75) * 4;      // -1 to 0
+                
+                carrier.push(c);
+
+                // PWM Comparator
+                const pwmVal = (r >= c) ? 1 : -1;
+                pwm.push(pwmVal);
+            }
+
+            // 2. Calculate Per-Cycle Averages
+            const avgTime = [];
+            const avgVal = [];
+
+            for (let i = 0; i < fc_ratio; i++) {
+                const startIdx = i * samplesPerCarrier;
+                const endIdx = startIdx + samplesPerCarrier;
+                
+                let sum = 0;
+                for (let k = startIdx; k < endIdx; k++) {
+                    sum += pwm[k];
+                }
+                const average = sum / samplesPerCarrier;
+
+                avgTime.push(time[startIdx]);
+                avgVal.push(average);
+                avgTime.push(time[endIdx]);
+                avgVal.push(average);
+            }
+
+            return { time, carrier, ref, pwm, avgTime, avgVal };
+        }
+
+        function updateSimulation() {
+            const m = parseFloat(document.getElementById('mInput').value);
+            const fc_ratio = parseInt(document.getElementById('fcInput').value);
+
+            document.getElementById('mVal').innerText = m.toFixed(2);
+            document.getElementById('fcVal').innerText = fc_ratio;
+
+            const data = generateData(m, fc_ratio);
+            drawPlots(data, m, fc_ratio);
+        }
+
+        function drawPlots(data, m, fc_ratio) {
+            
+            // --- Subplot 1: Modulation ---
+            // Explicitly mapped to x and y (Subplot 1)
+            const traceRef = {
+                x: data.time,
+                y: data.ref,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Reference Sine',
+                line: { color: '#e63946', width: 2 },
+                xaxis: 'x', yaxis: 'y' 
+            };
+
+            const traceCarrier = {
+                x: data.time,
+                y: data.carrier,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Triangle Carrier',
+                line: { color: 'grey', width: 1 },
+                opacity: 0.6,
+                xaxis: 'x', yaxis: 'y'
+            };
+
+            // --- Subplot 2: PWM & Average ---
+            // Explicitly mapped to x2 and y2 (Subplot 2)
+            
+            const tracePWM = {
+                x: data.time,
+                y: data.pwm,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'PWM Pulses',
+                line: { color: '#4a4a4a', width: 1, shape: 'hv' },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(74, 74, 74, 0.1)',
+                xaxis: 'x2', yaxis: 'y2' // FIXED: Was 'x'
+            };
+
+            const traceAvg = {
+                x: data.avgTime,
+                y: data.avgVal,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Avg Value (Per Period)',
+                line: { color: '#e63946', width: 3 },
+                xaxis: 'x2', yaxis: 'y2' // FIXED: Was default
+            };
+
+            const traceRefDash = {
+                x: data.time,
+                y: data.ref,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Target Sine',
+                line: { color: '#e63946', width: 1.5, dash: 'dot' },
+                opacity: 0.7,
+                xaxis: 'x2', yaxis: 'y2' // FIXED: Was default
+            };
+
+            const layout = {
+                title: 'SPWM Average Value Extraction',
+                grid: { rows: 2, columns: 1, pattern: 'independent' },
+                paper_bgcolor: STYLE.paper_bgcolor,
+                plot_bgcolor: STYLE.plot_bgcolor,
+                font: STYLE.font,
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.1 },
+                
+                // Top Axis (Modulation) - Defined for Row 1
+                xaxis: { 
+                    range: [0, 0.02], 
+                    showticklabels: false,
+                    gridcolor: STYLE.gridcolor,
+                    zeroline: false
+                },
+                yaxis: { 
+                    title: 'Control Signal',
+                    range: [-1.2, 1.2], 
+                    gridcolor: STYLE.gridcolor,
+                    zerolinecolor: STYLE.zerolinecolor,
+                    zerolinewidth: 2
+                },
+
+                // Bottom Axis (PWM + Average) - Defined for Row 2
+                xaxis2: { 
+                    range: [0, 0.02], 
+                    title: 'Time (s)',
+                    gridcolor: STYLE.gridcolor,
+                    zeroline: false
+                },
+                yaxis2: { 
+                    title: 'Output Voltage (Normalized)',
+                    range: [-1.5, 1.5], 
+                    gridcolor: STYLE.gridcolor,
+                    zerolinecolor: STYLE.zerolinecolor,
+                    zerolinewidth: 2
+                },
+                margin: { t: 60, b: 60, l: 60, r: 20 },
+                height: 700
+            };
+
+            Plotly.newPlot('plotMain', [traceCarrier, traceRef, tracePWM, traceAvg, traceRefDash], layout, {responsive: true, displayModeBar: false});
+        }
+
+        document.getElementById('mInput').addEventListener('input', updateSimulation);
+        document.getElementById('fcInput').addEventListener('input', updateSimulation);
+        window.addEventListener('load', updateSimulation);
+
+    </script>
+</body>
+</html>

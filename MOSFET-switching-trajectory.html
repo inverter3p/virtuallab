@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOSFET Dynamic Trajectory Mapping</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MATHJAX CONFIGURATION (Must be before loading MathJax) -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']], // Allow single dollar signs
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    
+    <!-- MATHJAX LIBRARY -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #1c1b1f; }
+        h1, h2, h3, .serif { font-family: 'Spectral', serif; font-weight: 700; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .plot-container { background: white; border-radius: 12px; height: 550px; width: 100%; border: 1px solid #e5e7eb; }
+        .math-box { background: #f1f3f9; border-left: 5px solid #3f51b5; padding: 1.25rem; border-radius: 8px; margin: 1rem 0; font-size: 0.95rem; }
+        /* Prevent layout shift during MathJax loading */
+        mjx-container { vertical-align: text-bottom !important; }
+    </style>
+</head>
+<body class="p-4 lg:p-12">
+
+    <header class="max-w-7xl mx-auto mb-12">
+        <h1 class="text-4xl text-gray-900 mb-2">MOSFET Dynamic Switching Trajectories</h1>
+        <p class="text-lg text-gray-600">Mapping the transition path through Triode and Saturation regions on the $i_D - V_{DS}$ plane.</p>
+    </header>
+
+    <main class="max-w-7xl mx-auto space-y-16">
+
+        <!-- TURN-ON DYNAMICS SECTION -->
+        <section class="card p-8">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-2 h-8 bg-blue-600 rounded-full"></div>
+                <h2 class="text-2xl uppercase tracking-tight">1. Turn-On Trajectory Mapping</h2>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div id="swOnPlot" class="plot-container"></div>
+                <div id="ivOnPlot" class="plot-container"></div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 mt-8">
+                <div class="math-box">
+                    <span class="text-red-600 font-bold">A. Delay:</span> Point stays at ($V_{dc}, 0$) while $V_{GS}$ rises to $V_{th}$.
+                </div>
+                <div class="math-box">
+                    <span class="text-red-600 font-bold">B. Current Rise:</span> Point moves vertically from $0$ to $I_{load}$. $V_{GS}$ reaches $V_{pl}$.
+                </div>
+                <div class="math-box">
+                    <span class="text-red-600 font-bold">C. Voltage Fall:</span> Point moves horizontally from $V_{dc}$ to $V_{on}$ during the Miller Plateau.
+                </div>
+            </div>
+        </section>
+
+        <!-- TURN-OFF DYNAMICS SECTION -->
+        <section class="card p-8">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-2 h-8 bg-red-600 rounded-full"></div>
+                <h2 class="text-2xl uppercase tracking-tight">2. Turn-Off Trajectory Mapping</h2>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div id="swOffPlot" class="plot-container"></div>
+                <div id="ivOffPlot" class="plot-container"></div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 mt-8">
+                <div class="math-box">
+                    <span class="text-blue-600 font-bold">A. Storage:</span> Point stays at ($V_{on}, I_{load}$) as $V_{GS}$ falls from $V_{gate}$ to $V_{pl}$.
+                </div>
+                <div class="math-box">
+                    <span class="text-blue-600 font-bold">B. Voltage Rise:</span> Point moves horizontally from $V_{on}$ to $V_{dc}$ at constant $I_{load}$.
+                </div>
+                <div class="math-box">
+                    <span class="text-blue-600 font-bold">C. Current Fall:</span> Point moves vertically back to $0$ as $V_{GS}$ drops from $V_{pl}$ to $V_{th}$.
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+<script>
+    // --- PHYSICS CONSTANTS ---
+    const Vg=15, Vth=4, Vpl=7.3, Vdd=300, IdL=15, Rg=5, Cgs=6.45e-9, Qgd=50e-9, K=0.55;
+    const serifBold = { family: 'Spectral', weight: 700 };
+    const theme = { plot_bgcolor: '#EAEAF2', paper_bgcolor: 'white', font: serifBold, margin: {t:60, b:60, l:60, r:60} };
+
+    // --- DATA GENERATION ---
+    function genData(mode) {
+        let t_a=[], vgs_a=[], vds_a=[], id_a=[];
+        const pts = 400;
+        if(mode === 'on') {
+            const t1 = -Math.log(1-Vth/Vg)*Rg*Cgs, t2 = -Math.log(1-Vpl/Vg)*Rg*Cgs, tpl = (Rg*Qgd)/(Vg-Vpl), t3 = t2+tpl, tfin = t3+0.2e-6;
+            for(let i=0;i<pts;i++){ let t=(i/pts)*t1; t_a.push(t*1e6); vgs_arr=vgs_a.push(Vg*(1-Math.exp(-t/(Rg*Cgs)))); vds_a.push(Vdd); id_a.push(0); }
+            for(let i=0;i<pts;i++){ let t=t1+(i/pts)*(t2-t1); t_a.push(t*1e6); vgs_a.push(Vg*(1-Math.exp(-t/(Rg*Cgs)))); vds_a.push(Vdd); id_a.push(IdL*((t-t1)/(t2-t1))); }
+            for(let i=0;i<pts;i++){ let t=t2+(i/pts)*tpl; t_a.push(t*1e6); vgs_a.push(Vpl); vds_a.push(Vdd-(Vdd-2)*((t-t2)/tpl)); id_a.push(IdL); }
+            for(let i=0;i<pts;i++){ let t=t3+(i/pts)*0.2e-6; t_a.push(t*1e6); vgs_a.push(Vpl+(Vg-Vpl)*(1-Math.exp(-(t-t3)/(Rg*Cgs)))); vds_a.push(2); id_a.push(IdL); }
+        } else {
+            const tl=0.02e-6, tst=Rg*Cgs*Math.log(Vg/Vpl), tpl=(Rg*Qgd)/Vpl, tf=Rg*Cgs*Math.log(Vpl/Vth), t1=tl+tst, t2=t1+tpl, t3=t2+tf, tfin=t3+0.2e-6;
+            for(let i=0;i<pts;i++){ let t=(i/pts)*tl; t_a.push(t*1e6); vgs_a.push(Vg); vds_a.push(2); id_a.push(IdL); }
+            for(let i=0;i<pts;i++){ let t=tl+(i/pts)*tst; t_a.push(t*1e6); vgs_a.push(Vg*Math.exp(-(t-tl)/(Rg*Cgs))); vds_a.push(2); id_a.push(IdL); }
+            for(let i=0;i<pts;i++){ let t=t1+(i/pts)*tpl; t_a.push(t*1e6); vgs_a.push(Vpl); vds_a.push(2+(Vdd-2)*((t-t1)/tpl)); id_a.push(IdL); }
+            for(let i=0;i<pts;i++){ let t=t2+(i/pts)*tf; t_a.push(t*1e6); vgs_a.push(Vpl*Math.exp(-(t-t2)/(Rg*Cgs))); vds_a.push(Vdd); id_a.push(IdL*(1-(t-t2)/tf)); }
+            for(let i=0;i<pts;i++){ let t=t3+(i/pts)*0.2e-6; t_a.push(t*1e6); vgs_a.push(Vth*Math.exp(-(t-t3)/(Rg*Cgs))); vds_a.push(Vdd); id_a.push(0); }
+        }
+        return {t_a, vgs_a, vds_a, id_a};
+    }
+
+    function initMapping(swId, ivId, mode) {
+        const d = genData(mode);
+        const vgsSteps = [4, 6, 8, 10, 12, 14, 15];
+        let ivTraces = vgsSteps.map(v => {
+            let vx=[], vy=[]; for(let d=0; d<=350; d+=5){ let vov=Math.max(0,v-Vth); vy.push((d<vov)?K*(2*vov*d-d**2):K*vov**2); vx.push(d); }
+            return {x:vx, y:vy, line:{color:'#ddd', width:1}, showlegend:false, hoverinfo:'skip'};
+        });
+
+        // 1. Static Trajectory Overlay with Arrows
+        let trajColor = mode === 'on' ? 'rgba(37, 99, 235, 0.4)' : 'rgba(220, 38, 38, 0.4)';
+        ivTraces.push({ x: d.vds_a, y: d.id_a, name: 'Path', line: {color: trajColor, width: 6}, showlegend: false, hoverinfo: 'skip' });
+
+        // Arrow Annotations
+        let annotations = vgsSteps.map((v, i) => ({
+            x: 320, y: (Math.max(0,v-Vth)**2)*K, text: `VGS=${v}V`, showarrow: false, font: {size: 10, color: '#999'}, xanchor: 'right'
+        }));
+
+        if (mode === 'on') {
+            annotations.push(
+                { x: Vdd, y: IdL/2, ax: 0, ay: 30, showarrow: true, arrowhead: 2, arrowcolor: 'blue' },
+                { x: Vdd/2, y: IdL, ax: 30, ay: 0, showarrow: true, arrowhead: 2, arrowcolor: 'blue' },
+                { x: Vdd, y: 0.5, text: "VGS=Vth", font: {color: 'red'}, showarrow: true, arrowhead: 1, ax: 40, ay: -20 },
+                { x: Vdd, y: IdL, text: "VGS=Vpl", font: {color: 'red'}, showarrow: true, arrowhead: 1, ax: 40, ay: -20 },
+                { x: Vdd*0.95, y: IdL/2, text: "Current Rise", font: {color: 'red'},showarrow: true, arrowhead: 1, ax: -80, ay: 20},
+                { x: Vdd/2, y: IdL+1, text: "Voltage Fall", font: {color: 'red'}}
+            );
+        } else {
+            annotations.push(
+                { x: Vdd/2, y: IdL, ax: -30, ay: 0, showarrow: true, arrowhead: 2, arrowcolor: 'red' },
+                { x: Vdd, y: IdL/2-0.5, ax: 0, ay: -30, showarrow: true, arrowhead: 2, arrowcolor: 'red' },
+                { x: Vdd, y: IdL, text: "VGS=Vpl", font: {color: 'blue'}, showarrow: true, arrowhead: 1, ax: 40, ay: -20 },
+                { x: Vdd, y: 0.5, text: "VGS=Vth", font: {color: 'blue'}, showarrow: true, arrowhead: 1, ax: 40, ay: -20 },
+                { x: Vdd*0.95, y: IdL/2, text: "Current Fall", font: {color: 'blue'},showarrow: true, arrowhead: 1, ax: -80, ay: -20},
+                { x: Vdd/2, y: IdL+1, text: "Voltage Rise", font: {color: 'blue'}}
+
+            );
+        }
+
+        // 2. Waveform Traces
+        const swTraces = [
+            {x:d.t_a, y:d.vgs_a, name:'Vgs', line:{color:'#4C72B0', width:2}},
+            {x:d.t_a, y:d.vds_a, name:'Vds', line:{color:'#C44E52', width:2}, yaxis:'y2'},
+            {x:d.t_a, y:d.id_a, name:'Id', line:{color:'#55A868', width:2}, yaxis:'y2'},
+            {x:[d.t_a[0]], y:[d.vgs_a[0]], mode:'markers', marker:{color:'red', size:10}, showlegend:false}
+        ];
+
+        Plotly.newPlot(swId, swTraces, {
+            ...theme, title: mode==='on'?'TURN-ON WAVEFORMS':'TURN-OFF WAVEFORMS',
+            xaxis:{title:'Time (us)', gridcolor: 'white'}, 
+            yaxis:{title:'Vgs (V)', range:[0,18], gridcolor: 'white'}, 
+            yaxis2:{overlaying:'y', side:'right', range:[0,350], title:'Vds (V) / Id (A)', gridcolor: 'transparent'}, 
+            hovermode:'x unified'
+        }, {displayModeBar:false});
+
+        Plotly.newPlot(ivId, [...ivTraces, {x:[d.vds_a[0]], y:[d.id_a[0]], mode:'markers', marker:{color:'red', size:12, line:{color:'white',width:2}}, showlegend:false}], {
+            ...theme, title: 'DYNAMIC TRAJECTORY',
+            xaxis:{title:'Drain-Source Voltage Vds (V)', range:[0,360], gridcolor: 'white'}, 
+            yaxis:{title:'Drain Current Id (A)', range:[0,25], gridcolor: 'white'},
+            annotations: annotations
+        }, {displayModeBar:false});
+
+        // 3. Hover Sync
+        document.getElementById(swId).on('plotly_hover', (ev) => {
+            let i = ev.points[0].pointIndex;
+            Plotly.restyle(swId, {x:[[d.t_a[i]]], y:[[d.vgs_a[i]]]}, [3]);
+            Plotly.restyle(ivId, {x:[[d.vds_a[i]]], y:[[d.id_a[i]]]}, [ivTraces.length]);
+        });
+    }
+
+    initMapping('swOnPlot', 'ivOnPlot', 'on');
+    initMapping('swOffPlot', 'ivOffPlot', 'off');
+</script>
+</body>
+</html>

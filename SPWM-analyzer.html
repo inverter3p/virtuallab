@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPWM Analysis & Harmonic Decomposition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            /* Changed to modern sans-serif font stack */
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f0f5;
+        }
+        .seaborn-plot {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        input[type=range] {
+            accent-color: #cf3838;
+        }
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-slate-800">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h1 class="text-3xl font-bold mb-2">SPWM Generator & Decomposition</h1>
+            <p class="text-slate-600 mb-6 text-slate-500">
+                Adjust parameters to simulate Sinusoidal Pulse Width Modulation. The system performs a real-time FFT to identify and plot the fundamental wave plus the top 7 dominant harmonics.
+            </p>
+
+            <!-- Controls -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">Modulation Index (m): <span id="mVal" class="text-red-600 font-bold">0.9</span></label>
+                    <input type="range" id="mInput" min="0.1" max="1.2" step="0.05" value="0.9" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">Carrier Freq Ratio (fc/fm): <span id="fcVal" class="text-red-600 font-bold">21</span></label>
+                    <input type="range" id="fcInput" min="9" max="50" step="2" value="21" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-xs text-slate-500">Odd integers preferred.</p>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">DC Bus Voltage (VDC): <span id="vdcVal" class="text-red-600 font-bold">200</span> V</label>
+                    <input type="range" id="vdcInput" min="10" max="800" step="10" value="200" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">Inverter Topology</label>
+                    <select id="topologyInput" onchange="updateSimulation()" class="w-full bg-slate-200 border border-slate-300 text-slate-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                        <option value="half">Half Bridge (Vout = ±Vdc/2)</option>
+                        <option value="full">Full Bridge Bipolar (Vout = ±Vdc)</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Update Button moved below grid for better mobile layout -->
+            <div class="mt-4">
+                <button onclick="updateSimulation()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-medium py-2 px-4 rounded transition">
+                    Update Simulation
+                </button>
+            </div>
+        </div>
+
+        <!-- Plot 1: SPWM Generation -->
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold mb-4 ml-2">1. Modulation & PWM Output</h2>
+            <!-- Increased height to accommodate 3 subplots -->
+            <div id="plotSPWM" class="w-full h-[800px] seaborn-plot"></div>
+        </div>
+
+        <!-- Plot 2: Decomposition -->
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold mb-4 ml-2">2. Harmonic Decomposition (Time Domain)</h2>
+            <p class="text-sm text-slate-500 mb-2 ml-2">Showing the reconstructed Fundamental (50Hz) + Top 7 Harmonics for <strong>1 Cycle</strong>.</p>
+            <!-- Grid Layout Container -->
+            <div id="plotDecomp" class="w-full h-[600px] seaborn-plot"></div>
+        </div>
+
+        <!-- Plot 3: Frequency Spectrum -->
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold mb-4 ml-2">3. Frequency Spectrum (FFT)</h2>
+            <div id="plotFFT" class="w-full h-[400px] seaborn-plot"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Constants & Config ---
+        const FUNDAMENTAL_FREQ = 50; // Hz
+        const DURATION = 0.2; // 0.2s = Exactly 10 cycles of 50Hz.
+        
+        // --- Seaborn Style Constants ---
+        const STYLE = {
+            paper_bgcolor: '#EAEAF2',
+            plot_bgcolor: '#EAEAF2',
+            // Updated font to modern sans-serif
+            font: { family: "ui-sans-serif, system-ui, sans-serif", size: 14, color: '#333' },
+            gridcolor: 'white',
+            zerolinecolor: 'white',
+            zerolinewidth: 2
+        };
+
+        // --- FFT Implementation (Radix-2 Cooley-Tukey) ---
+        function Complex(re, im) {
+            this.re = re;
+            this.im = im || 0.0;
+        }
+        Complex.prototype.add = function(other) { return new Complex(this.re + other.re, this.im + other.im); }
+        Complex.prototype.sub = function(other) { return new Complex(this.re - other.re, this.im - other.im); }
+        Complex.prototype.mul = function(other) { return new Complex(this.re * other.re - this.im * other.im, this.re * other.im + this.im * other.re); }
+
+        function fft(amplitudes) {
+            const N = amplitudes.length;
+            if (N <= 1) return amplitudes.map(a => new Complex(a, 0));
+
+            const even = fft(amplitudes.filter((_, i) => i % 2 === 0));
+            const odd = fft(amplitudes.filter((_, i) => i % 2 !== 0));
+
+            const results = new Array(N);
+            for (let k = 0; k < N / 2; k++) {
+                const t = -2 * Math.PI * k / N;
+                const exp = new Complex(Math.cos(t), Math.sin(t));
+                const term = exp.mul(odd[k]);
+                results[k] = even[k].add(term);
+                results[k + N / 2] = even[k].sub(term);
+            }
+            return results;
+        }
+
+        // --- Logic ---
+
+        function generateData(m, fc_ratio, vdc, topology, fs) {
+            const fc = FUNDAMENTAL_FREQ * fc_ratio;
+            
+            // Generate full duration (approx 0.2s)
+            const N_raw = Math.floor(DURATION * fs); 
+            
+            // Calculate how many samples make up exactly one carrier period
+            const samplesPerCarrier = Math.round(fs / fc); // Should be exact integer due to updateSimulation logic
+            
+            // Determine Peak Amplitude based on Topology
+            // Half Bridge: Peak = VDC / 2 (Swings +VDC/2 to -VDC/2)
+            // Full Bridge: Peak = VDC (Swings +VDC to -VDC)
+            const peakVoltage = (topology === 'half') ? (vdc / 2) : vdc;
+
+            const time = [];
+            const carrier = [];
+            const ref = [];
+            const pwmLogic = [];
+            const pwmVoltage = [];
+
+            // Generate Time Domain Signals
+            for (let i = 0; i < N_raw; i++) {
+                const t = i / fs;
+                time.push(t);
+
+                // Reference Sine
+                const r = m * Math.sin(2 * Math.PI * FUNDAMENTAL_FREQ * t);
+                ref.push(r);
+
+                // Triangle Carrier - PRECISE INTEGER GENERATION
+                const indexInCycle = i % samplesPerCarrier;
+                const phase = indexInCycle / samplesPerCarrier; 
+
+                let c = 0;
+                if (phase < 0.5) {
+                    c = -1 + (phase * 4);
+                } else {
+                    c = 1 - ((phase - 0.5) * 4);
+                }
+                
+                carrier.push(c);
+
+                // PWM Logic (0 or 1)
+                const logicVal = (r >= c) ? 1 : 0;
+                pwmLogic.push(logicVal);
+
+                // PWM Voltage (Bipolar: +Peak or -Peak)
+                // For SPWM, we model it as bipolar swinging around 0
+                // Logic 1 => +Peak, Logic 0 => -Peak
+                const voltVal = (logicVal === 1) ? peakVoltage : -peakVoltage;
+                pwmVoltage.push(voltVal);
+            }
+
+            // --- Calculate Average Over Switching Period Ts ---
+            const avgTime = [];
+            const avgVal = [];
+
+            // Number of full carrier cycles
+            const numCycles = Math.floor(N_raw / samplesPerCarrier);
+
+            for(let j=0; j < numCycles; j++) {
+                const startIdx = j * samplesPerCarrier;
+                const endIdx = startIdx + samplesPerCarrier;
+                
+                if (endIdx > pwmVoltage.length) break;
+
+                let sum = 0;
+                for(let k=startIdx; k<endIdx; k++) {
+                    sum += pwmVoltage[k];
+                }
+                const average = sum / samplesPerCarrier;
+
+                // Add points to create a "stepped" line effect
+                avgTime.push(time[startIdx]);
+                avgVal.push(average);
+                // Hold value until end of period
+                avgTime.push(time[endIdx-1]);
+                avgVal.push(average);
+            }
+
+
+            // Calculate smallest Power of 2 that fits inside N_raw for the FFT step
+            const powerOf2 = Math.pow(2, Math.floor(Math.log2(N_raw)));
+
+            return { time, carrier, ref, pwmLogic, pwmVoltage, avgTime, avgVal, N_raw, N_fft: powerOf2, peakVoltage };
+        }
+
+        // Helper: Single Frequency DFT (Correlation)
+        function getSingleFrequencyComponent(data, freq, fs) {
+            const N = data.length;
+            let sumRe = 0;
+            let sumIm = 0;
+            
+            const samplesPerCycle = fs / freq;
+            const numCycles = Math.floor(N / samplesPerCycle);
+            const N_eff = Math.floor(numCycles * samplesPerCycle);
+            
+            if (N_eff === 0) return { freq, mag: 0, phase: 0 };
+
+            for (let i = 0; i < N_eff; i++) {
+                const angle = -2 * Math.PI * freq * i / fs;
+                sumRe += data[i] * Math.cos(angle);
+                sumIm += data[i] * Math.sin(angle);
+            }
+            
+            // Scale: 2/N for amplitude
+            const mag = (2 / N_eff) * Math.sqrt(sumRe*sumRe + sumIm*sumIm);
+            const phase = Math.atan2(sumIm, sumRe);
+            
+            return { freq, mag, phase };
+        }
+
+        function analyzeHarmonics(signalData, N_fft, fs) {
+            // signalData should be the VOLTAGE signal (pwmVoltage) to get correct units
+            
+            // 1. Calculate Fundamental EXACTLY using DFT on the full dataset
+            const fundamental = getSingleFrequencyComponent(signalData, FUNDAMENTAL_FREQ, fs);
+
+            // 2. Perform FFT for the Spectrum Plot and identifying other harmonics
+            const fftInput = signalData.slice(0, N_fft);
+            const spectrumComplex = fft(fftInput);
+            
+            const magnitudes = [];
+            // DC Component
+            const dc = Math.sqrt(spectrumComplex[0].re**2 + spectrumComplex[0].im**2) / N_fft;
+
+            for (let k = 1; k < N_fft/2; k++) {
+                const mag = (2/N_fft) * Math.sqrt(spectrumComplex[k].re**2 + spectrumComplex[k].im**2);
+                const freq = k * fs / N_fft;
+                const phase = Math.atan2(spectrumComplex[k].im, spectrumComplex[k].re);
+                magnitudes.push({ freq, mag, phase, k });
+            }
+
+            // Find Peaks
+            const peaks = [];
+            for(let i=1; i<magnitudes.length-1; i++) {
+                if (magnitudes[i].mag > magnitudes[i-1].mag && magnitudes[i].mag > magnitudes[i+1].mag) {
+                    peaks.push(magnitudes[i]);
+                }
+            }
+            peaks.sort((a, b) => b.mag - a.mag);
+
+            // Get Top 7 harmonics, EXCLUDING the fundamental region (40-60Hz)
+            const others = peaks.filter(p => p.freq < 40 || p.freq > 60).slice(0, 7);
+
+            return { 
+                spectrum: magnitudes, 
+                fundamental, 
+                others, 
+                dc 
+            };
+        }
+
+        function updateSimulation() {
+            const m = parseFloat(document.getElementById('mInput').value);
+            const fc_ratio = parseFloat(document.getElementById('fcInput').value);
+            const vdc = parseFloat(document.getElementById('vdcInput').value);
+            const topology = document.getElementById('topologyInput').value;
+
+            document.getElementById('mVal').innerText = m.toFixed(2);
+            document.getElementById('fcVal').innerText = fc_ratio;
+            document.getElementById('vdcVal').innerText = vdc;
+
+            // --- Synchronized Sampling Calculation ---
+            const fc = FUNDAMENTAL_FREQ * fc_ratio;
+            const target_fs = 100000; 
+            const multiplier = Math.ceil(target_fs / (4 * fc)); 
+            const samplesPerCarrier = multiplier * 4; 
+            const fs = samplesPerCarrier * fc;
+
+            const data = generateData(m, fc_ratio, vdc, topology, fs);
+            // Pass pwmVoltage to analysis so charts show correct Volts
+            const analysis = analyzeHarmonics(data.pwmVoltage, data.N_fft, fs);
+
+            drawPlots(data, analysis, m, data.peakVoltage);
+        }
+
+        function drawPlots(data, analysis, m, peakVoltage) {
+            
+            // --- 1. Top Plot: SPWM, Logic, & Voltage Output ---
+            // Display only first 2 cycles (0.04s) for standard view
+            const displayLimit = data.time.findIndex(t => t > 0.04);
+            const timeSlice = data.time.slice(0, displayLimit);
+            const carrierSlice = data.carrier.slice(0, displayLimit);
+            const refSlice = data.ref.slice(0, displayLimit);
+            const logicSlice = data.pwmLogic.slice(0, displayLimit);
+            const voltageSlice = data.pwmVoltage.slice(0, displayLimit);
+
+            // Trace 1: Carrier (Row 1)
+            const traceCarrier = {
+                x: timeSlice, y: carrierSlice,
+                type: 'scatter', mode: 'lines', name: 'Carrier',
+                line: { color: 'grey', width: 1 }, opacity: 0.7,
+                xaxis: 'x', yaxis: 'y',
+                showlegend: false // Hide
+            };
+
+            // Trace 2: Reference (Row 1)
+            const traceRef = {
+                x: timeSlice, y: refSlice,
+                type: 'scatter', mode: 'lines', name: 'Reference',
+                line: { color: '#e63946', width: 2.5 },
+                xaxis: 'x', yaxis: 'y',
+                showlegend: false // Hide
+            };
+
+            // Trace 3: PWM Logic (Row 2)
+            const traceLogic = {
+                x: timeSlice, y: logicSlice,
+                type: 'scatter', mode: 'lines', name: 'PWM Logic',
+                line: { color: '#4a4a4a', width: 1.5, shape: 'hv' },
+                fill: 'tozeroy', fillcolor: 'rgba(74, 74, 74, 0.1)',
+                xaxis: 'x2', yaxis: 'y2',
+                showlegend: false // Hide
+            };
+
+            // Trace 4: Output Voltage (Row 3)
+            const traceVoltage = {
+                x: timeSlice, y: voltageSlice,
+                type: 'scatter', mode: 'lines', name: 'PWM Output Voltage',
+                line: { color: '#2563eb', width: 1.5, shape: 'hv' }, // Blue color
+                fill: 'tozeroy', fillcolor: 'rgba(37, 99, 235, 0.1)',
+                xaxis: 'x3', yaxis: 'y3',
+                showlegend: true // Show in legend
+            };
+            
+            // Trace 5: Output Average Overlay (Row 3)
+            // Limit average overlay to the same time range
+            const avgDisplayLimit = data.avgTime.findIndex(t => t > 0.04);
+            const traceAvg = {
+                x: data.avgTime.slice(0, avgDisplayLimit), 
+                y: data.avgVal.slice(0, avgDisplayLimit),
+                type: 'scatter', mode: 'lines', name: 'Avg Value (Ts)',
+                line: { color: '#dc2626', width: 2.5 }, // Red color
+                xaxis: 'x3', yaxis: 'y3',
+                showlegend: true // Show in legend
+            };
+
+            const layout1 = {
+                title: { text: `SPWM Modulation & Output (m=${m})`, font: { size: 18 } },
+                grid: { rows: 3, columns: 1, pattern: 'independent' },
+                paper_bgcolor: STYLE.paper_bgcolor,
+                plot_bgcolor: STYLE.plot_bgcolor,
+                font: STYLE.font,
+                
+                // Legend Configuration
+                showlegend: true,
+                legend: { 
+                    orientation: 'h', 
+                    x: 0.5, 
+                    xanchor: 'center', 
+                    y: 0.3, // Position inside the plot (top-right of bottom subplot)
+                    yanchor: 'top',
+                    bgcolor: 'rgba(255, 255, 255, 0.8)',
+                    bordercolor: '#e2e8f0',
+                    borderwidth: 1
+                },
+                
+                // Row 1: Carrier/Ref
+                xaxis: { range: [0, 0.04], gridcolor: STYLE.gridcolor, zeroline: false, showticklabels: false },
+                yaxis: { range: [-1.2, 1.2], gridcolor: STYLE.gridcolor, zerolinecolor: STYLE.zerolinecolor, title: {text: 'Modulation'} },
+
+                // Row 2: Logic
+                xaxis2: { range: [0, 0.04], gridcolor: STYLE.gridcolor, zeroline: false, showticklabels: false },
+                yaxis2: { range: [-0.1, 1.2], gridcolor: STYLE.gridcolor, title: {text: 'Gate Logic'}, zeroline: false },
+
+                // Row 3: Output Voltage
+                xaxis3: { range: [0, 0.04], gridcolor: STYLE.gridcolor, title: {text: 'Time (s)'}, zeroline: false },
+                yaxis3: { 
+                    range: [-peakVoltage*1.2, peakVoltage*1.2], 
+                    gridcolor: STYLE.gridcolor, title: {text: 'V_out (V)'}, 
+                    zeroline: false 
+                },
+
+                margin: { t: 50, b: 60, l: 70, r: 20 }
+            };
+
+            Plotly.newPlot('plotSPWM', [traceCarrier, traceRef, traceLogic, traceVoltage, traceAvg], layout1, {responsive: true, displayModeBar: false});
+
+
+            // --- 2. Decomposition Plot (Grid View) ---
+            
+            const componentsToPlot = [];
+            
+            // 1. Fundamental
+            componentsToPlot.push({
+                freq: analysis.fundamental.freq,
+                mag: analysis.fundamental.mag,
+                phase: analysis.fundamental.phase,
+                label: `Fund. (${analysis.fundamental.freq.toFixed(0)}Hz)`
+            });
+
+            // 2. Top 7 Harmonics
+            analysis.others.forEach((h, index) => {
+                componentsToPlot.push({
+                    freq: h.freq,
+                    mag: h.mag,
+                    phase: h.phase,
+                    label: `H${index+1} (${h.freq.toFixed(0)}Hz)`
+                });
+            });
+
+            while(componentsToPlot.length < 8) {
+                componentsToPlot.push({freq: 0, mag: 0, phase:0, label: 'N/A'});
+            }
+
+            // UNIFORM SCALING (Now based on Peak Voltage)
+            // Use peakVoltage to set consistent Y-axis limits across components
+            const maxPlotMag = Math.max(peakVoltage, Math.max(...componentsToPlot.map(c => c.mag)));
+            const uniformRange = [-maxPlotMag * 1.1, maxPlotMag * 1.1]; 
+
+            const decompTraces = [];
+            const annotations = [];
+            const gridLayout = { rows: 2, columns: 4, pattern: 'independent' };
+
+            // Reduced plotting range to 1 Cycle (0.02s)
+            const oneCycleDuration = 1 / FUNDAMENTAL_FREQ; // 0.02s
+
+            componentsToPlot.forEach((comp, i) => {
+                if (i >= 8) return;
+
+                // High resolution drawing for 1 cycle
+                const drawSteps = 4000; 
+                const xDraw = [];
+                const yDraw = [];
+                for(let k=0; k<=drawSteps; k++) {
+                    const t = k * oneCycleDuration / drawSteps;
+                    xDraw.push(t);
+                    yDraw.push(comp.mag * Math.cos(2 * Math.PI * comp.freq * t + comp.phase));
+                }
+
+                const axisSuffix = i === 0 ? '' : (i + 1);
+                
+                decompTraces.push({
+                    x: xDraw,
+                    y: yDraw,
+                    xaxis: 'x' + axisSuffix,
+                    yaxis: 'y' + axisSuffix,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: comp.label,
+                    line: { color: i===0 ? '#e63946' : '#4a4a4a', width: 2 },
+                    showlegend: false
+                });
+
+                // Title Annotation
+                const colIndex = i % 4;
+                const rowIndex = Math.floor(i / 4);
+                const xPos = (colIndex * 0.25) + 0.125; 
+                const yPos = rowIndex === 0 ? 1.0 : 0.42;
+
+                annotations.push({
+                    text: comp.label,
+                    x: xPos, y: yPos, xref: 'paper', yref: 'paper',
+                    xanchor: 'center', yanchor: 'bottom', showarrow: false,
+                    font: { size: 13, family: "ui-sans-serif, system-ui, sans-serif", color: '#333', weight: 'bold' }
+                });
+            });
+
+            const layout2 = {
+                title: 'Decomposed Components (1 Cycle, Scaled to Voltage)',
+                paper_bgcolor: STYLE.paper_bgcolor,
+                plot_bgcolor: STYLE.plot_bgcolor,
+                font: STYLE.font,
+                grid: gridLayout,
+                annotations: annotations,
+                margin: { t: 60, b: 50, l: 60, r: 20 },
+                showlegend: false
+            };
+            
+            for(let i=1; i<=8; i++) {
+                const axSuffix = i===1 ? '' : i;
+                layout2['xaxis'+axSuffix] = { 
+                    range: [0, oneCycleDuration], // 0.02s
+                    gridcolor: STYLE.gridcolor, 
+                    zeroline: false, showticklabels: false 
+                };
+                layout2['yaxis'+axSuffix] = { 
+                    range: uniformRange, 
+                    gridcolor: STYLE.gridcolor,
+                    zerolinecolor: STYLE.zerolinecolor, zerolinewidth: 2,
+                    showticklabels: i === 1 || i === 5,
+                    nticks: 5
+                };
+            }
+
+            Plotly.newPlot('plotDecomp', decompTraces, layout2, {responsive: true, displayModeBar: false});
+
+
+            // --- 3. FFT Spectrum Plot ---
+            const maxDisplayFreq = FUNDAMENTAL_FREQ * parseFloat(document.getElementById('fcInput').value) * 3;
+            const displaySpectrum = analysis.spectrum.filter(s => s.freq <= maxDisplayFreq);
+
+            const traceFFT = {
+                x: displaySpectrum.map(s => s.freq),
+                y: displaySpectrum.map(s => s.mag),
+                type: 'bar',
+                marker: { color: '#4a4a4a' },
+                name: 'Voltage (V)'
+            };
+            
+            const peaksToPlot = [analysis.fundamental, ...analysis.others].filter(x => x && x.freq <= maxDisplayFreq);
+
+            const tracePeaks = {
+                x: peaksToPlot.map(x => x.freq),
+                y: peaksToPlot.map(x => x.mag),
+                mode: 'markers',
+                type: 'scatter',
+                marker: { color: '#e63946', size: 8, symbol: 'diamond' },
+                name: 'Dominant Components'
+            };
+
+            const layout3 = {
+                title: 'Frequency Spectrum (Voltage Magnitude)',
+                paper_bgcolor: STYLE.paper_bgcolor,
+                plot_bgcolor: STYLE.plot_bgcolor,
+                font: STYLE.font,
+                xaxis: { 
+                    gridcolor: STYLE.gridcolor,
+                    title: {text: 'Frequency (Hz)'},
+                    zeroline: false
+                },
+                yaxis: { 
+                    gridcolor: STYLE.gridcolor,
+                    title: {text: 'Magnitude (V)'},
+                    zeroline: false
+                },
+                margin: { t: 40, b: 40, l: 60, r: 20 },
+                showlegend: true
+            };
+
+            Plotly.newPlot('plotFFT', [traceFFT, tracePeaks], layout3, {responsive: true, displayModeBar: false});
+        }
+
+        document.getElementById('mInput').addEventListener('input', updateSimulation);
+        document.getElementById('fcInput').addEventListener('input', updateSimulation);
+        document.getElementById('vdcInput').addEventListener('input', updateSimulation);
+        window.addEventListener('load', updateSimulation);
+
+    </script>
+</body>
+</html>
