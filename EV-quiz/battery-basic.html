@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Battery Learning Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn.active {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+            color: #4f46e5;
+        }
+        .quiz-option {
+            transition: background-color 0.2s;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7 !important;
+            border-color: #22c55e !important;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+        }
+        /* SVG Animation styles */
+        .svg-cell, .svg-wire {
+            opacity: 0;
+            transform: scale(0.5);
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .svg-wire {
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            animation: drawLine 0.8s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        @keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        /* Charge Flow Animation */
+        .ion, .electron {
+            opacity: 0;
+            transition: all 1.5s ease-in-out;
+        }
+        .mode-btn.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+
+        /* Continuous Animation */
+        .anim-ion {
+            animation: moveIon 8s linear infinite;
+        }
+        .anim-electron {
+            animation: moveElectron 4s linear infinite;
+        }
+        @keyframes moveIon {
+            from { transform: translateX(0); opacity: 1;}
+            to { transform: translateX(-300px); opacity: 1;}
+        }
+        @keyframes moveElectron {
+            0% { offset-distance: 0%; opacity: 1;}
+            100% { offset-distance: 100%; opacity: 1;}
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-indigo-600">EV Battery Learning Hub</h1>
+            <p class="text-lg text-gray-600 mt-2">An Interactive Guide to Li-ion Batteries in Electric Vehicles</p>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="mb-8 border-b border-gray-200">
+            <nav class="flex flex-wrap -mb-px" aria-label="Tabs">
+                <button class="tab-btn active text-lg font-medium py-4 px-6 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="intro">Introduction</button>
+                <button class="tab-btn text-lg font-medium py-4 px-6 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="fundamentals">Cell Fundamentals</button>
+                <button class="tab-btn text-lg font-medium py-4 px-6 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="charge-flow">How Charge Moves</button>
+                <button class="tab-btn text-lg font-medium py-4 px-6 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="pack-builder">Pack Builder</button>
+                <button class="tab-btn text-lg font-medium py-4 px-6 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-tab="quiz">Quiz</button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <main>
+            <!-- Introduction Section -->
+            <section id="intro" class="tab-content active bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-3xl font-bold mb-4 text-indigo-700">Welcome!</h2>
+                <p class="mb-4 text-gray-700 leading-relaxed">Lithium-ion (Li-ion) batteries are the powerhouse behind the electric vehicle revolution. They offer a fantastic combination of high energy density, good lifespan, and relatively light weight, making them perfect for powering cars, trucks, and buses.</p>
+                <p class="mb-4 text-gray-700 leading-relaxed">This guide will take you on a step-by-step journey to understand these amazing devices. We'll start with the very basics of what a battery cell is made of, explore different cell shapes, and then dive into the most exciting part: how thousands of these small cells are connected to form a massive EV battery pack. Use the tabs above to navigate through the lessons.</p>
+                <div class="bg-indigo-50 border-l-4 border-indigo-500 text-indigo-800 p-4 rounded-r-lg mt-6">
+                    <p><strong>Ready to start?</strong> Click on the "Cell Fundamentals" tab to learn about the building blocks of an EV battery.</p>
+                </div>
+            </section>
+
+            <!-- Cell Fundamentals Section -->
+            <section id="fundamentals" class="tab-content bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-3xl font-bold mb-6 text-indigo-700">Lesson 1: The Building Blocks</h2>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-3">Material Characteristics</h3>
+                        <p class="mb-4">A Li-ion battery cell has four key components:</p>
+                        <ul class="space-y-3 list-inside list-disc text-gray-700">
+                            <li><strong>Cathode (+):</strong> The positive electrode. Materials like Nickel Manganese Cobalt (NMC) or Lithium Iron Phosphate (LFP) are common. It's where lithium ions are stored when the battery is discharged.</li>
+                            <li><strong>Anode (-):</strong> The negative electrode, typically made of graphite. It stores lithium ions when the battery is charged.</li>
+                            <li><strong>Separator:</strong> A micro-porous membrane that sits between the cathode and anode. It prevents them from touching (which would cause a short circuit) but allows lithium ions to pass through.</li>
+                            <li><strong>Electrolyte:</strong> A liquid salt solution that fills the battery, acting as the transport medium for lithium ions to move between the cathode and anode.</li>
+                        </ul>
+                    </div>
+                    <div class="flex flex-col items-center justify-center bg-gray-100 rounded-lg p-4">
+                        <!-- SVG representation of a battery cell's inner workings -->
+                        <svg viewBox="0 0 200 120" class="w-full h-auto max-w-sm mb-4">
+                            <rect x="10" y="10" width="180" height="100" fill="none" stroke="#4a5568" rx="5"/>
+                            <text x="100" y="25" text-anchor="middle" font-size="8" font-weight="bold">Li-ion Cell Cross-Section</text>
+                            <!-- Cathode -->
+                            <rect x="20" y="35" width="40" height="70" fill="#fca5a5"/>
+                            <text x="40" y="115" text-anchor="middle" font-size="7">Cathode (+)</text>
+                            <!-- Anode -->
+                            <rect x="140" y="35" width="40" height="70" fill="#93c5fd"/>
+                            <text x="160" y="115" text-anchor="middle" font-size="7">Anode (-)</text>
+                            <!-- Separator -->
+                            <line x1="100" y1="35" x2="100" y2="105" stroke="#a78bfa" stroke-width="2" stroke-dasharray="4"/>
+                            <text x="100" y="75" text-anchor="middle" font-size="7" fill="#6d28d9" transform="rotate(-90 100,75)">Separator</text>
+                            <!-- Ions Moving -->
+                            <text x="80" y="55" text-anchor="middle" font-size="7" fill="#1d4ed8">Li+</text>
+                            <path d="M 85 55 Q 100 45, 115 55" stroke="#1d4ed8" fill="none" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <text x="80" y="90" text-anchor="middle" font-size="7" fill="#1d4ed8">Li+</text>
+                            <path d="M 115 90 Q 100 100, 85 90" stroke="#1d4ed8" fill="none" stroke-width="1.5" marker-end="url(#arrow)"/>
+                            <defs><marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3" markerHeight="3" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1d4ed8"/></marker></defs>
+                        </svg>
+                        <img id="diagram-image" src="https://c8.alamy.com/comp/MY43PH/li-ion-battery-diagram-vector-illustration-rechargeable-battery-in-which-lithium-ions-move-from-the-negative-electrode-to-the-positive-electrode-dur-MY43PH.jpg" 
+                             alt="Diagram of Li-ion battery showing charge and discharge cycle" 
+                             class="w-full h-auto max-w-sm rounded-lg border shadow-sm cursor-pointer hover:opacity-80 transition-opacity">
+                    </div>
+                </div>
+
+                <hr class="my-8">
+
+                <h3 class="text-2xl font-semibold mb-4">Different Cell Structures (Form Factors)</h3>
+                <p class="mb-6">Li-ion cells are manufactured in three primary shapes, each with its own pros and cons for EV applications.</p>
+                <div class="grid md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-gray-50 p-4 rounded-lg border">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="h-24 w-24 mx-auto mb-3">
+                            <g transform="translate(50, 50)">
+                               <ellipse cx="0" cy="30" rx="25" ry="8" fill="#d1d5db"/>
+                               <rect x="-25" y="-30" width="50" height="60" fill="#9ca3af"/>
+                               <ellipse cx="0" cy="-30" rx="25" ry="8" fill="#e5e7eb"/>
+                               <rect x="-10" y="-38" width="20" height="8" fill="#6b7280"/>
+                            </g>
+                        </svg>
+                        <h4 class="text-xl font-medium">Cylindrical</h4>
+                        <p class="text-sm text-gray-600">Looks like a standard AA battery. Very common (e.g., Tesla). Good for thermal management but can have wasted space in a pack.</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="h-24 w-24 mx-auto mb-3">
+                           <g transform="translate(15,10) skewX(-10)">
+                              <rect x="0" y="0" width="60" height="80" fill="#9ca3af"/>
+                              <rect x="-5" y="4" width="70" height="6" fill="#6b7280"/>
+                              <rect x="10" y="-5" width="10" height="5" fill="#e5e7eb"/>
+                              <rect x="40" y="-5" width="10" height="5" fill="#e5e7eb"/>
+                           </g>
+                        </svg>
+                        <h4 class="text-xl font-medium">Prismatic</h4>
+                        <p class="text-sm text-gray-600">A hard, rectangular case. Very space-efficient, allowing for high energy density in a pack. Often used by automakers like VW and BYD.</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="h-24 w-24 mx-auto mb-3">
+                            <rect x="15" y="15" width="70" height="80" rx="5" fill="#d1d5db"/>
+                            <rect x="10" y="20" width="80" height="10" fill="#9ca3af"/>
+                             <rect x="25" y="10" width="15" height="5" fill="#facc15" />
+                             <rect x="60" y="10" width="15" height="5" fill="#6b7280" />
+                        </svg>
+                        <h4 class="text-xl font-medium">Pouch</h4>
+                        <p class="text-sm text-gray-600">A soft, flexible foil-like casing. Lightweight and space-efficient, but can be more prone to swelling and needs more protection in the pack.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- How Charge Moves Section -->
+            <section id="charge-flow" class="tab-content bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-3xl font-bold mb-4 text-indigo-700">Lesson 2: How Ions & Electrons Move</h2>
+                <p class="mb-4 text-gray-700">A battery works by controlling the flow of lithium ions (Li+) and electrons (e-). The ions move internally through the electrolyte, while the electrons are forced to travel through an external circuit, creating the electrical current that powers a device.</p>
+                <div class="flex justify-center gap-4 mb-6">
+                    <button id="discharge-btn" class="mode-btn active bg-indigo-600 text-white font-bold py-2 px-6 rounded-md hover:bg-indigo-700">Discharging Cycle</button>
+                    <button id="charge-btn" class="mode-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-md hover:bg-gray-300">Charging Cycle</button>
+                </div>
+                
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-gray-100 rounded-lg p-2 border">
+                        <svg id="charge-flow-svg" viewBox="0 0 500 300" class="w-full h-auto"></svg>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                        <h3 id="step-title" class="text-xl font-bold text-indigo-800 mb-2">Discharging: Step 1</h3>
+                        <p id="step-explanation" class="text-gray-700">Explanation for the current step will appear here.</p>
+                        <div class="mt-4 flex gap-4">
+                            <button id="prev-step-btn" class="bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <button id="next-step-btn" class="bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
+                        <div class="mt-6 border-t pt-4">
+                            <button id="show-live-animation-btn" class="w-full bg-green-500 text-white font-bold py-2 px-6 rounded-md hover:bg-green-600 transition-colors">
+                                Show Live Animation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pack Builder Section -->
+            <section id="pack-builder" class="tab-content bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-3xl font-bold mb-2 text-indigo-700">Lesson 3: Building a Battery Pack</h2>
+                <p class="mb-6 text-gray-700">Individual cells don't have enough power for an EV. They must be connected together in <span class="font-semibold text-indigo-600">Series (S)</span> and <span class="font-semibold text-purple-600">Parallel (P)</span> to create a high-voltage, high-capacity battery pack.</p>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-lg">
+                        <h3 class="font-semibold text-xl text-indigo-800">Series Connection (S)</h3>
+                        <p>Connecting cells positive-to-negative in a chain.
+                        <strong class="block mt-2">Result: Voltage adds up, capacity stays the same.</strong>
+                        Example: 3 cells of 3.7V / 2.5Ah in series = 11.1V / 2.5Ah.</p>
+                    </div>
+                     <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg">
+                        <h3 class="font-semibold text-xl text-purple-800">Parallel Connection (P)</h3>
+                        <p>Connecting cells positive-to-positive and negative-to-negative.
+                        <strong class="block mt-2">Result: Capacity adds up, voltage stays the same.</strong>
+                        Example: 3 cells of 3.7V / 2.5Ah in parallel = 3.7V / 7.5Ah.</p>
+                    </div>
+                </div>
+                
+                <div class="mb-8 p-6 bg-gray-50 rounded-lg border">
+                    <h3 class="text-2xl font-semibold mb-3">Pack Assembly Methods</h3>
+                    <p class="mb-4 text-gray-700">There are two main strategies for wiring cells into a large S and P configuration. The choice depends on factors like battery management system (BMS) design, safety, and manufacturing efficiency.</p>
+                    <ul class="space-y-4">
+                        <li>
+                            <p><strong>1. Parallel First, Then Series (Most Common):</strong></p>
+                            <p class="text-sm text-gray-600 ml-4">First, connect the desired number of cells in parallel to create a "parallel group" or "module". This increases the capacity. Then, connect these modules in series to achieve the target voltage. This is easier for the BMS to manage as it only needs to monitor the voltage of each module. <strong class="block">Our animation below demonstrates this method.</strong></p>
+                        </li>
+                         <li>
+                            <p><strong>2. Series First, Then Parallel:</strong></p>
+                            <p class="text-sm text-gray-600 ml-4">First, connect the desired number of cells in series to create a high-voltage "string". Then, connect multiple identical strings in parallel to increase the total capacity. This method can offer some redundancy if one string fails, but requires a more complex BMS to monitor individual cell voltages within each string.</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-100 p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-4">Interactive Pack Animator</h3>
+                    <div class="flex flex-wrap items-center gap-4 mb-4">
+                        <div>
+                            <label for="cell-voltage-input" class="font-medium text-sm">Cell Voltage (V):</label>
+                            <input type="number" id="cell-voltage-input" value="3.7" step="0.1" class="w-24 p-2 border rounded-md">
+                        </div>
+                         <div>
+                            <label for="cell-capacity-input" class="font-medium text-sm">Cell Capacity (Ah):</label>
+                            <input type="number" id="cell-capacity-input" value="2.5" step="0.1" class="w-24 p-2 border rounded-md">
+                        </div>
+                        <div>
+                            <label for="series-input" class="font-medium text-sm">Cells in Series (S):</label>
+                            <input type="number" id="series-input" value="2" min="1" max="5" class="w-20 p-2 border rounded-md">
+                        </div>
+                        <div>
+                            <label for="parallel-input" class="font-medium text-sm">Cells in Parallel (P):</label>
+                            <input type="number" id="parallel-input" value="4" min="1" max="8" class="w-20 p-2 border rounded-md">
+                        </div>
+                        <button id="build-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-md hover:bg-indigo-700 transition-colors self-end">Build Pack</button>
+                    </div>
+                     <div id="pack-info" class="text-md font-semibold mb-4 bg-white p-3 rounded-md border">
+                        <!-- Info will be populated by JS -->
+                     </div>
+                    <div id="animation-container" class="bg-white rounded-md border p-4 min-h-[600px]">
+                        <svg id="animation-svg" class="w-full h-full min-h-[600px]" viewBox="0 0 800 600"></svg>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quiz Section -->
+            <section id="quiz" class="tab-content bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-3xl font-bold mb-4 text-indigo-700">Test Your Knowledge!</h2>
+                <div id="quiz-container">
+                    <!-- Quiz questions will be injected here -->
+                </div>
+                <div id="quiz-results" class="hidden text-center">
+                    <h3 class="text-2xl font-bold mb-4">Quiz Complete!</h3>
+                    <p id="score-text" class="text-xl mb-4"></p>
+                    <button id="restart-quiz-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-md hover:bg-indigo-700">Try Again</button>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <!-- Image Modal -->
+    <div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 items-center justify-center p-4">
+        <div class="bg-white p-4 rounded-lg shadow-xl max-w-4xl max-h-full relative">
+            <button id="close-modal-btn" class="absolute -top-4 -right-4 bg-white text-gray-800 rounded-full h-10 w-10 flex items-center justify-center text-2xl font-bold shadow-lg">&times;</button>
+            <img id="modal-img" src="" alt="Enlarged Diagram" class="max-w-full max-h-[85vh] object-contain">
+        </div>
+    </div>
+    
+    <!-- Live Animation Modal -->
+    <div id="live-animation-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full relative">
+             <button id="close-live-animation-btn" class="absolute -top-4 -right-4 bg-white text-gray-800 rounded-full h-10 w-10 flex items-center justify-center text-2xl font-bold shadow-lg">&times;</button>
+             <h2 class="text-3xl font-bold mb-4 text-indigo-700">Live Battery Animation</h2>
+             <p class="mb-6 text-gray-700">This animation shows the continuous flow of ions and electrons during the discharging cycle, powering a lightbulb. Notice how the electrons are forced to take the 'long way around' through the external wire, which is what creates usable electricity.</p>
+            <div class="bg-gray-100 rounded-lg p-2 border">
+                <svg id="live-animation-svg" viewBox="0 0 500 300" class="w-full h-auto"></svg>
+            </div>
+             <div id="animation-explanation" class="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200 text-center text-indigo-800 font-medium">
+                <!-- Explanation will be updated by JS -->
+             </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- TABS LOGIC ---
+        const tabs = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        let isChargeFlowInitialized = false;
+        let isBatteryAnimationInitialized = false;
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetId = tab.getAttribute('data-tab');
+
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                tabContents.forEach(content => {
+                    if (content.id === targetId) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+
+                // Initialize the charge flow animation only when its tab is first viewed
+                if (targetId === 'charge-flow' && !isChargeFlowInitialized) {
+                    isChargeFlowInitialized = true;
+                    setupChargeFlowSVG();
+                    createParticles(6);
+                    setMode('discharging');
+                }
+            });
+        });
+
+        // --- INTERACTIVE PACK BUILDER ---
+        const seriesInput = document.getElementById('series-input');
+        const parallelInput = document.getElementById('parallel-input');
+        const cellVoltageInput = document.getElementById('cell-voltage-input');
+        const cellCapacityInput = document.getElementById('cell-capacity-input');
+        const buildBtn = document.getElementById('build-btn');
+        const animationSvg = document.getElementById('animation-svg');
+        const packInfo = document.getElementById('pack-info');
+        
+        buildBtn.addEventListener('click', buildPack);
+
+        function drawCell(x, y, delay) {
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            group.setAttribute('class', 'svg-cell');
+            group.style.animationDelay = `${delay}s`;
+
+            const body = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            body.setAttribute('x', x);
+            body.setAttribute('y', y);
+            body.setAttribute('width', 30);
+            body.setAttribute('height', 60);
+            body.setAttribute('rx', 5);
+            body.setAttribute('fill', '#9ca3af');
+            
+            const pos = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            pos.setAttribute('x', x + 10);
+            pos.setAttribute('y', y - 5);
+            pos.setAttribute('width', 10);
+            pos.setAttribute('height', 5);
+            pos.setAttribute('fill', '#fca5a5'); // red for positive
+            
+            const neg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            neg.setAttribute('x', x);
+            neg.setAttribute('y', y + 60);
+            neg.setAttribute('width', 30);
+            neg.setAttribute('height', 5);
+            neg.setAttribute('fill', '#93c5fd'); // blue for negative
+
+            group.appendChild(body);
+            group.appendChild(pos);
+            group.appendChild(neg);
+            return group;
+        }
+
+        function drawWire(pathData, delay, color = '#374151', strokeWidth = '2') {
+             const wire = document.createElementNS("http://www.w3.org/2000/svg", "path");
+             wire.setAttribute('d', pathData);
+             wire.setAttribute('stroke', color);
+             wire.setAttribute('stroke-width', strokeWidth);
+             wire.setAttribute('fill', 'none');
+             wire.setAttribute('class', 'svg-wire');
+             wire.style.animationDelay = `${delay}s`;
+             return wire;
+        }
+
+
+        function buildPack() {
+            const s = parseInt(seriesInput.value) || 1;
+            const p = parseInt(parallelInput.value) || 1;
+            const cellVoltage = parseFloat(cellVoltageInput.value) || 3.7;
+            const cellCapacity = parseFloat(cellCapacityInput.value) || 2.5;
+
+            
+            animationSvg.innerHTML = ''; // Clear previous animation
+            
+            const totalVoltage = (s * cellVoltage).toFixed(1);
+            const totalCapacity = (p * cellCapacity).toFixed(1);
+            const totalEnergy = (totalVoltage * totalCapacity).toFixed(1);
+            
+            packInfo.innerHTML = `
+                Configuration: <span class="text-indigo-600 font-bold">${s}S${p}P</span> | 
+                Total Voltage: <span class="text-green-600 font-bold">${totalVoltage}V</span> | 
+                Total Capacity: <span class="text-blue-600 font-bold">${totalCapacity}Ah</span> |
+                Total Energy: <span class="text-purple-600 font-bold">${totalEnergy}Wh</span>`;
+
+            const startX = 60;
+            const startY = 50;
+            const cellWidth = 30;
+            const cellHeight = 60;
+            const pSpacing = 15; // horizontal spacing for parallel
+            const sSpacing = 50; // vertical spacing for series
+            let animationDelay = 0;
+
+            for (let i = 0; i < s; i++) { // Loop for series groups
+                for (let j = 0; j < p; j++) { // Loop for parallel cells within a group
+                    const x = startX + j * (cellWidth + pSpacing);
+                    const y = startY + i * (cellHeight + sSpacing);
+                    
+                    const cell = drawCell(x, y, animationDelay);
+                    animationSvg.appendChild(cell);
+                    animationDelay += 0.05;
+                }
+            }
+
+            // Draw parallel connections
+            for (let i = 0; i < s; i++) {
+                // Positive busbar
+                if (p > 1) {
+                    const yPos = startY + i * (cellHeight + sSpacing) - 10;
+                    const x1Pos = startX + 15;
+                    const x2Pos = startX + (p - 1) * (cellWidth + pSpacing) + 15;
+                    animationSvg.appendChild(drawWire(`M ${x1Pos} ${yPos} H ${x2Pos}`, animationDelay, '#ef4444'));
+                    animationDelay += 0.1;
+                     // Positive connectors
+                    for(let j=0; j<p; j++) {
+                         const x = startX + j * (cellWidth + pSpacing) + 15;
+                         animationSvg.appendChild(drawWire(`M ${x} ${yPos} V ${yPos+5}`, animationDelay, '#ef4444'));
+                    }
+                    animationDelay += 0.1;
+                }
+                
+                // Negative busbar
+                if (p > 1) {
+                     const yNeg = startY + i * (cellHeight + sSpacing) + 70;
+                     const x1Neg = startX + 15;
+                     const x2Neg = startX + (p - 1) * (cellWidth + pSpacing) + 15;
+                     animationSvg.appendChild(drawWire(`M ${x1Neg} ${yNeg} H ${x2Neg}`, animationDelay, '#3b82f6'));
+                     animationDelay += 0.1;
+                     // Negative connectors
+                     for(let j=0; j<p; j++) {
+                         const x = startX + j * (cellWidth + pSpacing) + 15;
+                         animationSvg.appendChild(drawWire(`M ${x} ${yNeg} V ${yNeg-5}`, animationDelay, '#3b82f6'));
+                     }
+                    animationDelay += 0.1;
+                }
+            }
+
+            // Draw series connections
+            if (s > 1) {
+                for (let i = 0; i < s - 1; i++) {
+                    const y1 = startY + i * (cellHeight + sSpacing) + 70; // Bottom of group i
+                    const y2 = startY + (i + 1) * (cellHeight + sSpacing) - 10; // Top of group i+1
+                    const x = startX + (p - 1) * (cellWidth + pSpacing) + 15; // Rightmost cell
+                    const path = `M ${x} ${y1} C ${x + 40} ${y1}, ${x + 40} ${y2}, ${x} ${y2}`;
+                    animationSvg.appendChild(drawWire(path, animationDelay));
+                    animationDelay += 0.2;
+                }
+            }
+            
+            // Draw Main Terminals
+            // Main Positive
+            const mainPosY = startY - 10;
+            const mainPosX = startX + (p > 1 ? 0 : 15);
+            animationSvg.appendChild(drawWire(`M ${mainPosX} ${mainPosY} V ${mainPosY - 20} H ${mainPosX-20}`, animationDelay, '#ef4444', '3'));
+            animationDelay += 0.2;
+            
+            // Main Negative
+            const mainNegY = startY + (s - 1) * (cellHeight + sSpacing) + 70;
+            const mainNegX = startX + (p > 1 ? 0 : 15);
+            animationSvg.appendChild(drawWire(`M ${mainNegX} ${mainNegY} V ${mainNegY + 20} H ${mainNegX-20}`, animationDelay, '#3b82f6', '3'));
+        }
+        
+        // Initial build
+        buildPack();
+
+
+        // --- QUIZ LOGIC ---
+        const quizData = [
+            {
+                question: "What is the primary function of the Separator in a Li-ion cell?",
+                options: ["Store lithium ions", "Act as the positive terminal", "Prevent the anode and cathode from touching", "Conduct electricity"],
+                answer: "Prevent the anode and cathode from touching"
+            },
+            {
+                question: "Which cell structure is known for being very space-efficient in a rectangular pack?",
+                options: ["Cylindrical", "Pouch", "Prismatic", "Spherical"],
+                answer: "Prismatic"
+            },
+            {
+                question: "If you connect three 3.7V cells in SERIES, what is the resulting voltage?",
+                options: ["3.7V", "7.4V", "11.1V", "1.2V"],
+                answer: "11.1V"
+            },
+            {
+                question: "A battery pack configuration is labeled '4S2P'. What does this mean?",
+                options: ["4 cells in series, 2 in parallel", "4 cells in parallel, 2 in series", "A total of 6 cells", "A special type of cell"],
+                answer: "4 cells in series, 2 in parallel"
+            },
+            {
+                question: "Connecting cells in PARALLEL increases the battery's...",
+                options: ["Voltage", "Capacity (Ah)", "Weight", "Temperature"],
+                answer: "Capacity (Ah)"
+            }
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+        const quizResults = document.getElementById('quiz-results');
+        const scoreText = document.getElementById('score-text');
+        const restartBtn = document.getElementById('restart-quiz-btn');
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function loadQuiz() {
+            quizContainer.innerHTML = '';
+            quizResults.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            const questionElement = document.createElement('div');
+            questionElement.innerHTML = `
+                <h3 class="text-xl font-semibold mb-4">${currentQuestionIndex + 1}. ${currentQuestion.question}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    ${currentQuestion.options.map(option => `
+                        <button class="quiz-option text-left w-full p-3 border-2 border-gray-300 rounded-lg hover:bg-gray-100 hover:border-indigo-300">
+                            ${option}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            quizContainer.appendChild(questionElement);
+
+            const options = quizContainer.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                option.addEventListener('click', selectAnswer);
+            });
+        }
+
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const answer = quizData[currentQuestionIndex].answer;
+
+            // Disable all buttons after an answer is selected
+            const allOptions = quizContainer.querySelectorAll('.quiz-option');
+            allOptions.forEach(btn => btn.disabled = true);
+            
+            if (selectedButton.textContent.trim() === answer) {
+                score++;
+                selectedButton.classList.add('correct');
+            } else {
+                selectedButton.classList.add('incorrect');
+                // Highlight the correct answer
+                 allOptions.forEach(btn => {
+                    if(btn.textContent.trim() === answer) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizData.length) {
+                    loadQuiz();
+                } else {
+                    showResults();
+                }
+            }, 1500);
+        }
+        
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            quizResults.classList.remove('hidden');
+            scoreText.textContent = `You scored ${score} out of ${quizData.length}!`;
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuiz();
+        }
+
+        restartBtn.addEventListener('click', restartQuiz);
+
+        loadQuiz();
+        
+        // --- CHARGE FLOW ANIMATION ---
+        const chargeFlowSVG = document.getElementById('charge-flow-svg');
+        const chargeBtn = document.getElementById('charge-btn');
+        const dischargeBtn = document.getElementById('discharge-btn');
+        const stepTitle = document.getElementById('step-title');
+        const stepExplanation = document.getElementById('step-explanation');
+        const prevStepBtn = document.getElementById('prev-step-btn');
+        const nextStepBtn = document.getElementById('next-step-btn');
+
+        let currentMode = 'discharging';
+        let currentStep = 0;
+
+        const dischargeSteps = [
+            { title: "Discharging: Step 1", explanation: "Lithium atoms (Li) stored in the graphite anode split into Lithium ions (Li+) and electrons (e-)." },
+            { title: "Discharging: Step 2", explanation: "Electrons cannot pass through the separator. They are forced to travel through the external circuit, creating current to power the load (e.g., a light bulb)." },
+            { title: "Discharging: Step 3", explanation: "Meanwhile, the positively charged Lithium ions (Li+) are attracted to the cathode and travel through the electrolyte and separator." },
+            { title: "Discharging: Step 4", explanation: "The Lithium ions and electrons recombine and are stored in the cathode material. The battery is now providing power." }
+        ];
+
+        const chargeSteps = [
+            { title: "Charging: Step 1", explanation: "An external power source (like a charger) is applied. Lithium is currently stored in the cathode." },
+            { title: "Charging: Step 2", explanation: "The external voltage forces electrons out of the cathode material and pushes them through the external circuit toward the anode." },
+            { title: "Charging: Step 3", explanation: "As the cathode becomes more positive, it releases the Lithium ions (Li+), which are pushed back through the electrolyte and separator." },
+            { title: "Charging: Step 4", explanation: "The Lithium ions and electrons recombine and are stored (intercalated) in the graphite anode. The battery is now charged." }
+        ];
+
+        function setupChargeFlowSVG() {
+            chargeFlowSVG.innerHTML = `
+                <!-- Electrodes -->
+                <rect x="50" y="50" width="100" height="200" fill="#fca5a5" rx="10" />
+                <text x="100" y="40" text-anchor="middle" font-weight="bold">Cathode (+)</text>
+                <rect x="350" y="50" width="100" height="200" fill="#93c5fd" rx="10" />
+                <text x="400" y="40" text-anchor="middle" font-weight="bold">Anode (-)</text>
+                
+                <!-- Separator -->
+                <line x1="250" y1="50" x2="250" y2="250" stroke="#a78bfa" stroke-width="4" stroke-dasharray="8"/>
+                <text x="250" y="150" text-anchor="middle" transform="rotate(-90 250,150)" fill="#6d28d9">Separator</text>
+                
+                <!-- External Circuit -->
+                <path id="electron-path" d="M 400 50 Q 250 -10, 100 50" stroke="#4b5563" stroke-width="3" fill="none"/>
+                <g id="load-icon" transform="translate(0, -20)">
+                    <circle cx="250" cy="35" r="15" fill="none" stroke="orange" stroke-width="2"/>
+                    <line x1="242" y1="35" x2="258" y2="35" stroke="orange" stroke-width="2"/>
+                    <line x1="250" y1="27" x2="250" y2="43" stroke="orange" stroke-width="2"/>
+                </g>
+                <g id="charger-icon" style="display:none;" transform="translate(0, -20)">
+                    <rect x="235" y="20" width="30" height="15" fill="#16a34a" rx="3"/>
+                    <text x="250" y="31" text-anchor="middle" font-size="8" fill="white">CHARGER</text>
+                </g>
+
+                <!-- Particles -->
+                <g id="particles"></g>
+            `;
+        }
+
+        function createParticles(n) {
+            const particlesGroup = chargeFlowSVG.querySelector('#particles');
+            particlesGroup.innerHTML = '';
+            for (let i = 0; i < n; i++) {
+                // Ion (Li+)
+                const ionGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                ionGroup.setAttribute('class', 'ion');
+                const ionCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                ionCircle.setAttribute('r', '6');
+                ionCircle.setAttribute('fill', '#4f46e5');
+                const ionText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                ionText.textContent = 'Li+';
+                ionText.setAttribute('fill', 'white');
+                ionText.setAttribute('font-size', '6px');
+                ionText.setAttribute('font-weight', 'bold');
+                ionText.setAttribute('text-anchor', 'middle');
+                ionText.setAttribute('dominant-baseline', 'middle');
+                ionGroup.appendChild(ionCircle);
+                ionGroup.appendChild(ionText);
+                particlesGroup.appendChild(ionGroup);
+
+                // Electron (e-)
+                const electronGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                electronGroup.setAttribute('class', 'electron');
+                const electronCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                electronCircle.setAttribute('r', '4');
+                electronCircle.setAttribute('fill', '#f59e0b');
+                const electronText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                electronText.textContent = 'e-';
+                electronText.setAttribute('fill', 'black');
+                electronText.setAttribute('font-size', '6px');
+                electronText.setAttribute('font-weight', 'bold');
+                electronText.setAttribute('text-anchor', 'middle');
+                electronText.setAttribute('dominant-baseline', 'middle');
+                electronGroup.appendChild(electronCircle);
+                electronGroup.appendChild(electronText);
+                particlesGroup.appendChild(electronGroup);
+            }
+        }
+        
+        function updateAnimationStep(path) {
+            const steps = currentMode === 'discharging' ? dischargeSteps : chargeSteps;
+            if (currentStep >= steps.length) currentStep = steps.length - 1;
+            if (currentStep < 0) currentStep = 0;
+
+            const { title, explanation } = steps[currentStep];
+            stepTitle.textContent = title;
+            stepExplanation.textContent = explanation;
+
+            prevStepBtn.disabled = currentStep === 0;
+            nextStepBtn.disabled = currentStep === steps.length - 1;
+
+            const ions = chargeFlowSVG.querySelectorAll('.ion');
+            const electrons = chargeFlowSVG.querySelectorAll('.electron');
+
+            if (!path || typeof path.getPointAt !== 'function') {
+                console.error("SVG path for animation is invalid.");
+                return;
+            }
+            const pathLength = path.getTotalLength();
+
+            ions.forEach((ion, i) => {
+                // Reset styles at the beginning of each update
+                ion.style.transform = 'none';
+                electrons[i].style.transform = 'none';
+                ion.style.opacity = '0';
+                electrons[i].style.opacity = '0';
+
+                // Define start/end positions based on mode
+                const ionStartX = currentMode === 'discharging' ? 400 : 100; // Anode : Cathode
+                const ionEndX = currentMode === 'discharging' ? 100 : 400; // Cathode : Anode
+                const ionStartY = 150 + (i - 2.5) * 20;
+                ion.setAttribute('cx', ionStartX);
+                ion.setAttribute('cy', ionStartY);
+
+                const electronStartPoint = path.getPointAt(0);
+                const electronEndPoint = path.getPointAt(pathLength);
+                electrons[i].setAttribute('cx', electronStartPoint.x);
+                electrons[i].setAttribute('cy', electronStartPoint.y);
+
+                // Apply styles based on the current step and mode
+                if (currentMode === 'discharging') {
+                    // Step 0: Particles appear at Anode
+                    if (currentStep >= 0) {
+                        ion.style.opacity = '1';
+                        electrons[i].style.opacity = '1';
+                    }
+                    // Step 1: Electrons travel the external circuit
+                    if (currentStep >= 1) {
+                        electrons[i].style.transform = `translate(${electronEndPoint.x - electronStartPoint.x}px, ${electronEndPoint.y - electronStartPoint.y}px)`;
+                    }
+                    // Step 2: Ions travel through the separator
+                    if (currentStep >= 2) {
+                        ion.style.transform = `translateX(${ionEndX - ionStartX}px)`;
+                    }
+                     // Step 3: All particles have arrived
+                    if (currentStep >= 3) {
+                       // The final state is just the completed transforms from previous steps.
+                       // We re-apply opacity to ensure they stay visible.
+                       ion.style.opacity = '1';
+                       electrons[i].style.opacity = '1';
+                    }
+                } else { // Charging
+                    // Step 0: Ions appear at Cathode, ready to move
+                    if (currentStep >= 0) {
+                        ion.style.opacity = '1';
+                    }
+                    // Step 1: Electrons are forced from Cathode to Anode
+                    if (currentStep >= 1) {
+                        electrons[i].style.opacity = '1';
+                        electrons[i].style.transform = `translate(${electronEndPoint.x - electronStartPoint.x}px, ${electronEndPoint.y - electronStartPoint.y}px)`;
+                    }
+                    // Step 2: Ions follow the electrons
+                    if (currentStep >= 2) {
+                        ion.style.transform = `translateX(${ionEndX - ionStartX}px)`;
+                    }
+                    // Step 3: All particles have arrived at the anode
+                    if (currentStep >= 3) {
+                       ion.style.opacity = '1';
+                       electrons[i].style.opacity = '1';
+                    }
+                }
+            });
+        }
+        
+        function setMode(mode) {
+            currentMode = mode;
+            currentStep = 0;
+            
+            const loadIcon = document.getElementById('load-icon');
+            const chargerIcon = document.getElementById('charger-icon');
+            const electronPath = document.getElementById('electron-path');
+
+            if (!electronPath) {
+                console.error("Cannot set mode: electron path not found.");
+                return;
+            }
+
+            if(mode === 'discharging') {
+                dischargeBtn.classList.add('active');
+                chargeBtn.classList.remove('active');
+                loadIcon.style.display = 'block';
+                chargerIcon.style.display = 'none';
+                // Path from Anode (-) to Cathode (+)
+                electronPath.setAttribute('d', "M 400 50 Q 250 -10, 100 50");
+            } else {
+                chargeBtn.classList.add('active');
+                dischargeBtn.classList.remove('active');
+                loadIcon.style.display = 'none';
+                chargerIcon.style.display = 'block';
+                // Path from Cathode (+) to Anode (-)
+                electronPath.setAttribute('d', "M 100 50 Q 250 110, 400 50");
+            }
+            
+            // Pass the found path element directly to avoid a second lookup.
+            // A slight delay gives the browser time to process DOM changes.
+            setTimeout(() => updateAnimationStep(electronPath), 50);
+        }
+
+        chargeBtn.addEventListener('click', () => setMode('charging'));
+        dischargeBtn.addEventListener('click', () => setMode('discharging'));
+        nextStepBtn.addEventListener('click', () => { 
+            currentStep++; 
+            updateAnimationStep(document.getElementById('electron-path')); 
+        });
+        prevStepBtn.addEventListener('click', () => { 
+            currentStep--; 
+            updateAnimationStep(document.getElementById('electron-path')); 
+        });
+        
+        // --- LIVE BATTERY ANIMATION MODAL---
+        const liveAnimationModal = document.getElementById('live-animation-modal');
+        const showLiveAnimationBtn = document.getElementById('show-live-animation-btn');
+        const closeLiveAnimationBtn = document.getElementById('close-live-animation-btn');
+
+        showLiveAnimationBtn.addEventListener('click', () => {
+            if (!isBatteryAnimationInitialized) {
+                isBatteryAnimationInitialized = true;
+                setupLiveAnimation();
+            }
+            liveAnimationModal.classList.remove('hidden');
+            liveAnimationModal.classList.add('flex');
+        });
+
+        const closeLiveModal = () => {
+            liveAnimationModal.classList.add('hidden');
+            liveAnimationModal.classList.remove('flex');
+        }
+
+        closeLiveAnimationBtn.addEventListener('click', closeLiveModal);
+        liveAnimationModal.addEventListener('click', (e) => {
+            if (e.target === liveAnimationModal) {
+                closeLiveModal();
+            }
+        });
+
+
+        function setupLiveAnimation() {
+            const svg = document.getElementById('live-animation-svg');
+            const explanation = document.getElementById('animation-explanation');
+            svg.innerHTML = `
+                <rect x="50" y="50" width="100" height="200" fill="#fca5a5" rx="10" />
+                <text x="100" y="40" text-anchor="middle" font-weight="bold">Cathode (+)</text>
+                <rect x="350" y="50" width="100" height="200" fill="#93c5fd" rx="10" />
+                <text x="400" y="40" text-anchor="middle" font-weight="bold">Anode (-)</text>
+                <line x1="250" y1="50" x2="250" y2="250" stroke="#a78bfa" stroke-width="4" stroke-dasharray="8"/>
+                <path id="live-electron-path" d="M 400 50 Q 250 -10, 100 50" stroke="#4b5563" stroke-width="3" fill="none"/>
+                <g transform="translate(0, -20)">
+                    <circle cx="250" cy="35" r="15" fill="yellow" stroke="orange" stroke-width="2"/>
+                    <line x1="152" y1="30" x2="172" y2="30" stroke="orange" stroke-width="2" transform-origin="center" transform="rotate(45)"/>
+                    <line x1="250" y1="27" x2="250" y2="43" stroke="orange" stroke-width="2" transform-origin="center" transform="rotate(45)"/>
+                </g>
+            `;
+
+            // Create ions
+            for (let i = 0; i < 8; i++) {
+                const ion = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                ion.setAttribute('class', 'anim-ion');
+                ion.setAttribute('cx', 400);
+                ion.setAttribute('cy', 70 + i * 20);
+                ion.setAttribute('r', 5);
+                ion.setAttribute('fill', '#4f46e5');
+                ion.style.animationDelay = `${i * 1}s`;
+                svg.appendChild(ion);
+            }
+
+            // Create electrons
+            const electronPath = document.getElementById('live-electron-path');
+            for (let i = 0; i < 5; i++) {
+                 const electronGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                 electronGroup.setAttribute('class', 'anim-electron');
+                 electronGroup.style.animationDelay = `${i * 0.8}s`;
+                 electronGroup.style.offsetPath = `path('${electronPath.getAttribute('d')}')`;
+
+                 const electron = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                 electron.setAttribute('r', 4);
+                 electron.setAttribute('fill', '#f59e0b');
+
+                 const electronText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                 electronText.textContent = 'e-';
+                 electronText.setAttribute('font-size', '7px');
+                 electronText.setAttribute('fill', 'black');
+                 electronText.setAttribute('text-anchor', 'middle');
+                 electronText.setAttribute('dy', '2.5');
+
+                 electronGroup.appendChild(electron);
+                 electronGroup.appendChild(electronText);
+                 svg.appendChild(electronGroup);
+            }
+
+            // Update explanations
+            const explanations = [
+                "During discharge, Lithium ions (blue) travel from the Anode to the Cathode...",
+                "...while Electrons (orange) flow through the external circuit to power the lightbulb.",
+                "The separator allows ions to pass but blocks electrons, forcing them outside.",
+                "This controlled flow of electrons is what we harness as electricity."
+            ];
+            let explanationIndex = 0;
+            explanation.textContent = explanations[explanationIndex];
+            setInterval(() => {
+                explanationIndex = (explanationIndex + 1) % explanations.length;
+                explanation.textContent = explanations[explanationIndex];
+            }, 4000);
+        }
+
+
+        // --- IMAGE MODAL LOGIC ---
+        const diagramImage = document.getElementById('diagram-image');
+        const imageModal = document.getElementById('image-modal');
+        const modalImg = document.getElementById('modal-img');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        if(diagramImage) {
+            diagramImage.addEventListener('click', () => {
+                modalImg.src = diagramImage.src;
+                imageModal.classList.remove('hidden');
+                imageModal.classList.add('flex');
+            });
+        }
+
+        if(closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => {
+                imageModal.classList.add('hidden');
+                imageModal.classList.remove('flex');
+            });
+        }
+        
+        if(imageModal){
+            imageModal.addEventListener('click', (e) => {
+                if (e.target === imageModal) {
+                    imageModal.classList.add('hidden');
+                    imageModal.classList.remove('flex');
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>
+

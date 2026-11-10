@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charger Levels Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .step-content {
+            display: none;
+        }
+        .step-content.active {
+            display: block;
+        }
+        .image-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e5e7eb; /* gray-200 */
+            border: 2px dashed #9ca3af; /* gray-400 */
+            border-radius: 0.5rem;
+            color: #6b7280; /* gray-500 */
+            font-weight: 500;
+        }
+        .quiz-question {
+            margin-bottom: 1.5rem;
+        }
+        .quiz-options label {
+            display: block;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .quiz-options label:hover {
+            background-color: #f3f4f6;
+        }
+        .quiz-options input {
+            display: none;
+        }
+        /* Style for when an answer is selected */
+        .quiz-options label.selected {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+        /* Style for correct answer feedback */
+        .quiz-feedback.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        /* Style for incorrect answer feedback */
+        .quiz-feedback.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .quiz-feedback.correct::after {
+            content: '✔ Correct';
+            color: #16a34a;
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+         .quiz-feedback.incorrect::after {
+            content: '✖ Incorrect';
+            color: #dc2626;
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">A Guide to EV Charger Levels</h1>
+            <p class="mt-2 text-lg text-gray-600">Learn about the different types of electric vehicle charging.</p>
+        </header>
+
+        <div class="bg-white p-6 sm:p-8 rounded-lg shadow-md">
+            <div id="steps-container">
+                <!-- Step 0: Summary Table -->
+                <div id="step-0" class="step-content active">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">IEC 61851-1 Charging Modes Summary</h2>
+                    <p class="mb-4 text-gray-600">The international standard IEC 61851-1 defines four modes for charging electric vehicles. These modes correspond to the different charging levels.</p>
+                    <div class="overflow-x-auto rounded-lg border">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Power / Phase</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Typical Connectors</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200 text-sm">
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">Mode 1</td>
+                                    <td class="px-4 py-3">~2.3kW / 1-Phase</td>
+                                    <td class="px-4 py-3">Standard Domestic Socket</td>
+                                    <td class="px-4 py-3">Slow charging from a standard household outlet without any safety communication. Not recommended or permitted in many regions.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">Mode 2</td>
+                                    <td class="px-4 py-3">~3.7kW / 1-Phase</td>
+                                    <td class="px-4 py-3">Domestic Socket -> Type 1/2</td>
+                                    <td class="px-4 py-3">Slow charging using a special cable (IC-CPD) with built-in safety protection, connecting a domestic outlet to the car's charge port. Corresponds to <strong>Level 1</strong>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">Mode 3</td>
+                                    <td class="px-4 py-3">up to 22kW / 3-Phase</td>
+                                    <td class="px-4 py-3">Type 2 (Mennekes)</td>
+                                    <td class="px-4 py-3">Charging via a dedicated EVSE (wallbox or public charger) with advanced safety and control functions. Corresponds to <strong>Level 2</strong>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">Mode 4</td>
+                                    <td class="px-4 py-3">400kW+ / DC</td>
+                                    <td class="px-4 py-3">CCS2, CHAdeMO, NACS</td>
+                                    <td class="px-4 py-3">Very fast charging using a DC fast charging station which converts AC to DC externally. Corresponds to <strong>Level 3 / DC Fast Charging</strong>.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Step 1: On-Board vs Off-Board -->
+                <div id="step-1" class="step-content">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">On-Board vs. Off-Board Charging</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <p class="mb-4">A key difference between charging types is where the AC-to-DC power conversion happens. Your EV battery can only store Direct Current (DC) power, but the grid supplies Alternating Current (AC).</p>
+                            <div class="space-y-4">
+                                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <h4 class="font-semibold text-blue-700">AC Charging (Level 1 & 2)</h4>
+                                    <p class="text-sm text-gray-700 mt-1">The charger is <strong>inside the car</strong>. It's called the <strong>On-Board Charger (OBC)</strong>. The wallbox or portable cable (EVSE) simply supplies the car with AC power safely.</p>
+                                </div>
+                                <div class="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                                    <h4 class="font-semibold text-purple-700">DC Fast Charging (Level 3)</h4>
+                                    <p class="text-sm text-gray-700 mt-1">The charger is <strong>outside the car</strong>. The large charging station contains the AC-to-DC converter and delivers DC power directly to the battery, bypassing the car's smaller on-board charger. This is why it's so much faster.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="min-h-[250px] image-placeholder">
+                            <span>Diagram showing AC charging via<br>On-Board Charger vs. DC charging<br>bypassing it.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Level 1 Charging -->
+                <div id="step-2" class="step-content">
+                    <h2 class="text-2xl font-bold mb-4 text-blue-600">Level 1: Slow & Steady (Mode 2)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <p class="mb-4"><strong>Level 1 charging</strong> uses a standard <strong>220-volt AC</strong> residential wall outlet. The charging cable has a control box (IC-CPD) that ensures safety.</p>
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-semibold">Key Features:</h4>
+                                    <ul class="list-disc list-inside mt-2 text-gray-700 space-y-1">
+                                        <li><strong>Voltage:</strong> 220V AC</li>
+                                        <li><strong>Location:</strong> Primarily at home, using any standard wall outlet.</li>
+                                        <li><strong>Speed:</strong> Adds about <strong>10-16 km (6-10 miles)</strong> of range per hour.</li>
+                                        <li><strong>Best For:</strong> Overnight charging for PHEVs or EVs with smaller batteries.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Connectors:</h4>
+                                    <p class="text-sm text-gray-700 mt-1">The cable plugs into a standard domestic wall socket and connects to the car with a <strong>Type 1 (J1772)</strong> or <strong>Type 2 (Mennekes)</strong> connector, depending on the vehicle model.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="min-h-[250px] image-placeholder">
+                            <span>Image of a portable Mode 2 charger<br>with Type 2 connector</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Level 2 Charging -->
+                <div id="step-3" class="step-content">
+                    <h2 class="text-2xl font-bold mb-4 text-green-600">Level 2: The Daily Driver (Mode 3)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <p class="mb-4"><strong>Level 2 charging</strong> uses a dedicated AC charging station (EVSE) installed at a home, workplace, or public location. It offers a great balance of speed and cost.</p>
+                             <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-semibold">Key Features:</h4>
+                                    <ul class="list-disc list-inside mt-2 text-gray-700 space-y-1">
+                                        <li><strong>Voltage:</strong> 220V AC (Single-Phase) or 380V AC (Three-Phase)</li>
+                                        <li><strong>Location:</strong> Homes (with dedicated circuit), workplaces, public parking lots.</li>
+                                        <li><strong>Speed:</strong> Adds about <strong>15-100 km (10-60 miles)</strong> of range per hour.</li>
+                                        <li><strong>Best For:</strong> Most daily and overnight charging needs for any EV.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Connector:</h4>
+                                    <p class="text-sm text-gray-700 mt-1">The standard connector for Level 2 AC charging in Thailand and Europe is the <strong>Type 2 (Mennekes)</strong> plug. It can support both single-phase and three-phase power.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="min-h-[250px] image-placeholder">
+                           <span>Image of a Type 2 connector and<br>a wall-mounted Level 2 charger</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: DC Fast Charging -->
+                <div id="step-4" class="step-content">
+                    <h2 class="text-2xl font-bold mb-4 text-purple-600">Level 3: DC Fast Charging (Mode 4)</h2>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                           <p class="mb-4"><strong>DC Fast Charging</strong> is the fastest method, supplying high-voltage <strong>Direct Current (DC)</strong> power straight to the battery. These are found at dedicated public stations.</p>
+                             <div class="space-y-4">
+                                <div>
+                                    <h4 class="font-semibold">Key Features:</h4>
+                                    <ul class="list-disc list-inside mt-2 text-gray-700 space-y-1">
+                                        <li><strong>Power:</strong> High-Voltage DC (400V - 1000V)</li>
+                                        <li><strong>Location:</strong> Dedicated public charging stations, often along highways.</li>
+                                        <li><strong>Speed:</strong> Can add over <strong>200-300 km</strong> of range in just 20-30 minutes.</li>
+                                        <li><strong>Best For:</strong> Road trips and rapid top-ups.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Connectors:</h4>
+                                     <ul class="list-disc list-inside mt-2 text-gray-700 space-y-1 text-sm">
+                                        <li><strong>CCS2 (Combined Charging System):</strong> The dominant standard in Thailand/Europe. It combines a Type 2 connector with two large DC pins below it.</li>
+                                        <li><strong>CHAdeMO:</strong> An older standard, primarily found on Japanese vehicles like the Nissan Leaf.</li>
+                                         <li><strong>NACS (Tesla):</strong> Tesla's proprietary connector, which is becoming more common as other manufacturers adopt it.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="min-h-[250px] image-placeholder">
+                            <span>Image showing CCS2 and CHAdeMO<br>connectors at a DC Fast Charger</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Further Investigation -->
+                <div id="step-5" class="step-content">
+                    <h2 class="text-2xl font-bold mb-4 text-indigo-600">Exercise: Explore Further</h2>
+                    <p class="mb-4">Now that you understand the basics, here are some topics to investigate to deepen your knowledge:</p>
+                    <ul class="list-decimal list-inside space-y-4 text-gray-700">
+                        <li>Research the pros and cons of an EV with an <strong>800V battery architecture</strong> compared to a traditional <strong>400V</strong> one. Why does 800V allow for faster charging?</li>
+                        <li>Investigate the typical power output (in kW) and cost (in Baht per kWh) for a <strong>home Level 2 charger</strong> and a public <strong>DC Fast Charger</strong> in Thailand. Using this data, estimate the time and cost to fully charge a 50 kWh EV battery with each method.</li>
+                        <li>Survey the EV market in Thailand. Find at least one car manufacturer that sells different models using <strong>more than one type of charging connector</strong> (e.g., one model uses CHAdeMO and another uses CCS2).</li>
+                        <li class="p-3 bg-gray-50 border rounded-lg">
+                            <strong>Critical Thinking Scenario:</strong> You are on a road trip from Bangkok to Chiang Mai. Your EV has 15% battery left and an efficiency of 6 km/kWh. You need to add enough range to safely drive 250 km to the next city. You find a charging hub with two options:
+                            <ul class="list-disc list-inside mt-2 ml-4">
+                                <li><strong>Charger A:</strong> 50 kW power, costs 6.5 Baht/kWh.</li>
+                                <li><strong>Charger B:</strong> 150 kW power, costs 8.0 Baht/kWh.</li>
+                            </ul>
+                             Which charger do you choose? Justify your decision by calculating and comparing the approximate time and cost for each option. What other non-financial factors might influence your choice?
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Step 6: Quiz -->
+                <div id="step-6" class="step-content">
+                    <h2 class="text-2xl font-bold mb-4 text-teal-600">Knowledge Check</h2>
+                    <p class="mb-6">Test your understanding with this short quiz.</p>
+                    <div id="quiz-container">
+                        <!-- Questions will be injected by JS -->
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button id="check-answers-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Check Answers</button>
+                        <p id="quiz-results" class="mt-4 font-bold text-lg"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="mt-8 pt-6 border-t flex justify-between items-center">
+                <button id="prev-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Previous
+                </button>
+                <span id="step-counter" class="text-sm font-medium text-gray-600"></span>
+                <button id="next-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const steps = document.querySelectorAll('.step-content');
+            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const stepCounter = document.getElementById('step-counter');
+            
+            const stepNames = ["IEC Summary", "On-Board vs. Off-Board", "Level 1 (Mode 2)", "Level 2 (Mode 3)", "DC Fast Charging (Mode 4)", "Further Investigation", "Knowledge Check"];
+            let currentStep = 0;
+            const totalSteps = steps.length - 1;
+
+            const updateUI = () => {
+                steps.forEach((step, index) => {
+                    step.classList.toggle('active', index === currentStep);
+                });
+                
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.disabled = currentStep === totalSteps;
+                
+                stepCounter.textContent = stepNames[currentStep];
+            };
+
+            nextBtn.addEventListener('click', () => {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateUI();
+                }
+            });
+
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateUI();
+                }
+            });
+
+            // --- QUIZ LOGIC ---
+            const quizContainer = document.getElementById('quiz-container');
+            const checkAnswersBtn = document.getElementById('check-answers-btn');
+            const quizResults = document.getElementById('quiz-results');
+
+            const quizData = [
+                { question: "Which IEC mode uses a portable cable with built-in safety (IC-CPD) from a standard domestic outlet?", options: ["Mode 1", "Mode 2", "Mode 3", "Mode 4"], answer: "Mode 2" },
+                { question: "What is the primary role of a Level 2 EVSE (wallbox)?", options: ["To convert AC power from the grid to DC for the battery", "To safely supply AC power to the vehicle's On-Board Charger", "To bypass the vehicle's battery management system"], answer: "To safely supply AC power to the vehicle's On-Board Charger" },
+                { question: "During Level 2 charging, where does the conversion from AC to DC power happen?", options: ["In the charging station (EVSE)", "In the car's On-Board Charger (OBC)", "In the charging cable itself"], answer: "In the car's On-Board Charger (OBC)" },
+                { question: "Which component inside the car is bypassed during DC Fast Charging?", options: ["The battery", "The motor", "The On-Board Charger (OBC)"], answer: "The On-Board Charger (OBC)" },
+                { question: "Which connector is the standard for Level 2 public AC charging in Thailand?", options: ["Type 1 (J1772)", "Type 2 (Mennekes)", "CHAdeMO"], answer: "Type 2 (Mennekes)" },
+                { question: "Which charging level is described as being best for 'road trips and rapid top-ups'?", options: ["Level 1", "Level 2", "Level 3 / DC Fast Charging"], answer: "Level 3 / DC Fast Charging" },
+                { question: "According to the lesson, Mode 1 charging is often not permitted because it lacks what feature?", options: ["A Type 2 connector", "High speed", "Safety communication"], answer: "Safety communication" },
+                { question: "Which charging level typically requires a dedicated, professionally installed circuit at home?", options: ["Level 1", "Level 2", "Level 3"], answer: "Level 2" },
+                { question: "Which connector combines a Type 2 plug with two large DC pins for DC fast charging?", options: ["CHAdeMO", "NACS", "CCS2"], answer: "CCS2" },
+                { question: "What does the 'OBC' in an electric vehicle stand for?", options: ["Off-Board Converter", "On-Board Charger", "Optimal Battery Control"], answer: "On-Board Charger" }
+            ];
+
+            function buildQuiz() {
+                quizContainer.innerHTML = '';
+                quizData.forEach((q, index) => {
+                    const questionEl = document.createElement('div');
+                    questionEl.className = 'quiz-question';
+                    const optionsHTML = q.options.map(option => `
+                        <label>
+                            <input type="radio" name="question${index}" value="${option}">
+                            <span>${option}</span>
+                        </label>
+                    `).join('');
+
+                    questionEl.innerHTML = `
+                        <p class="font-semibold mb-2">${index + 1}. ${q.question}</p>
+                        <div class="quiz-options" data-question-index="${index}">${optionsHTML}</div>
+                    `;
+                    quizContainer.appendChild(questionEl);
+                });
+            }
+
+            quizContainer.addEventListener('change', event => {
+                if (event.target.matches('input[type="radio"]')) {
+                    const questionName = event.target.name;
+                    // Reset all labels for this question
+                    document.querySelectorAll(`input[name="${questionName}"]`).forEach(radio => {
+                        const label = radio.parentElement;
+                        label.classList.remove('selected', 'quiz-feedback', 'correct', 'incorrect');
+                    });
+                    // Highlight the selected one
+                    event.target.parentElement.classList.add('selected');
+                    // Clear overall results text
+                    quizResults.textContent = '';
+                }
+            });
+            
+            checkAnswersBtn.addEventListener('click', () => {
+                let score = 0;
+                quizData.forEach((q, index) => {
+                    const container = quizContainer.querySelector(`[data-question-index="${index}"]`);
+                    const selected = container.querySelector(`input[name="question${index}"]:checked`);
+                    
+                    if (selected) {
+                        const label = selected.parentElement;
+                        label.classList.remove('selected'); // Remove selection style before adding feedback
+                        if (selected.value === q.answer) {
+                            score++;
+                            label.classList.add('quiz-feedback', 'correct');
+                        } else {
+                            label.classList.add('quiz-feedback', 'incorrect');
+                            // Also highlight the correct answer if the user was wrong
+                            const correctLabel = container.querySelector(`input[value="${q.answer}"]`).parentElement;
+                            correctLabel.classList.add('quiz-feedback', 'correct');
+                        }
+                    }
+                });
+                quizResults.textContent = `You scored ${score} out of ${quizData.length}!`;
+            });
+
+            // Initial UI setup
+            buildQuiz();
+            updateUI();
+        });
+    </script>
+</body>
+</html>
+
